@@ -13,7 +13,7 @@ import time
 # 获取当前日期
 current_date = datetime.datetime.now().strftime('%Y-%m-%d')
 # 读取180天内的数据，这里面还得排除掉节假日
-date_ago = datetime.datetime.now() - datetime.timedelta(days=365)
+date_ago = datetime.datetime.now() - datetime.timedelta(days=180)
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
