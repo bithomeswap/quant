@@ -1,0 +1,91 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，同时你的代码当中很少有bug存在
+
+工作任务：
+根据参考资料,在# 开盘后时间间隔
+位置添加开盘后时间间隔，即在原始数据当中距离第一条数据中'日期'位置的时间距离
+
+参考资料：
+0.参考代码
+import pandas as pd
+import talib
+import numpy as np
+from datetime import datetime
+from pymongo import MongoClient
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# 连接MongoDB数据库
+client = MongoClient(
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+collection = db['etf']
+
+# 获取数据并转换为DataFrame格式
+data = pd.DataFrame(list(collection.find()))
+
+# 定义开盘后时间间隔
+def get_technical_indicators(df):
+    df["成交量"] = df["成交量"].astype(float)  # 转换数据类型
+
+    # 开盘后时间间隔
+
+
+    # 计算ATR指标
+    df['ATR'] = talib.ATR(df['最高'].values, df['最低'].values,
+                          df['收盘'].values, timeperiod=14)
+
+
+    
+
+
+    df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+    return df
+
+
+# 按照“代码”列进行分组并计算技术指标
+grouped = data.groupby('代码').apply(get_technical_indicators)
+
+# 连接MongoDB数据库并创建新表
+new_collection = db['etf指标']
+
+# 将分组后的数据拆成多个DataFrame，每个 DataFrame 最多包含 1000 行数据
+dfs = [grouped.iloc[i:i+1000] for i in range(0, len(grouped), 1000)]
+
+# 定义异步插入函数
+
+
+def insert_data(df):
+    new_collection.insert_many(df.to_dict('records'))
+
+
+# 使用线程池批量插入数据
+with ThreadPoolExecutor(max_workers=10) as executor:
+    futures = [executor.submit(insert_data, df) for df in dfs]
+    for future in as_completed(futures):
+        try:
+            result = future.result()
+        except Exception as e:
+            print(f'插入数据失败：{e}')
+        else:
+            print('插入数据成功')
+
+
+
+
+1。etf数据库表中的数据存储格式如下所示：
+// 1
+{
+    "_id": ObjectId("642156493a7afd43957e82e2"),
+    "日期": "2021-10-11",
+    "开盘": 1.011,
+    "收盘": 1.01,
+    "最高": 1.019,
+    "最低": 1.007,
+    "成交量": NumberInt("1753180"),
+    "成交额": 177505565,
+    "振幅": 0,
+    "涨跌幅": 0,
+    "涨跌额": 0,
+    "换手率": 368.92,
+    "代码": "516860"
+}
