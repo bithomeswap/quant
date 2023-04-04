@@ -6,6 +6,7 @@
 # pip install python-binance
 import pandas as pd
 import talib
+import os
 import numpy as np
 from datetime import datetime
 from pymongo import MongoClient
@@ -92,7 +93,16 @@ df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 for n in range(1, 8):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
 
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上级目录的路径
+parent_dir_path = os.path.dirname(dir_path)
 
+# 保存数据到指定目录
+file_path = os.path.join(parent_dir_path, f'{name}.csv')
+df.to_csv(file_path, index=False)
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']
 records = df.to_dict("records")  # 将DataFrame转换为字典

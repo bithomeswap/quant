@@ -6,6 +6,7 @@
 # pip install python-binance
 import pandas as pd
 import talib
+import os
 import numpy as np
 from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -97,8 +98,16 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码').apply(get_technical_indicators)
 
-# 保存技术指标数据为CSV文件
-grouped.to_csv(f'{name}指标.csv', index=False)
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上级目录的路径
+parent_dir_path = os.path.dirname(dir_path)
+
+# 保存数据到指定目录
+file_path = os.path.join(parent_dir_path, f'{name}.csv')
+grouped.to_csv(file_path, index=False)
 print('准备插入数据')
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']

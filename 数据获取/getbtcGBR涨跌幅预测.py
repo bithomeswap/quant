@@ -87,7 +87,7 @@ db[f"{name}预测误差"].insert_one(data)
 
 
 # 假设model是我们训练好的模型
-with open(f'{name}model.pickle', 'wb') as f:
+with open(f'../{name}model.pickle', 'wb') as f:
     pickle.dump(model, f)
 # # 从'model.pickle'文件中加载模型
 # with open('model.pickle', 'rb') as f:

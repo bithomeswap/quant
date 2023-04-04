@@ -7,7 +7,7 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'MACDsignal'
+mubiao = '换手率'
 print('已经获取数据')
 # 假设数据存储在ndarray类型的变量data中
 # 对指定列排序
