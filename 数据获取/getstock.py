@@ -28,36 +28,6 @@ print(f'开始日期{start_date}')
 
 collection.drop()  # 清空集合中的所有文档
 
-# # 获取上证指数日k数据
-# sh_data = ak.stock_zh_index_daily_em(symbol="sh000001")
-# # 获取深证指数日k数据
-# sh_data['代码'] = "sh000001"
-# sh_data['名称'] = "上证指数"
-# sh_data['日期'] = sh_data["date"]
-# sh_data['开盘'] = sh_data["open"]
-# sh_data['收盘'] = sh_data["close"]
-# sh_data['最高'] = sh_data["high"]
-# sh_data['最低'] = sh_data["low"]
-# sh_data['成交量'] = sh_data["volume"].astype(float)
-# sh_data['成交额'] = sh_data["amount"]
-# sh_data = sh_data.drop(["date", "open", "close", "high",
-#                        "low", "volume", "amount"], axis=1)
-# sz_data = ak.stock_zh_index_daily_em(symbol="sz399001")
-# sz_data['代码'] = "sz399001"
-# sz_data['名称'] = "深证成指"
-# sz_data['日期'] = sz_data["date"]
-# sz_data['开盘'] = sz_data["open"]
-# sz_data['收盘'] = sz_data["close"]
-# sz_data['最高'] = sz_data["high"]
-# sz_data['最低'] = sz_data["low"]
-# sz_data['成交量'] = sz_data["volume"].astype(float)
-# sz_data['成交额'] = sz_data["amount"]
-# sz_data = sz_data.drop(["date", "open", "close", "high",
-#                        "low", "volume", "amount"], axis=1)
-# # 将上证指数日K数据插入数据库
-# collection.insert_many(sh_data.to_dict('records'))
-# collection.insert_many(sz_data.to_dict('records'))
-
 # 从akshare获取A股主板股票的代码和名称
 stock_info_df = ak.stock_zh_a_spot_em()
 # 迭代每只股票，获取每天的前复权日k数据
