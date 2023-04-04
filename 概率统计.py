@@ -6,6 +6,8 @@ import numpy as np
 # 具体实现代码如下：
 # 从本地CSV文件读取数据集合
 name = 'STOCK'
+
+
 df = pd.read_csv(f'{name}指标.csv')
 gongzhen1 = 'MACDsignal'
 gongzhen2 = 'KDJ_D'
