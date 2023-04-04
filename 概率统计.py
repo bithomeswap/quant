@@ -6,18 +6,25 @@ import numpy as np
 # 具体实现代码如下：
 # 从本地CSV文件读取数据集合
 name = 'STOCK'
-
-
 df = pd.read_csv(f'{name}指标.csv')
-# gongzhen1 = 'MACDsignal'
-mubiao = '40日交易量排名'
+mubiao = 'MACDhist'
 print('已经获取数据')
 # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
-# df = df[(df[f'{gongzhen1}'] >= -0.7) & (df[f'{gongzhen1}'] <= -0.03)]
-# # 对换手率在3以下的数据进行预处理
-# df = df[(df[f'{gongzhen2}'] >= 500000000)]
-# 对KDJ_D在<7或者>86之间的数据进行预处理
-# df = df[(df[f'{gongzhen2}'] >= 86) | (df[f'{gongzhen2}'] <= 7)]
+gongzhen1 = 'MACDsignal'
+df = df[(df[f'{gongzhen1}'] >= -0.7) & (df[f'{gongzhen1}'] <= -0.03)]
+
+# 对振幅在1.9以下的数据进行预处理
+gongzhen2 = '振幅'
+df = df[(df[f'{gongzhen2}'] <= 1.9)]
+
+# # 对换手率在0.65以下的数据进行预处理
+gongzhen3 = '换手率'
+df = df[(df[f'{gongzhen3}'] <= 0.65)]
+
+# 对KDJ_D在<7的数据进行预处理
+gongzhen4 = 'KDJ_D'
+df = df[(df[f'{gongzhen4}'] <= 7)]
+
 
 # 对指定列排序
 sorted_data = np.sort(df[f'{mubiao}'])
@@ -62,6 +69,4 @@ for n in range(1, 8):
     result_df = pd.DataFrame(result_dicts)
     result_df.round(decimals=6).to_csv(
         f'{name}标的{mubiao}{n}日涨幅分布.csv', index=True
-        # f'{name}标的{gongzhen1}共振{mubiao}{n}日涨幅分布.csv', index=True
-        # f'{name}标的{gongzhen1}{gongzhen2}共振{mubiao}{n}日涨幅分布.csv', index=True
     )
