@@ -93,10 +93,7 @@ dir_path = os.path.dirname(file_path)
 parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
 
 # 保存数据到指定目录
-file_path = os.path.join(parent_dir_path, f'{name}.csv')
-
-df.to_csv(file_path, index=False)
-
+file_path = os.path.join(parent_dir_path, f'{name}model.pickle')
 # 假设model是我们训练好的模型
 with open(file_path, 'wb') as f:
     pickle.dump(model, f)
