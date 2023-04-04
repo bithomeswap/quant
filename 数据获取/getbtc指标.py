@@ -97,8 +97,8 @@ for n in range(1, 8):  # 计算未来n日涨跌幅
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上级目录的路径
-parent_dir_path = os.path.dirname(dir_path)
+# 获取当前.py文件所在目录的上两级目录的路径
+parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
 
 # 保存数据到指定目录
 file_path = os.path.join(parent_dir_path, f'{name}.csv')

@@ -102,8 +102,8 @@ grouped = data.groupby('代码').apply(get_technical_indicators)
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上级目录的路径
-parent_dir_path = os.path.dirname(dir_path)
+# 获取当前.py文件所在目录的上两级目录的路径
+parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
 
 # 保存数据到指定目录
 file_path = os.path.join(parent_dir_path, f'{name}.csv')
