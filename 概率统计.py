@@ -7,15 +7,21 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-gongzhen = 'MACDsignal'
-mubiao = '成交额'
+gongzhen1 = 'MACDsignal'
+gongzhen2 = 'KDJ_D'
+mubiao = '换手率'
 print('已经获取数据')
 # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
-df = df[(df[f'{gongzhen}'] >= -0.7) & (df[f'{gongzhen}'] <= -0.03)]
+df = df[(df[f'{gongzhen1}'] >= -0.7) & (df[f'{gongzhen1}'] <= -0.03)]
+# # 对换手率在3以下的数据进行预处理
+# df = df[(df[f'{gongzhen2}'] >= 500000000)]
+# 对KDJ_D在<7或者>86之间的数据进行预处理
+df = df[(df[f'{gongzhen2}'] >= 86) | (df[f'{gongzhen2}'] <= 7)]
+
 # 对指定列排序
 sorted_data = np.sort(df[f'{mubiao}'])
 # 将数据划分成n个等距离的区间
-n = 40
+n = 6
 indices = np.linspace(0, len(df[f'{mubiao}']),
                       num=n+1, endpoint=True, dtype=int)
 # 得到每一个区间的上界，并作为该部分对应的区间范围
@@ -54,4 +60,4 @@ for n in range(1, 8):
     # 将结果存入数据库
     result_df = pd.DataFrame(result_dicts)
     result_df.round(decimals=6).to_csv(
-        f'{name}标的{gongzhen}共振{mubiao}{n}日涨幅分布.csv', index=True)
+        f'{name}标的{gongzhen1}{gongzhen2}共振{mubiao}{n}日涨幅分布.csv', index=True)

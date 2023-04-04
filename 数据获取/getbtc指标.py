@@ -101,7 +101,7 @@ dir_path = os.path.dirname(file_path)
 parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
 
 # 保存数据到指定目录
-file_path = os.path.join(parent_dir_path, f'{name}.csv')
+file_path = os.path.join(parent_dir_path, f'{name}指标.csv')
 df.to_csv(file_path, index=False)
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']
