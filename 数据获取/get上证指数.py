@@ -29,18 +29,38 @@ print(f'开始日期{start_date}')
 collection.drop()  # 清空集合中的所有文档
 
 # 获取上证指数日k数据
-sh_data = ak.stock_zh_index_daily_em(symbol="sh000001")
-# 获取深证指数日k数据
-sh_data['代码'] = "sh000001"
-sh_data['名称'] = "上证指数"
-sh_data['日期'] = sh_data["date"]
-sh_data['开盘'] = sh_data["open"]
-sh_data['收盘'] = sh_data["close"]
-sh_data['最高'] = sh_data["high"]
-sh_data['最低'] = sh_data["low"]
-sh_data['成交量'] = sh_data["volume"].astype(float)
-sh_data['成交额'] = sh_data["amount"]
-sh_data = sh_data.drop(["date", "open", "close", "high",
-                       "low", "volume", "amount"], axis=1)
+klines = ak.index_zh_a_hist_min_em(symbol="000002",
+                                   # 000001是上证指数，000002是A股指数
+                                   period="5"
+                                   # choice of {'1', '5', '15', '30', '60'} # 其中 1 分钟数据只能返回当前的, 其余只能返回近期的数据
+                                   # start_date=start_date="1979-09-01 09:32:00"; 开始日期时间
+                                   # end_date=end_date="2222-01-01 09:32:00"; 结束时间时间
+                                   )
+
+for kline in klines:
+    # 将时间戳转换为ISO格式的日期字符串
+    kline['日期'] = kline['时间']
+
+    # 插入到数据库中
+    if collection.count_documents({
+        '日期': kline['时间'],
+        '开盘': kline['开盘']
+    }) == 0:
+        collection.insert_one({
+            '日期': kline['时间'],
+            '开盘': kline['开盘'],
+            '开盘': float(kline[1]),
+            '最高': float(kline[2]),
+            '最低': float(kline[3]),
+            '收盘': float(kline[4]),
+            '成交量': float(kline[5]),
+            '收盘timestamp': float(kline[6]/1000),
+            '成交额': float(kline[7]),
+            '成交笔数': float(kline[8]),
+            '主动买入成交量': float(kline[9]),
+            '主动买入成交额':  float(kline[10])
+        })
+
+time.sleep(10)
 # 将上证指数日K数据插入数据库
 collection.insert_many(sh_data.to_dict('records'))
