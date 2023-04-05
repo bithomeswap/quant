@@ -10,20 +10,20 @@ df = pd.read_csv(f'{name}指标.csv')
 mubiao = 'KDJ_D'
 print('已经获取数据')
 # # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
-# gongzhen1 = 'MACDsignal'
-# df = df[(df[f'{gongzhen1}'] >= -0.7) & (df[f'{gongzhen1}'] <= -0.03)]
+# gongzhen = 'MACDsignal'
+# df = df[(df[f'{gongzhen}'] >= -0.7) & (df[f'{gongzhen}'] <= -0.03)]
 
 # # 对振幅在1.9以下的数据进行预处理
-# gongzhen2 = '振幅'
-# df = df[(df[f'{gongzhen2}'] <= 1.9)]
+# gongzhen = '振幅'
+# df = df[(df[f'{gongzhen}'] <= 1.9)]
 
 # # 对换手率在0.65以下的数据进行预处理
-# gongzhen3 = '换手率'
-# df = df[(df[f'{gongzhen3}'] <= 0.65)]
+# gongzhen = '换手率'
+# df = df[(df[f'{gongzhen}'] <= 0.65)]
 
 # 对KDJ_D在<7的数据进行预处理
-gongzhen4 = 'KDJ_D'
-df = df[(df[f'{gongzhen4}'] <= 7)]
+gongzhen = 'KDJ_D'
+df = df[(df[f'{gongzhen}'] <= 7)]
 
 
 # 对指定列排序
