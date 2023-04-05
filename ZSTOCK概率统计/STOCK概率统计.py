@@ -7,11 +7,11 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'MACDhist'
+mubiao = '换手率'
 print('已经获取数据')
-# 对MACDsignal在-0.7至-0.03之间的数据进行预处理
-gongzhen = 'MACDsignal'
-df = df[(df[f'{gongzhen}'] >= -0.7) & (df[f'{gongzhen}'] <= -0.03)]
+# # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
+# gongzhen = 'MACDsignal'
+# df = df[(df[f'{gongzhen}'] >= -0.7) & (df[f'{gongzhen}'] <= -0.03)]
 
 # # 对振幅在1.9以下的数据进行预处理
 # gongzhen = '振幅'
