@@ -17,9 +17,9 @@ print('已经获取数据')
 # gongzhen = '振幅'
 # df = df[(df[f'{gongzhen}'] <= 1.9)]
 
-# # 对换手率在0.65以下的数据进行预处理
+# # 对换手率在0.23-0.65以下的数据进行预处理
 # gongzhen = '换手率'
-# df = df[(df[f'{gongzhen}'] <= 0.65)]
+# df = df[(df[f'{gongzhen}'] <= 0.65)&(df[f'{gongzhen}'] >= 0.23)]
 
 # 对KDJ_D在<7的数据进行预处理
 gongzhen = 'KDJ_D'
