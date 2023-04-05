@@ -60,6 +60,15 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['KDJ_D'] = d
     df['KDJ_J'] = j
 
+    # 计算维加斯通道指标
+    n = 2  # 维加斯通道的倍数
+    m = 20  # 维加斯通道的周期
+    std = df['收盘'].rolling(m).std(ddof=0)
+    midline = df['收盘'].rolling(m).mean()
+    df[f'维加斯上轨{n}'] = midline + n * std
+    df[f'维加斯中轨{n}'] = midline
+    df[f'维加斯下轨{n}'] = midline - n * std
+
     # 计算波动率指标ATR指标
     df['ATR'] = talib.ATR(df['最高'].values, df['最低'].values,
                           df['收盘'].values, timeperiod=14)
