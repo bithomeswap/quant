@@ -23,10 +23,9 @@ df_numerical = df[numerical_cols]
 db[f'{name}待训练'].drop()  # 清空集合中的所有文档
 db[f'{name}待训练'].insert_many(df_numerical.to_dict('records'))
 # # 计算相关系数,第一个参数是相关性分析的方法（这个是非线性和线性一起算）,第二个参数是只计算数字列
-# corr_df = df_normalized.corr(method='spearman', numeric_only=True)
-# 计算相关系数,第一个参数是相关性分析的方法（这个是只计算线性相关一起算）,第二个参数是只计算数字列
-corr_df = df_numerical.corr(method='pearson')
-
+corr_df = df_numerical.corr(method='spearman', numeric_only=True)
+# # 计算相关系数,第一个参数是相关性分析的方法（这个是只计算线性相关一起算）,第二个参数是只计算数字列
+# corr_df = df_numerical.corr(method='pearson')
 # 将相关系数数据保存到名为'相关系数'的数据集合中
 corr_dict = corr_df.round(decimals=6).to_dict('index')
 db[f'{name}相关系数'].drop()  # 清空集合中的所有文档

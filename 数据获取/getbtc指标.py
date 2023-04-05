@@ -70,6 +70,7 @@ midline = df['收盘'].rolling(m).mean()
 df[f'维加斯上轨{n}'] = (midline + n * std)/df['收盘']
 df[f'维加斯中轨{n}'] = (midline)/df['收盘']
 df[f'维加斯下轨{n}'] = (midline - n * std)/df['收盘']
+
 # 计算波动率指标ATR指标
 df['ATR'] = talib.ATR(df['最高'].values, df['最低'].values,
                       df['收盘'].values, timeperiod=14)
