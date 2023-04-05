@@ -34,7 +34,8 @@ for code in stock_info_df['代码']:
 
     # 将动态市盈率、市净率、流通市值、总市值、成交额等信息加入到数据中
     k_data['名称'] = stock_info_df.loc[stock_info_df['代码'] == code, '名称'].values[0]
-    k_data['流通市值'] = stock_info_df.loc[stock_info_df['代码'] == code, '流通市值'].values[0]
+    k_data['流通市值'] = stock_info_df.loc[stock_info_df['代码']
+                                       == code, '流通市值'].values[0]
     k_data['总市值'] = stock_info_df.loc[stock_info_df['代码'] == code, '总市值'].values[0]
     k_data['成交额'] = stock_info_df.loc[stock_info_df['代码'] == code, '成交额'].values[0]
     # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
