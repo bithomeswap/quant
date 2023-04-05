@@ -7,7 +7,7 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'EMA2成交量比值'
+mubiao = 'KDJ_D'
 print('已经获取数据')
 # # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
 # gongzhen1 = 'MACDsignal'
