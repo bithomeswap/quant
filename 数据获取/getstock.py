@@ -7,7 +7,7 @@
 import akshare as ak
 import pandas as pd
 import datetime
-from pymongo import MongoClient, ASCENDING
+from pymongo import MongoClient
 import time
 
 # 获取当前日期
@@ -21,11 +21,6 @@ db = client['wth000']
 # 输出的表为截止日期
 name = 'STOCK'
 collection = db[f"{name}"]
-
-print(f'开始日期{start_date}')
-# 以日期为索引
-# collection.create_index([('日期', ASCENDING)])
-
 collection.drop()  # 清空集合中的所有文档
 
 # 从akshare获取A股主板股票的代码和名称

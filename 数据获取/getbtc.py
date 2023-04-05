@@ -6,12 +6,7 @@
 # pip install python-binance
 import time
 from binance.client import Client
-from pymongo import MongoClient, ASCENDING
-
-# 执行一次即可，宝塔可以设置定时执行
-
-# 以日期为索引
-# collection.create_index([('日期', ASCENDING)])
+from pymongo import MongoClient
 
 # 币安的api配置
 api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
@@ -21,7 +16,7 @@ api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-name='BTC'
+name = 'BTC'
 collection = db[f"{name}"]
 
 

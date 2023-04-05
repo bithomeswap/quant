@@ -6,10 +6,7 @@
 # pip install python-binance
 import time
 from binance.client import Client
-from pymongo import MongoClient, ASCENDING
-
-print('任务已经开始')
-
+from pymongo import MongoClient
 
 # 币安的api配置
 api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
