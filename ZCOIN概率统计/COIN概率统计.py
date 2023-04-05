@@ -5,21 +5,21 @@ import numpy as np
 # 使用等距离的方式进行数据划分。可以使用NumPy中的linspace函数，将数据集的最大值和最小值之间的区间划分为n个部分。
 # 具体实现代码如下：
 # 从本地CSV文件读取数据集合
-name = 'STOCK'
+name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'MACDhist'
+mubiao = 'EMA2成交量比值'
 print('已经获取数据')
-# 对MACDsignal在-0.7至-0.03之间的数据进行预处理
-gongzhen1 = 'MACDsignal'
-df = df[(df[f'{gongzhen1}'] >= -0.7) & (df[f'{gongzhen1}'] <= -0.03)]
+# # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
+# gongzhen1 = 'MACDsignal'
+# df = df[(df[f'{gongzhen1}'] >= -0.7) & (df[f'{gongzhen1}'] <= -0.03)]
 
-# 对振幅在1.9以下的数据进行预处理
-gongzhen2 = '振幅'
-df = df[(df[f'{gongzhen2}'] <= 1.9)]
+# # 对振幅在1.9以下的数据进行预处理
+# gongzhen2 = '振幅'
+# df = df[(df[f'{gongzhen2}'] <= 1.9)]
 
 # # 对换手率在0.65以下的数据进行预处理
-gongzhen3 = '换手率'
-df = df[(df[f'{gongzhen3}'] <= 0.65)]
+# gongzhen3 = '换手率'
+# df = df[(df[f'{gongzhen3}'] <= 0.65)]
 
 # 对KDJ_D在<7的数据进行预处理
 gongzhen4 = 'KDJ_D'
