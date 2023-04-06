@@ -8,7 +8,7 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'MACDhist'
+mubiao = 'EMA9收盘比值'
 print('已经获取数据')
 # # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
 # gongzhen = 'MACDsignal'
@@ -39,7 +39,7 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 # 计算指标
-for n in range(1, 8):
+for n in range(1, 10):
     rank_ranges = ranges
 
     for rank_range in rank_ranges:
@@ -70,7 +70,7 @@ for n in range(1, 8):
                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))
 
-result_df=result_df.dropna()# 删除含有空值的行
+result_df = result_df.dropna()  # 删除含有空值的行
 
 result_df.round(decimals=6).to_csv(
     f'{name}标的{mubiao}涨幅分布.csv', index=False

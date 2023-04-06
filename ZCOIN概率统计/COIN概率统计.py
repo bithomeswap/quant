@@ -8,7 +8,7 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'EMA2开盘比值'
+mubiao = 'EMA9收盘比值'
 print('已经获取数据')
 # # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
 # gongzhen = 'MACDsignal'
@@ -39,7 +39,7 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 # 计算指标
-for n in range(1, 8):
+for n in range(1, 10):
     rank_ranges = ranges
 
     for rank_range in rank_ranges:
