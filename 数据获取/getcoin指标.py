@@ -61,16 +61,15 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['KDJ_J'] = j
 
     # 计算维加斯通道指标
-    for m in range(5, 20):
-        for n in range(2,10):
-            # n = 2  # 维加斯通道的基准倍数
+    for m in range(2, 10):
+        for n in range(1, 8):
             # m = 20  # 维加斯通道的基准周期
-            std = df['收盘'].rolling(m).std(ddof=0)
-            midline = df['收盘'].rolling(m).mean()
+            std = df['收盘'].rolling(m*m).std(ddof=0)
+            midline = df['收盘'].rolling(m*m).mean()
             # 原指标没有除以收盘价的过程，这里处于收盘价是为了让指标标准化
-            df[f'维加斯上轨{n}倍{m}周期'] = (midline + n * std)/df['收盘']
-            df[f'维加斯中轨{n}倍{m}周期'] = (midline)/df['收盘']
-            df[f'维加斯下轨{n}倍{m}周期'] = (midline - n * std)/df['收盘']
+            df[f'维加斯上轨{n*n}倍{m*m}周期'] = (midline + n*n * std)/df['收盘']
+            df[f'维加斯中轨{n*n}倍{m*m}周期'] = (midline)/df['收盘']
+            df[f'维加斯下轨{n*n}倍{m*m}周期'] = (midline - n*n * std)/df['收盘']
 
     # 计算波动率指标ATR指标
     df['ATR'] = talib.ATR(df['最高'].values, df['最低'].values,
@@ -86,9 +85,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['slowk'] = slowk
     df['slowd'] = slowd
 
-    # 计算指标
+    # 计算过去n日ema比值指标
     for n in range(2, 20):
-        # 过去n日ema
         df[f'EMA{n*n}成交量比值'] = df['成交量'] / \
             talib.MA(df['成交量'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
