@@ -12,8 +12,6 @@ from datetime import datetime
 from pymongo import MongoClient
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# 执行一次即可，宝塔可以设置定时执行
-
 # 连接MongoDB数据库
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
@@ -62,17 +60,15 @@ df['KDJ_D'] = d
 df['KDJ_J'] = j
 
 # 计算维加斯通道指标
-for m in range(5, 20):
-    for n in range(2, 9):
-        # n = 2  # 维加斯通道的基准倍数
-        # m = 20  # 维加斯通道的基准周期
-        std = df['收盘'].rolling(m).std(ddof=0)
-        midline = df['收盘'].rolling(m).mean()
-        # 原指标没有除以收盘价的过程，这里处于收盘价是为了让指标标准化
-        df[f'维加斯上轨{n}倍{m}周期'] = (midline + n * std)/df['收盘']
-        df[f'维加斯中轨{n}倍{m}周期'] = (midline)/df['收盘']
-        df[f'维加斯下轨{n}倍{m}周期'] = (midline - n * std)/df['收盘']
-
+for m in range(2, 30):
+    n = 2  # 维加斯通道的基准倍数
+    # m = 20  # 维加斯通道的基准周期
+    std = df['收盘'].rolling(m).std(ddof=0)
+    midline = df['收盘'].rolling(m).mean()
+    # 原指标没有除以收盘价的过程，这里处于收盘价是为了让指标标准化
+    df[f'维加斯上轨{n}倍{m}周期'] = (midline + n * std)/df['收盘']
+    df[f'维加斯中轨{n}倍{m}周期'] = (midline)/df['收盘']
+    df[f'维加斯下轨{n}倍{m}周期'] = (midline - n * std)/df['收盘']
 
 # 计算波动率指标ATR指标
 df['ATR'] = talib.ATR(df['最高'].values, df['最低'].values,
@@ -89,18 +85,16 @@ df['slowk'] = slowk
 df['slowd'] = slowd
 
 # 计算指标
-for n in range(2, 9):
+for n in range(2, 20):
     # 过去n日ema
-    df[f'EMA{n}成交量比值'] = df['成交量'] / \
-        talib.MA(df['成交量'].values, timeperiod=n, matype=0)
-    df[f'EMA{n}收盘比值'] = df['收盘'] / \
-        talib.MA(df['收盘'].values, timeperiod=n, matype=0)
-    df[f'EMA{n}开盘比值'] = df['开盘'] / \
-        talib.MA(df['收盘'].values, timeperiod=n, matype=0)
-    df[f'EMA{n}最高比值'] = df['最高'] / \
-        talib.MA(df['收盘'].values, timeperiod=n, matype=0)
-    df[f'EMA{n}最低比值'] = df['最低'] / \
-        talib.MA(df['最低'].values, timeperiod=n, matype=0)
+    df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
+        talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+    df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
+        talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+    df[f'EMA{n*n}最高比值'] = df['最高'] / \
+        talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+    df[f'EMA{n*n}最低比值'] = df['最低'] / \
+        talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 for n in range(1, 8):  # 计算未来n日涨跌幅

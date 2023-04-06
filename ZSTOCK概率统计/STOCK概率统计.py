@@ -73,5 +73,5 @@ for n in range(1, 8):
 result_df=result_df.dropna()# 删除含有空值的行
 
 result_df.round(decimals=6).to_csv(
-    f'{name}标的{mubiao}{n}日涨幅分布.csv', index=False
+    f'{name}标的{mubiao}涨幅分布.csv', index=False
 )

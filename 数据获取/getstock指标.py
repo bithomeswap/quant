@@ -62,7 +62,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     # 计算维加斯通道指标
     for m in range(5, 20):
-        for n in range(2, 9):
+        for n in range(2, 10):
             # n = 2  # 维加斯通道的基准倍数
             # m = 20  # 维加斯通道的基准周期
             std = df['收盘'].rolling(m).std(ddof=0)
@@ -87,18 +87,18 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['slowd'] = slowd
 
     # 计算指标
-    for n in range(2, 9):
+    for n in range(2, 20):
         # 过去n日ema
-        df[f'EMA{n}成交量比值'] = df['成交量'] / \
-            talib.MA(df['成交量'].values, timeperiod=n, matype=0)
-        df[f'EMA{n}收盘比值'] = df['收盘'] / \
-            talib.MA(df['收盘'].values, timeperiod=n, matype=0)
-        df[f'EMA{n}开盘比值'] = df['开盘'] / \
-            talib.MA(df['收盘'].values, timeperiod=n, matype=0)
-        df[f'EMA{n}最高比值'] = df['最高'] / \
-            talib.MA(df['收盘'].values, timeperiod=n, matype=0)
-        df[f'EMA{n}最低比值'] = df['最低'] / \
-            talib.MA(df['最低'].values, timeperiod=n, matype=0)
+        df[f'EMA{n*n}成交量比值'] = df['成交量'] / \
+            talib.MA(df['成交量'].values, timeperiod=n*n, matype=0)
+        df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
+            talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+        df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
+            talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+        df[f'EMA{n*n}最高比值'] = df['最高'] / \
+            talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+        df[f'EMA{n*n}最低比值'] = df['最低'] / \
+            talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 8):  # 计算未来n日涨跌幅
