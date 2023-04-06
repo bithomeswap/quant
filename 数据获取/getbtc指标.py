@@ -23,7 +23,6 @@ df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-
 # 定义涨跌幅
 df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 # 定义振幅
@@ -31,12 +30,6 @@ df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
 # 计算开盘后标准时间间隔
 df['标准时间间隔'] = pd.to_datetime(df['日期']) - pd.to_datetime(df.iloc[0]['日期'])
 df['标准时间间隔'] = df['标准时间间隔'].dt.total_seconds().astype(int)
-
-if len(df) >= 41:
-    df['40日交易量排名'] = df.loc[:, '成交量'].rolling(window=41, min_periods=1).apply(
-        lambda x: pd.Series(x).rank(ascending=False).iloc[-1] if len(x) >= 41 else np.nan)
-else:
-    df['40日交易量排名'] = np.nan
 
 # 是否涨跌停
 df.loc[df['涨跌幅'] > 9.9, '是否涨跌停'] = 1
@@ -59,26 +52,6 @@ df['KDJ_K'] = k
 df['KDJ_D'] = d
 df['KDJ_J'] = j
 
-
-# 计算维加斯通道指标
-for m in range(2, 10):
-    for n in range(1, 8):
-        # m = 20  # 维加斯通道的基准周期
-        std = df['收盘'].rolling(m*m).std(ddof=0)
-        midline = df['收盘'].rolling(m*m).mean()
-        # 原指标没有除以收盘价的过程，这里处于收盘价是为了让指标标准化
-        df[f'维加斯上轨{n*n}倍{m*m}周期'] = (midline + n*n * std)/df['收盘']
-        df[f'维加斯中轨{n*n}倍{m*m}周期'] = (midline)/df['收盘']
-        df[f'维加斯下轨{n*n}倍{m*m}周期'] = (midline - n*n * std)/df['收盘']
-
-# 计算波动率指标ATR指标
-df['ATR'] = talib.ATR(df['最高'].values, df['最低'].values,
-                      df['收盘'].values, timeperiod=14)
-
-# 计算能量指标威廉指标
-df['wr'] = talib.WILLR(df['最高'].values, df['最低'].values,
-                       df['收盘'].values, timeperiod=14)
-
 # 计算能量指标随机震荡器
 slowk, slowd = talib.STOCH(df['最高'].values, df['最低'].values, df['收盘'].values,
                            fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
@@ -86,7 +59,7 @@ df['slowk'] = slowk
 df['slowd'] = slowd
 
 # 计算过去n日ema比值指标
-for n in range(2, 20):
+for n in range(2, 10):
     df[f'EMA{n*n}成交量比值'] = df['成交量'] / \
         talib.MA(df['成交量'].values, timeperiod=n*n, matype=0)
     df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
@@ -98,9 +71,24 @@ for n in range(2, 20):
     df[f'EMA{n*n}最低比值'] = df['最低'] / \
         talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
+    std = df['收盘'].rolling(n*n).std(ddof=0)
+    midline = df['收盘'].rolling(n*n).mean()
+    df[f'维加斯中轨{n*n}周期'] = (midline)/df['收盘']
+    # 原指标没有除以收盘价的过程，这里处于收盘价是为了让指标标准化
+    df[f'维加斯上轨1倍{n*n}周期'] = (midline + 1 * std)/df['收盘']
+    df[f'维加斯下轨1倍{n*n}周期'] = (midline - 1 * std)/df['收盘']
+
+    # 计算波动率指标ATR指标
+    df[f'ATR{n*n}'] = talib.ATR(df['最高'].values, df['最低'].values,
+                                df['收盘'].values, timeperiod=n*n)
+    # 计算能量指标威廉指标
+    df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
+                                 df['收盘'].values, timeperiod=n*n)
+
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-for n in range(1, 8):  # 计算未来n日涨跌幅
+for n in range(1, 10):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
+
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

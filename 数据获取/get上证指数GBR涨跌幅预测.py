@@ -30,21 +30,23 @@ print('数据获取成功')
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
-tezheng = [
-    # 正相关
-    "开盘", "最高", "最低", "收盘", "标准时间间隔",
-    "涨跌幅", "40日交易量排名", "是否涨跌停",
-    "MACD", "MACDsignal", "MACDhist", "KDJ_K", "KDJ_D", "KDJ_J", "ATR", "wr", "slowk", "slowd",
-    # "EMA2成交量比值", "EMA2收盘比值", "EMA2开盘比值", "EMA2最高比值", "EMA2最低比值", "EMA3成交量比值", "EMA3收盘比值", "EMA3开盘比值", "EMA3最高比值", "EMA3最低比值",
-    # "EMA4成交量比值", "EMA4收盘比值", "EMA4开盘比值", "EMA4最高比值", "EMA4最低比值", "EMA5成交量比值", "EMA5收盘比值", "EMA5开盘比值", "EMA5最高比值", "EMA5最低比值",
-    # "EMA6成交量比值", "EMA6收盘比值", "EMA6开盘比值", "EMA6最高比值", "EMA6最低比值", "EMA7成交量比值", "EMA7收盘比值", "EMA7开盘比值", "EMA7最高比值", "EMA7最低比值",
-    # "EMA8成交量比值", "EMA8收盘比值", "EMA8开盘比值", "EMA8最高比值", "EMA8最低比值",
-    #  "成交量", "成交额", "成交笔数", "主动买入成交量", "主动买入成交额", "标准时间间隔",
-    # 负相关
-    "timestamp"
-]
-x = df[tezheng]
 
+# 计算过去n日ema比值指标
+
+tezheng = [
+    "timestamp",
+    "开盘", "最高", "最低", "收盘", "标准时间间隔",
+    "涨跌幅", "是否涨跌停",
+    "MACD", "MACDsignal", "MACDhist", "KDJ_K", "KDJ_D", "KDJ_J", "slowk", "slowd"
+]
+
+for n in range(2, 10):
+    tezheng += [
+        f'wr{n*n}', f'ATR{n*n}', f'维加斯中轨{n*n}周期', f'维加斯下轨1倍{n*n}周期', f'维加斯上轨1倍{n*n}周期',
+        f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值', f'EMA{n*n}成交量比值',
+    ]
+x = df[tezheng]
+print(x)
 # 预测七日后涨跌幅
 n = 7
 y = df[f'{n}日后总涨跌幅（未来函数）']
