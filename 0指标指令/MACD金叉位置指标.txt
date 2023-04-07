@@ -5,7 +5,13 @@
 根据参考资料,在# 计算MACD状态
 位置添加计算MACD状态的指标
 输出:当前MACD状态的指标
-例如:当前处于低位金叉状态时df['MACD状态']=-1
+例如:
+当处于低位金叉状态时赋值为-1
+当处于低位死叉状态时赋值为-2
+当处于高位金叉状态时赋值为1
+当处于高位死叉状态时赋值为2
+其他时候赋值为0
+
 
 
 参考资料：
@@ -37,22 +43,7 @@ def get_technical_indicators(df):
     df['MACDhist'] = macdhist
 
     # 计算MACD状态
-    # 低位金叉：MACD柱首次由负转正时，且DEA也在DIF下方死叉之后向上突破时。
-    # 低位死叉：MACD柱从正转负时，且DEA也在DIF上方金叉之后向下突破时。
-    # 高位金叉：MACD柱从正转负时，且DEA也在DIF下方死叉之后向上突破时。
-    # 高位死叉：MACD柱首次由正转负时，且DEA也在DIF上方金叉之后向下突破时。
-    if macdhist[-1] > 0 and macdhist[-2] < 0 and macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
-        df['MACD状态']=-1
-        # 当前处于低位金叉状态
-    elif macdhist[-1] < 0 and macdhist[-2] > 0 and macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
-        df['MACD状态']=-2
-        # 当前处于低位死叉状态
-    elif macdhist[-1] > 0 and macdhist[-2] < 0 and macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
-        df['MACD状态']=1
-        # 当前处于高位金叉状态
-    elif macdhist[-1] < 0 and macdhist[-2] > 0 and macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
-        df['MACD状态']=-2
-        # 当前处于高位死叉状态
+
 
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
