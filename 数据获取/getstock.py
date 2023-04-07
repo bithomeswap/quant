@@ -10,6 +10,10 @@ import datetime
 from pymongo import MongoClient
 import time
 
+# 沪市主板股票代码：600、601、603、605开头
+# 深市主板股票代码：000、001开头
+# 这里只录入了主板的数据，其他板块直接过滤掉了
+
 # 获取当前日期
 current_date = datetime.datetime.now().strftime('%Y-%m-%d')
 # 读取180天内的数据，这里面还得排除掉节假日
@@ -27,12 +31,13 @@ collection.drop()  # 清空集合中的所有文档
 stock_info_df = ak.stock_zh_a_spot_em()
 # 迭代每只股票，获取每天的前复权日k数据
 for code in stock_info_df['代码']:
-    k_data = ak.stock_zh_a_hist(
-        symbol=code, start_date=start_date, adjust="qfq")
-    k_data['代码'] = code
-    k_data['成交量'] = k_data['成交量'].astype(float)
-    # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
-    collection.insert_many(k_data.to_dict('records'))
+    if code.startswith(('600', '601', '603', '605', '000', '001')):
+        k_data = ak.stock_zh_a_hist(
+            symbol=code, start_date=start_date, adjust="qfq")
+        k_data['代码'] = code
+        k_data['成交量'] = k_data['成交量'].astype(float)
+        # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
+        collection.insert_many(k_data.to_dict('records'))
 
 print('任务已经完成')
 # time.sleep(3600)

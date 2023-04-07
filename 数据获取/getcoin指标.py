@@ -29,9 +29,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
     # 定义振幅
     df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
-    # 计算开盘后标准时间间隔
-    df['标准时间间隔'] = pd.to_datetime(df['日期']) - pd.to_datetime(df.iloc[0]['日期'])
-    df['标准时间间隔'] = df['标准时间间隔'].dt.total_seconds().astype(int)
 
     # 是否涨跌停
     df.loc[df['涨跌幅'] > 9.9, '是否涨跌停'] = 1
@@ -61,7 +58,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['slowd'] = slowd
 
     # 计算过去n日ema比值指标
-    for n in range(2, 10):
+    for n in range(2, 12):
         df[f'EMA{n*n}成交量比值'] = df['成交量'] / \
             talib.MA(df['成交量'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}收盘比值'] = df['收盘'] / \

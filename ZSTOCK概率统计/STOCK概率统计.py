@@ -6,9 +6,9 @@ import numpy as np
 # 使用等距离的方式进行数据划分。可以使用NumPy中的linspace函数，将数据集的最大值和最小值之间的区间划分为n个部分。
 # 具体实现代码如下：
 # 从本地CSV文件读取数据集合
-name = 'STOCK'
+name = 'STOCk'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'EMA9收盘比值'
+mubiao = 'KDJ_D'
 print('已经获取数据')
 # # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
 # gongzhen = 'MACDsignal'
@@ -38,6 +38,7 @@ for i in range(len(indices) - 1):
     upper_bound = sorted_data[end_idx-1]  # 注意索引从0开始，因此要减1
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
+
 # 计算指标
 for n in range(1, 10):
     rank_ranges = ranges
@@ -45,8 +46,11 @@ for n in range(1, 10):
     for rank_range in rank_ranges:
         sub_df = df[df[f'{mubiao}'].between(
             rank_range[0], rank_range[1])]
-        # 过滤当日涨停无法交易的情况
+
+        # 过滤当日涨跌停的极端行情,必须至少有一个在,不然数据结构不对,无法输出数据
         sub_df = sub_df[sub_df[f'{n}日后总涨跌幅（未来函数）'] < 10]
+        sub_df = sub_df[sub_df[f'{n}日后总涨跌幅（未来函数）'] > -10]
+
         count = len(sub_df)
         future_returns = sub_df[[f'{n}日后总涨跌幅（未来函数）']].values
         up_rate = len(
@@ -62,10 +66,11 @@ for n in range(1, 10):
         }
         result_dicts.append(result_dict)
 
+
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
 
-for n in range(1, 8):
+for n in range(1, 10):
     cols_to_shift = [f'{n}日统计次数（已排除涨停）',
                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))
