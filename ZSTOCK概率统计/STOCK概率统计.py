@@ -47,9 +47,9 @@ for n in range(1, 10):
         sub_df = df[df[f'{mubiao}'].between(
             rank_range[0], rank_range[1])]
 
-        # 过滤到高开买不到的情况
-        sub_df = sub_df[sub_df[f'开盘幅'] < 5]
-        sub_df = sub_df[sub_df[f'开盘幅'] > -5]
+        # # 过滤到高开买不到的情况和低开有事故的情况
+        # sub_df = sub_df[sub_df[f'开盘幅'] < 5]
+        # sub_df = sub_df[sub_df[f'开盘幅'] > -5]
 
         count = len(sub_df)
         future_returns = sub_df[[f'{n}日后总涨跌幅（未来函数）']].values

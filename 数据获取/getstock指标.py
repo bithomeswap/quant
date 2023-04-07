@@ -7,9 +7,7 @@
 import pandas as pd
 import talib
 import os
-import numpy as np
 from pymongo import MongoClient
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 连接MongoDB数据库
 client = MongoClient(
@@ -25,8 +23,11 @@ print("数据读取成功")
 def get_technical_indicators(df):  # 定义计算技术指标的函数
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
-    # 定义涨跌幅
+    # 定义开盘幅
+    df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
+    # 定义收盘幅即涨跌幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
+
     # 定义振幅
     df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
 
@@ -42,22 +43,31 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['MACDsignal'] = macdsignal
     df['MACDhist'] = macdhist
 
-    # 低位金叉：MACD柱首次由负转正时，且DEA也在DIF下方死叉之后向上突破时。
-    # 低位死叉：MACD柱从正转负时，且DEA也在DIF上方金叉之后向下突破时。
-    # 高位金叉：MACD柱从正转负时，且DEA也在DIF下方死叉之后向上突破时。
-    # 高位死叉：MACD柱首次由正转负时，且DEA也在DIF上方金叉之后向下突破时。
-    if macdhist.shift(1) > 0 and macdhist.shift(2) < 0 and macd.shift(1) > macdsignal.shift(1) and macd.shift(2) < macdsignal.shift(2):
-        df['MACD状态'] = -1
-        # 当前处于低位金叉状态
-    elif macdhist.shift(1) < 0 and macdhist.shift(2) > 0 and macd.shift(1) < macdsignal.shift(1) and macd.shift(2) > macdsignal.shift(2):
-        df['MACD状态'] = -2
-        # 当前处于低位死叉状态
-    elif macdhist.shift(1) > 0 and macdhist.shift(2) < 0 and macd.shift(1) < macdsignal.shift(1) and macd.shift(2) < macdsignal.shift(2):
-        df['MACD状态'] = 1
-        # 当前处于高位金叉状态
-    elif macdhist.shift(1) < 0 and macdhist.shift(2) > 0 and macd.shift(1) > macdsignal.shift(1) and macd.shift(2) < macdsignal.shift(2):
-        df['MACD状态'] = -2
-        # 当前处于高位死叉状态
+    # 将MACD指标和MACD信号线转换为Pandas中的Series对象
+    macd = pd.Series(macd, index=df.index)
+    macdsignal = pd.Series(macdsignal, index=df.index)
+    macdhist = pd.Series(macdhist, index=df.index)
+
+    # 判断金叉和死叉的条件
+    cross_up = (macd > macdsignal) & (
+        macd.shift(1) < macdsignal.shift(1))  # 金叉
+    cross_down = (macd < macdsignal) & (
+        macd.shift(1) > macdsignal.shift(1))  # 死叉
+
+    # 判断低位金叉和高位金叉的条件
+    low_cross_up = cross_up & (macd < 0)  # 低位金叉，MACD指标在零轴以下
+    high_cross_up = cross_up & (macd >= 0)  # 高位金叉，MACD指标在零轴以上
+
+    # 判断低位死叉和高位死叉的条件
+    low_cross_down = cross_down & (macd > 0)  # 低位死叉，MACD指标在零轴以上
+    high_cross_down = cross_down & (macd <= 0)  # 高位死叉，MACD指标在零轴以下
+
+    # 将结果保存在一列中
+    df['MACD交叉状态'] = 0  # 先初始化为0，表示其他情况
+    df.loc[low_cross_up, 'MACD交叉状态'] = -1
+    df.loc[low_cross_down, 'MACD交叉状态'] = -2
+    df.loc[high_cross_up, 'MACD交叉状态'] = 1
+    df.loc[high_cross_down, 'MACD交叉状态'] = 2
 
     # 计算行情过滤指标KDJ指标
     high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
@@ -95,7 +105,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算波动率指标ATR指标
         df[f'ATR{n*n}'] = talib.ATR(df['最高'].values, df['最低'].values,
                                     df['收盘'].values, timeperiod=n*n)
-
         # 计算能量指标威廉指标
         df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
                                      df['收盘'].values, timeperiod=n*n)
