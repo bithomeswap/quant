@@ -5,7 +5,7 @@ import numpy as np
 
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'KDJ_D'
+mubiao = 'MACD交叉状态'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 # 对指定列排序
@@ -30,6 +30,7 @@ for n in range(1, 10):
                            (df[f'{mubiao}'] <= rank_range[1])]
 
         sub_df = sub_df[sub_df['开盘幅'] <= 8].copy()
+        sub_df = sub_df[sub_df['开盘幅'] >= -8].copy()
 
         count = len(sub_df)
         future_returns = np.array(sub_df[f'{n}日后总涨跌幅（未来函数）']) / 100
@@ -53,7 +54,6 @@ for n in range(1, 10):
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))
 
 result_df = result_df.dropna()  # 删除含有空值的行
-
 result_df.round(decimals=6).to_csv(
     f'{name}标的{mubiao}涨幅分布.csv', index=False
 )

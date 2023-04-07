@@ -42,8 +42,9 @@ tezheng = [
 
 for n in range(2, 10):
     tezheng += [
-        f'wr{n*n}', f'ATR{n*n}', f'维加斯中轨{n*n}周期', f'维加斯下轨1倍{n*n}周期', f'维加斯上轨1倍{n*n}周期',
+        f'wr{n*n}', f'ATR{n*n}',
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值', f'EMA{n*n}成交量比值',
+        f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值', f'SMA{n*n}成交量比值',
     ]
 x = df[tezheng]
 print(x)
