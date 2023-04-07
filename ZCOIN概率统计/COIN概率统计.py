@@ -53,9 +53,11 @@ for n in range(1, 10):
 
         count = len(sub_df)
         future_returns = sub_df[[f'{n}日后总涨跌幅（未来函数）']].values
+        avg_return = np.mean(sub_df[[f'{n}日后总涨跌幅（未来函数）']].values)
+
         up_rate = len(
             future_returns[future_returns >= 0])/count if count != 0 else 0
-        avg_return = np.mean(sub_df[[f'{n}日后总涨跌幅（未来函数）']].values)
+
         is_limit_up_count = len(sub_df[sub_df['是否涨跌停'] == 1])
         result_dict = {
             f'{mubiao}': f'from{rank_range[0]}to{rank_range[1]}',
