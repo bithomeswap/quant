@@ -78,6 +78,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算波动率指标ATR指标
         df[f'ATR{n*n}'] = talib.ATR(df['最高'].values, df['最低'].values,
                                     df['收盘'].values, timeperiod=n*n)
+        
         # 计算能量指标威廉指标
         df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
                                      df['收盘'].values, timeperiod=n*n)

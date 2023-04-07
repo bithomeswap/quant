@@ -2,7 +2,7 @@
 你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，通常采用最先进和最稳定的实现方式和API，同时你的代码当中很少有bug存在
 此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
 工作任务：
-1.使用参考资料中的方法获取币安交易所所有USDT计价的现货交易对的1分钟k线数据，并且将插入到名为‘COIN’的数据集合当中（如果已经有相同时间戳和内容的数据则跳过）；
+1.使用参考资料中的方法通过websocket获取币安交易所BTCUSDT交易对的十档数据及对应的时间戳,并输出到名为'十档BTC'的数据集合当中（如果已经有相同时间戳和内容的数据则跳过）；
 
 一、api配置
 # 币安的api配置
@@ -13,7 +13,7 @@ api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-collection = db['COIN']
+collection = db['十档BTC']
 
 三、参考资料
 https://testnet.binance.vision/
