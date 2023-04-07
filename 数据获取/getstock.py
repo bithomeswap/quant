@@ -29,6 +29,8 @@ collection.drop()  # 清空集合中的所有文档
 
 # 从akshare获取A股主板股票的代码和名称
 stock_info_df = ak.stock_zh_a_spot_em()
+# 过滤掉ST股票
+stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
 # 迭代每只股票，获取每天的前复权日k数据
 for code in stock_info_df['代码']:
     if code.startswith(('600', '601', '603', '605', '000', '001')):
@@ -38,6 +40,7 @@ for code in stock_info_df['代码']:
         k_data['成交量'] = k_data['成交量'].astype(float)
         # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
         collection.insert_many(k_data.to_dict('records'))
+
 
 print('任务已经完成')
 # time.sleep(3600)
