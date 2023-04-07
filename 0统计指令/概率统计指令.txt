@@ -1,4 +1,24 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，通常采用最先进和最稳定的实现方式和API，同时你的代码当中很少有bug存在
+此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
 
+工作任务:
+1 从本地CSV文件读取数据集合
+name = 'COIN'
+df = pd.read_csv(f'{name}指标.csv')
+2 在# 将结果持久化
+位置之前,分别计算1天2天3天......9天的
+        result_dict = {
+            f'{mubiao}': f'from{rank_range[0]}to{rank_range[1]}',
+            f'{n}日统计次数（已排除涨停）': count,
+            f'未来{n}日上涨概率': up_rate,
+            f'未来{n}日上涨次数': len(future_returns[future_returns >= 0]),
+            f'未来{n}日平均涨跌幅': avg_return,
+        }
+并输出到一个csv文件中
+3 给我可执行代码
+
+区间划分代码如下:
 import time
 from pymongo import MongoClient
 import pandas as pd
@@ -39,32 +59,8 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 
-# 计算指标
-for n in range(1, 10):
-    rank_ranges = ranges
 
-    for rank_range in rank_ranges:
-        sub_df = df[df[f'{mubiao}'].between(
-            rank_range[0], rank_range[1])]
 
-        # 过滤当日涨跌停的极端行情,必须至少有一个在,不然数据结构不对,无法输出数据
-        sub_df = sub_df[sub_df[f'{n}日后总涨跌幅（未来函数）'] < 10]
-        sub_df = sub_df[sub_df[f'{n}日后总涨跌幅（未来函数）'] > -10]
-
-        count = len(sub_df)
-        future_returns = sub_df[[f'{n}日后总涨跌幅（未来函数）']].values
-        up_rate = len(
-            future_returns[future_returns >= 0])/count if count != 0 else 0
-        avg_return = np.mean(sub_df[[f'{n}日后总涨跌幅（未来函数）']].values)
-        is_limit_up_count = len(sub_df[sub_df['是否涨跌停'] == 1])
-        result_dict = {
-            f'{mubiao}': f'from{rank_range[0]}to{rank_range[1]}',
-            f'{n}日统计次数（已排除涨停）': count,
-            f'未来{n}日上涨概率': up_rate,
-            f'未来{n}日上涨次数': len(future_returns[future_returns >= 0]),
-            f'未来{n}日平均涨跌幅': avg_return,
-        }
-        result_dicts.append(result_dict)
 
 
 # 将结果持久化
