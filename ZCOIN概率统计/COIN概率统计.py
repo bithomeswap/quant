@@ -8,7 +8,7 @@ import numpy as np
 # 从本地CSV文件读取数据集合
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'MACD交叉状态'
+mubiao = 'KDJ_D'
 print('已经获取数据')
 # # 对MACDsignal在-0.7至-0.03之间的数据进行预处理
 # gongzhen = 'MACDsignal'
@@ -42,12 +42,14 @@ result_dicts = []
 # 计算指标
 for n in range(1, 10):
     rank_ranges = ranges
-    result_dicts = []
+
     for rank_range in rank_ranges:
         sub_df = df[df[f'{mubiao}'].between(
             rank_range[0], rank_range[1])]
-        # 过滤当日涨停无法交易的情况
-        sub_df = sub_df[sub_df[f'开盘幅'] < 8]
+
+        # # 过滤到高开买不到的情况和低开有事故的情况
+        sub_df = sub_df[sub_df[f'开盘幅'] < 5]
+        # sub_df = sub_df[sub_df[f'开盘幅'] > -5]
 
         count = len(sub_df)
         future_returns = sub_df[[f'{n}日后总涨跌幅（未来函数）']].values
@@ -68,13 +70,12 @@ for n in range(1, 10):
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
 
-# for n in range(1, 10):
-#     cols_to_shift = [f'{n}日统计次数（已排除涨停）',
-#                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
-#     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))
+for n in range(1, 10):
+    cols_to_shift = [f'{n}日统计次数（已排除涨停）',
+                     f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
+    result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))
 
-# # 删除含有空值的行# result_df = result_df.dropna()  # 删除含有空值的行,有时候分不了足够多的行,这里一弄就没了
-# result_df = result_df.dropna()
+# result_df = result_df.dropna()  # 删除含有空值的行
 
 result_df.round(decimals=6).to_csv(
     f'{name}标的{mubiao}涨幅分布.csv', index=False
