@@ -42,6 +42,23 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['MACDsignal'] = macdsignal
     df['MACDhist'] = macdhist
 
+    # 低位金叉：MACD柱首次由负转正时，且DEA也在DIF下方死叉之后向上突破时。
+    # 低位死叉：MACD柱从正转负时，且DEA也在DIF上方金叉之后向下突破时。
+    # 高位金叉：MACD柱从正转负时，且DEA也在DIF下方死叉之后向上突破时。
+    # 高位死叉：MACD柱首次由正转负时，且DEA也在DIF上方金叉之后向下突破时。
+    if macdhist[-1] > 0 and macdhist[-2] < 0 and macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
+        df['MACD状态'] = -1
+        # 当前处于低位金叉状态
+    elif macdhist[-1] < 0 and macdhist[-2] > 0 and macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
+        df['MACD状态'] = -2
+        # 当前处于低位死叉状态
+    elif macdhist[-1] > 0 and macdhist[-2] < 0 and macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
+        df['MACD状态'] = 1
+        # 当前处于高位金叉状态
+    elif macdhist[-1] < 0 and macdhist[-2] > 0 and macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
+        df['MACD状态'] = -2
+        # 当前处于高位死叉状态
+
     # 计算行情过滤指标KDJ指标
     high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
     k, d = talib.STOCH(high, low, close, fastk_period=9, slowk_period=3,
@@ -65,20 +82,20 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
         df[f'SMA{n*n}成交量比值'] = df['成交量'] / \
-                    talib.SMA(df['成交量'].values, timeperiod=n*n)
+            talib.SMA(df['成交量'].values, timeperiod=n*n)
         df[f'SMA{n*n}收盘比值'] = df['收盘'] / \
-                    talib.SMA(df['收盘'].values, timeperiod=n*n)
+            talib.SMA(df['收盘'].values, timeperiod=n*n)
         df[f'SMA{n*n}开盘比值'] = df['开盘'] / \
-                    talib.SMA(df['开盘'].values, timeperiod=n*n)
+            talib.SMA(df['开盘'].values, timeperiod=n*n)
         df[f'SMA{n*n}最高比值'] = df['最高'] / \
-                    talib.SMA(df['最高'].values, timeperiod=n*n)
+            talib.SMA(df['最高'].values, timeperiod=n*n)
         df[f'SMA{n*n}最低比值'] = df['最低'] / \
-                    talib.SMA(df['最低'].values, timeperiod=n*n)
+            talib.SMA(df['最低'].values, timeperiod=n*n)
 
         # 计算波动率指标ATR指标
         df[f'ATR{n*n}'] = talib.ATR(df['最高'].values, df['最低'].values,
                                     df['收盘'].values, timeperiod=n*n)
-        
+
         # 计算能量指标威廉指标
         df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
                                      df['收盘'].values, timeperiod=n*n)
