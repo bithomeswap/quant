@@ -7,7 +7,7 @@ name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
 mubiao = 'KDJ_D'
 print('任务已经开始')
-
+df=df.dropna()  # 删除含有空值的行
 # 对指定列排序
 sorted_data = np.sort(df[f'{mubiao}'])
 # 将数据划分成n个等距离的区间
@@ -28,13 +28,15 @@ result_dicts = []
 for n in range(1, 10):
     rank_ranges = ranges
     for rank_range in ranges:
-        sub_df = df[(df[f'{mubiao}'] >= rank_range[0]) &                (df[f'{mubiao}'] <= rank_range[1])]
+        sub_df = df[(df[f'{mubiao}'] >= rank_range[0]) &
+                    (df[f'{mubiao}'] <= rank_range[1])]
 
-        sub_df = sub_df[sub_df['涨跌幅'].apply(lambda x: u'涨停' not in x)]  # 去除“涨停”的记录
+        sub_df = sub_df[sub_df['开盘幅'] <= 8]  # 去除开盘幅大于8的记录
 
         count = len(sub_df)
-        future_returns = np.array(sub_df[f'未来{n}日涨跌幅']) / 100
-        up_rate = len(future_returns[future_returns >= 0]) / len(future_returns)
+        future_returns = np.array(sub_df[f'{n}日后总涨跌幅(未来函数)']) / 100
+        up_rate = len(
+            future_returns[future_returns >= 0]) / len(future_returns)
         avg_return = np.mean(future_returns)
     result_dict = {
         f'{mubiao}': f'from{rank_range[0]}to{rank_range[1]}',
