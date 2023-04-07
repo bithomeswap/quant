@@ -44,7 +44,7 @@ for n in range(1, 10):
             f'未来{n}日上涨次数': len(future_returns[future_returns >= 0]),
             f'未来{n}日平均涨跌幅': avg_return,
         }
-result_dicts.append(result_dict)
+        result_dicts.append(result_dict)
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
 for n in range(1, 10):
