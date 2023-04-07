@@ -46,16 +46,16 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 低位死叉：MACD柱从正转负时，且DEA也在DIF上方金叉之后向下突破时。
     # 高位金叉：MACD柱从正转负时，且DEA也在DIF下方死叉之后向上突破时。
     # 高位死叉：MACD柱首次由正转负时，且DEA也在DIF上方金叉之后向下突破时。
-    if macdhist[-1] > 0 and macdhist[-2] < 0 and macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
+    if macdhist.shift(1) > 0 and macdhist.shift(2) < 0 and macd.shift(1) > macdsignal.shift(1) and macd.shift(2) < macdsignal.shift(2):
         df['MACD状态'] = -1
         # 当前处于低位金叉状态
-    elif macdhist[-1] < 0 and macdhist[-2] > 0 and macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
+    elif macdhist.shift(1) < 0 and macdhist.shift(2) > 0 and macd.shift(1) < macdsignal.shift(1) and macd.shift(2) > macdsignal.shift(2):
         df['MACD状态'] = -2
         # 当前处于低位死叉状态
-    elif macdhist[-1] > 0 and macdhist[-2] < 0 and macd[-1] < macdsignal[-1] and macd[-2] > macdsignal[-2]:
+    elif macdhist.shift(1) > 0 and macdhist.shift(2) < 0 and macd.shift(1) < macdsignal.shift(1) and macd.shift(2) < macdsignal.shift(2):
         df['MACD状态'] = 1
         # 当前处于高位金叉状态
-    elif macdhist[-1] < 0 and macdhist[-2] > 0 and macd[-1] > macdsignal[-1] and macd[-2] < macdsignal[-2]:
+    elif macdhist.shift(1) < 0 and macdhist.shift(2) > 0 and macd.shift(1) > macdsignal.shift(1) and macd.shift(2) < macdsignal.shift(2):
         df['MACD状态'] = -2
         # 当前处于高位死叉状态
 
