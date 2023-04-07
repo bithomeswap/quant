@@ -32,6 +32,9 @@ for n in range(1, 10):
         sub_df = sub_df[sub_df['开盘幅'] <= 8].copy()
         sub_df = sub_df[sub_df['开盘幅'] >= -8].copy()
 
+        sub_df.round(decimals=6).to_csv(
+            f'{name}标的{mubiao}在{rank_range}区间内样本分布.csv', index=False)
+
         count = len(sub_df)
         future_returns = np.array(sub_df[f'{n}日后总涨跌幅（未来函数）']) / 100
         # 括号注意大小写的问题，要不就会报错没这个参数
