@@ -25,6 +25,20 @@ https://github.com/binance/binance-connector-python
 https://github.com/binance/binance-futures-connector-python
 
 参考代码:
+# 本打新策略失效的部分原因是币安修改了websocket api的规则
+import logging
+import datetime
+import asyncio
+import json
+from decimal import *
+from binance.spot import Spot as SpotAPIClient
+from binance.lib.utils import config_logging
+from binance.websocket.spot.websocket_api import SpotWebsocketAPIClient
+from binance.websocket.spot.websocket_stream import SpotWebsocketStreamClient
+
+api_key = "8kjJqeJE6vtN8Jsdm3OsHKIip9iMuPtf10geZh0og2iHOJljftFBygxDyNPH0Zr0"
+api_secret = "k1V2YNF4uX3pcotmw5QPGav5u2wovu5Dweh3vlM1hO1bpmmme8qkYRmPNg9r6Hac"
+
 # 测试时间戳延迟默认为5000,避免无法交易
 recvWindows = 5000
 # 轮询的休息时间
@@ -33,7 +47,200 @@ sleeptime = 1
 symbol = "BUSDUSDT"
 jsymbol = "BUSD"
 # 目标下单量及价格(分20笔)，浮点数
+symbolquantity = 11
+symbolprice = 0.99
+# datetime.datetime.方法参数（时间精度）
+# 设置打新开始和结束时间，年月日时分秒。。。。。。
+# year,month=None,day=None,hour=0,minute=0,second=0,microsecond=0,tzinfo=None,*,fold=0
+bagin_date = datetime.datetime(2023, 3, 13, 17),
+end_date = datetime.datetime(2023, 3, 16, 19),
 
-# 币安的api配置
-api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
-api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
+
+global balance, jsymbolbalance
+# 余额默认为usdt
+balance = None
+# 投资标的余额,默认投资标的为jsymbol
+jsymbolbalance = None
+global bestbidPrice, bestbidQty, bestaskPrice, bestaskQty, ask1Price, ask1Qty, bid1Price, bid1Qty
+# 最优买单
+bestbidPrice = None
+bestbidQty = None
+# 最优卖单
+bestaskPrice = None
+bestaskQty = None
+# 卖一
+ask1Price = None
+ask1Qty = None
+# 买一
+bid1Price = None
+bid1Qty = None
+# 回调函数返回值赋值给以下全局变量
+global resbalance, resbest, resshishi
+resbalance = None
+resbest = None
+resshishi = None
+# 已下买单订单集
+global orders
+orders = []
+# 总成交量及总成交额
+global allbidval, allqty
+allbidval = 0
+allqty = 0
+
+
+config_logging(logging, logging.DEBUG)
+
+
+def on_close(_):
+    logging.info("Do custom stuff when connection is closed")
+
+
+def websocket_api_message_handler(_, data):
+    res = json.loads(data)
+    # logging.info("message from websocket API")
+    # 返回结果包含balances时对resbalance赋值
+    # {"id":"323d42b9-aa90-4cb1-9bf6-cde8fed90053","status":200,"result":{"makerCommission":10,"takerCommission":10,"buyerCommission":0,"sellerCommission":0,"commissionRates":{"maker":"0.00100000","taker":"0.00100000","buyer":"0.00000000","seller":"0.00000000"},"canTrade":true,"canWithdraw":true,"canDeposit":true,"brokered":false,"requireSelfTradePrevention":false,"updateTime":1678343451823,"accountType":"SPOT","balances":[{"asset":"BTC","free":"0.00000000","locked":"0.00000000"},{"asset":"LTC","free":"0.00000000","locked":"0.00000000"},{"asset":"ETH","free":"0.00000000","locked":"0.00000000"},{"asset":"NEO","free":"0.00000000","locked":"0.00000000"},{"asset":"BNB","free":"0.00000000","locked":"0.00000000"},{"asset":"QTUM","free":"0.00000000","locked":"0.00000000"},{"asset":"EOS","free":"0.00000000","locked":"0.00000000"},{"asset":"SNT","free":"0.00000000","locked":"0.00000000"},{"asset":"BNT","free":"0.00000000","locked":"0.00000000"},{"asset":"GAS","free":"0.00000000","locked":"0.00000000"},{"asset":"BCC","free":"0.00000000","locked":"0.00000000"},{"asset":"USDT","free":"1105.10108491","locked":"0.00000000"},{"asset":"HSR","free":"0.00000000","locked":"0.00000000"},
+    if res.__contains__("id") and res.__contains__("status") and res["result"].__contains__("balances"):
+        # and res["result"].__contains__("makerCommission") and res["result"].__contains__("takerCommission")
+        # and res["result"].__contains__("buyerCommission") and res["result"].__contains__("sellerCommission")
+        # and res["result"].__contains__("commissionRates") and res["result"].__contains__("canTrade ")
+        # and res["result"].__contains__("canWithdraw") and res["result"].__contains__("canDeposit")
+        global resbalance
+        resbalance = res
+    # 返回结果包含部分交易指令时判断为交易的响应
+    # #{"id":"ece8665e-1edd-46bd-92db-7b743a6db6bd","status":200,"result":{"symbol":"BUSDUSDT","orderId":913519402,"orderListId":-1,"clientOrderId":"6GgJH6Y2D4kRqki075OaWp","transactTime":1678443091212,"price":"1.10000000","origQty":"11.00000000","executedQty":"11.00000000","cummulativeQuoteQty":"11.00110000","status":"FILLED","timeInForce":"GTC","type":"LIMIT","side":"BUY","workingTime":1678443091212,"selfTradePreventionMode":"NONE"},"rateLimits":[{"rateLimitType":"ORDERS","interval":"SECOND","intervalNum":10,"limit":50,"count":1},{"rateLimitType":"ORDERS","interval":"DAY","intervalNum":1,"limit":160000,"count":1},{"rateLimitType":"REQUEST_WEIGHT","interval":"MINUTE","intervalNum":1,"limit":1200,"count":13}]}
+    elif res.__contains__("status") and res.__contains__("id") and res["result"].__contains__("side") and res["result"].__contains__("transactTime"):
+        # 响应的result的方向为买入时， 对orders赋值
+        if res["result"]["side"] == "BUY":
+            global orders
+            orders = orders+[res["result"]]
+            # 显示当前已下达的总买单
+            logging.info(orders)
+            # 2023-03-13 03:10:36.367 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"id": "80b47f23-089e-460c-aa3f-d87c30f1f5a6", "method": "order.place", "params": {"apiKey": "8kjJqeJE6vtN8Jsdm3OsHKIip9iMuPtf10geZh0og2iHOJljftFBygxDyNPH0Zr0", "newOrderRespType": "RESULT", "price": 1.0, "quantity": 11.0, "recvWindow": 500, "side": "BUY", "symbol": "BUSDUSDT", "timeInForce": "GTC", "timestamp": 1678677036367, "type": "LIMIT", "signature": "9a134070325116e80fc3648a861fc1791efdc20542198a54340fe1d98edd7596"}}
+            # 2023-03-13 03:10:36.555 UTC INFO root: {'id': '80b47f23-089e-460c-aa3f-d87c30f1f5a6', 'status': 200, 'result': {'symbol': 'BUSDUSDT', 'orderId': 917290083, 'orderListId': -1, 'clientOrderId': 'qBft1lFszMeZkZWWCVabEx', 'transactTime': 1678677036014, 'price': '1.00000000', 'origQty': '11.00000000', 'executedQty': '11.00000000', 'cummulativeQuoteQty': '10.94830000', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY', 'workingTime': 1678677036014, 'selfTradePreventionMode': 'NONE'}, 'rateLimits': [{'rateLimitType': 'ORDERS', 'interval': 'SECOND', 'intervalNum': 10, 'limit': 50, 'count': 2}, {'rateLimitType': 'ORDERS', 'interval': 'DAY', 'intervalNum': 1, 'limit': 160000, 'count': 64}, {'rateLimitType': 'REQUEST_WEIGHT', 'interval': 'MINUTE', 'intervalNum': 1, 'limit': 1200, 'count': 46}]}
+
+
+def websocket_stream_message_handler(_, data):
+    res = json.loads(data)
+    # logging.info("message from websocket stream")
+    global resbest, resshishi
+    if res.__contains__('u') and res.__contains__('b') and res.__contains__('B') and res.__contains__('a') and res.__contains__('A'):
+        resbest = res
+    elif res.__contains__('lastUpdateId') and res.__contains__('asks') and res.__contains__('bids'):
+        resshishi = res
+    # logging.info(data)
+
+
+# make a connection to the websocket api
+ws_api_client = SpotWebsocketAPIClient(
+    stream_url="wss://ws-api.binance.com/ws-api/v3",
+    api_key=api_key,
+    api_secret=api_secret,
+    on_message=websocket_api_message_handler,
+    on_close=on_close,
+)
+
+# make a connection to the websocket stream
+ws_stream_client = SpotWebsocketStreamClient(
+    stream_url="wss://stream.binance.com:9443",
+    on_message=websocket_stream_message_handler,
+)
+
+# spot api client to call all restful api endpoints
+spot_api_client = SpotAPIClient(api_key, base_url="https://api.binance.com")
+response = spot_api_client.new_listen_key()
+
+# You can subscribe to the user data stream from websocket stream, it will broadcast all the events
+# related to your account, including order updates, balance updates, etc.
+ws_stream_client.user_data(listen_key=response["listenKey"])
+
+async def getshishi():
+    # 实时盘口挂单信息
+    ws_stream_client.partial_book_depth(symbol)
+    global resshishi
+    # print('resshishi', resshishi)
+    if resshishi != None and resshishi.__contains__('asks') and resshishi.__contains__('bids') and resshishi.__contains__('lastUpdateId'):
+        # 获取实时卖一价格
+        ask1 = resshishi['asks']
+        # print("getask1", resshishi, type(resshishi))
+        global ask1Price, ask1Qty
+        ask1Price = float(ask1[0][0])
+        ask1Qty = float(ask1[0][1])
+        # 获取实时买一价格
+        bid1 = resshishi['bids']
+        # print("getbid1", resshishi, type(resshishi))
+        global bid1Price, bid1Qty
+        bid1Price = float(bid1[0][0])
+        bid1Qty = float(bid1[0][1])
+
+
+async def buytrade():
+    # 执行交易,指定x价格指定x金额的20笔订单（以买入BNB/BTC为例）
+    # 单次下单金额和价格向上取整、余额向下取整，以免在实际交易时，余额不足却执行成功，进而被交易所风控
+    global balance, bestbidPrice, bestbidQty
+    if balance:
+        if Decimal(balance) < Decimal(1):
+            print("余额不足，无法交易")
+        else:
+            if ask1Price and bestbidPrice and bestbidQty:
+                if Decimal(ask1Price) > Decimal(bestbidPrice):
+                    for i in range(4):
+                        ws_api_client.new_order(
+                            symbol,
+                            side="BUY",
+                            type="LIMIT",
+                            timeInForce="GTC",
+                            # 实际应为bestbidPrice,bestbidQty，
+                            # 以下数据为测试数据
+                            quantity=float(symbolquantity),
+                            price=float(symbolprice),
+                            # quantity=bestbidQty,
+                            # price=bestbidPrice,
+                            newOrderRespType="RESULT",
+                            recvWindow=recvWindows
+                        )
+            else:
+                print("卖一价高，无法交易")
+
+async def main_work():
+    for i in range(3):
+        global balance, bestbidPrice, bestbidQty, bestaskPrice, bestaskQty, ask1Price, ask1Qty, bid1Price, bid1Qty
+        await getbest()
+        print(bestbidPrice, bestbidQty, bestaskPrice, bestaskQty,
+              "bestbidPrice,bestbidQty,bestaskPrice, bestaskQty")
+        await getshishi()
+        print(bid1Price, bid1Qty, ask1Price, ask1Qty, "bid1Price,bid1Qty,ask1Price,ask1Qty", type(
+            bid1Price), type(bid1Qty), type(ask1Price), type(ask1Qty))
+        await getbalance()
+        # 2023-03-13 01:23:54.132 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"method": "SUBSCRIBE", "params": ["busdusdt@bookTicker"], "id": 1678670634132}
+        # 0.9939 728307.0 0.994 752472.0 bestbidPrice,bestbidQty,bestaskPrice, bestaskQty
+        # 2023-03-13 01:23:54.132 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"method": "SUBSCRIBE", "params": ["busdusdt@depth5@1000ms"], "id": 1678670634132}
+        # 0.9939 730177.0 0.994 753115.0 bid1Price,bid1Qty,ask1Price, ask1Qty <class 'float'> <class 'float'> <class 'float'> <class 'float'>
+        # 2023-03-13 01:23:54.133 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"id": "00c89734-9a04-444a-8560-35c11e05c982", "method": "account.status", "params": {"apiKey": "8kjJqeJE6vtN8Jsdm3OsHKIip9iMuPtf10geZh0og2iHOJljftFBygxDyNPH0Zr0", "recvWindow": 500, "timestamp": 1678670634133, "signature": "1176b69f0687b8386bca06c657df6372f207dda0157e9262f3348257af384ba3"}}
+        # usdtbalance= 44.09998491
+        # jsymbolbalance= 11.0
+        previous_date = datetime.datetime.now(),
+        if previous_date > bagin_date:
+            if previous_date < end_date:
+                await buytrade()
+                # 2023-03-10 10:11:32.113 UTC INFO root: {"id":"ece8665e-1edd-46bd-92db-7b743a6db6bd","status":200,"result":{"symbol":"BUSDUSDT","orderId":913519402,"orderListId":-1,"clientOrderId":"6GgJH6Y2D4kRqki075OaWp","transactTime":1678443091212,"price":"1.10000000","origQty":"11.00000000","executedQty":"11.00000000","cummulativeQuoteQty":"11.00110000","status":"FILLED","timeInForce":"GTC","type":"LIMIT","side":"BUY","workingTime":1678443091212,"selfTradePreventionMode":"NONE"},"rateLimits":[{"rateLimitType":"ORDERS","interval":"SECOND","intervalNum":10,"limit":50,"count":1},{"rateLimitType":"ORDERS","interval":"DAY","intervalNum":1,"limit":160000,"count":1},{"rateLimitType":"REQUEST_WEIGHT","interval":"MINUTE","intervalNum":1,"limit":1200,"count":13}]}
+                # 2023-03-10 10:11:41.793 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"method": "SUBSCRIBE", "params": ["busdusdt@bookTicker"], "id": 1678443101793}
+                # 2023-03-10 10:11:41.795 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"method": "SUBSCRIBE", "params": ["busdusdt@depth5@1000ms"], "id": 1678443101795}
+                # 2023-03-10 10:11:41.797 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"id": "10b22f9a-404f-4927-a0fc-de9763263955", "method": "account.status",
+                # "params": {"apiKey": "8kjJqeJE6vtN8Jsdm3OsHKIip9iMuPtf10geZh0og2iHOJljftFBygxDyNPH0Zr0", "recvWindow": 500, "timestamp": 1678443101797, "signature": "b1462803fe25fdbd718b404d89342bcfdecd2fdbd6724990d8e237158768f6a3"}}
+            else:
+                print('打新结束，不再买入')
+                await asyncio.sleep(sleeptime)
+            # 撤销全部未成交订单
+            ws_api_client.cancel_open_orders(symbol)
+
+            await asyncio.sleep(sleeptime)
+
+            await trademath()
+            await selltrade()
+        else:
+            print("打新尚未开始，不执行交易")
+
+main_loop = asyncio.get_event_loop()
+main_loop.run_until_complete(main_work())
+main_loop.close()
