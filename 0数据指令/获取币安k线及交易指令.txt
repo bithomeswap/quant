@@ -101,10 +101,7 @@ def websocket_api_message_handler(_, data):
     # 返回结果包含balances时对resbalance赋值
     # {"id":"323d42b9-aa90-4cb1-9bf6-cde8fed90053","status":200,"result":{"makerCommission":10,"takerCommission":10,"buyerCommission":0,"sellerCommission":0,"commissionRates":{"maker":"0.00100000","taker":"0.00100000","buyer":"0.00000000","seller":"0.00000000"},"canTrade":true,"canWithdraw":true,"canDeposit":true,"brokered":false,"requireSelfTradePrevention":false,"updateTime":1678343451823,"accountType":"SPOT","balances":[{"asset":"BTC","free":"0.00000000","locked":"0.00000000"},{"asset":"LTC","free":"0.00000000","locked":"0.00000000"},{"asset":"ETH","free":"0.00000000","locked":"0.00000000"},{"asset":"NEO","free":"0.00000000","locked":"0.00000000"},{"asset":"BNB","free":"0.00000000","locked":"0.00000000"},{"asset":"QTUM","free":"0.00000000","locked":"0.00000000"},{"asset":"EOS","free":"0.00000000","locked":"0.00000000"},{"asset":"SNT","free":"0.00000000","locked":"0.00000000"},{"asset":"BNT","free":"0.00000000","locked":"0.00000000"},{"asset":"GAS","free":"0.00000000","locked":"0.00000000"},{"asset":"BCC","free":"0.00000000","locked":"0.00000000"},{"asset":"USDT","free":"1105.10108491","locked":"0.00000000"},{"asset":"HSR","free":"0.00000000","locked":"0.00000000"},
     if res.__contains__("id") and res.__contains__("status") and res["result"].__contains__("balances"):
-        # and res["result"].__contains__("makerCommission") and res["result"].__contains__("takerCommission")
-        # and res["result"].__contains__("buyerCommission") and res["result"].__contains__("sellerCommission")
-        # and res["result"].__contains__("commissionRates") and res["result"].__contains__("canTrade ")
-        # and res["result"].__contains__("canWithdraw") and res["result"].__contains__("canDeposit")
+
         global resbalance
         resbalance = res
     # 返回结果包含部分交易指令时判断为交易的响应
@@ -114,10 +111,6 @@ def websocket_api_message_handler(_, data):
         if res["result"]["side"] == "BUY":
             global orders
             orders = orders+[res["result"]]
-            # 显示当前已下达的总买单
-            logging.info(orders)
-            # 2023-03-13 03:10:36.367 UTC DEBUG binance.websocket.websocket_client: Sending message to Binance WebSocket Server: {"id": "80b47f23-089e-460c-aa3f-d87c30f1f5a6", "method": "order.place", "params": {"apiKey": "8kjJqeJE6vtN8Jsdm3OsHKIip9iMuPtf10geZh0og2iHOJljftFBygxDyNPH0Zr0", "newOrderRespType": "RESULT", "price": 1.0, "quantity": 11.0, "recvWindow": 500, "side": "BUY", "symbol": "BUSDUSDT", "timeInForce": "GTC", "timestamp": 1678677036367, "type": "LIMIT", "signature": "9a134070325116e80fc3648a861fc1791efdc20542198a54340fe1d98edd7596"}}
-            # 2023-03-13 03:10:36.555 UTC INFO root: {'id': '80b47f23-089e-460c-aa3f-d87c30f1f5a6', 'status': 200, 'result': {'symbol': 'BUSDUSDT', 'orderId': 917290083, 'orderListId': -1, 'clientOrderId': 'qBft1lFszMeZkZWWCVabEx', 'transactTime': 1678677036014, 'price': '1.00000000', 'origQty': '11.00000000', 'executedQty': '11.00000000', 'cummulativeQuoteQty': '10.94830000', 'status': 'FILLED', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY', 'workingTime': 1678677036014, 'selfTradePreventionMode': 'NONE'}, 'rateLimits': [{'rateLimitType': 'ORDERS', 'interval': 'SECOND', 'intervalNum': 10, 'limit': 50, 'count': 2}, {'rateLimitType': 'ORDERS', 'interval': 'DAY', 'intervalNum': 1, 'limit': 160000, 'count': 64}, {'rateLimitType': 'REQUEST_WEIGHT', 'interval': 'MINUTE', 'intervalNum': 1, 'limit': 1200, 'count': 46}]}
 
 
 def websocket_stream_message_handler(_, data):
@@ -244,3 +237,61 @@ async def main_work():
 main_loop = asyncio.get_event_loop()
 main_loop.run_until_complete(main_work())
 main_loop.close()
+
+
+
+
+
+
+
+
+参考资料:
+from binance.client import Client
+
+api_key = "NnYmd0S7zGoM07Vewf71K3F150qEHQtNOAQrN4tpqmUOl4tTPin1tChZT2Va8EV9"
+api_secret = "Nq737nRstwGDNPuCgpvnoNy7rsLgExTT8HZ0jsDAbKSHxRkLhB0bV93WZIGiuag9"
+
+client = Client(api_key, api_secret)
+client.load
+
+
+# # 查询账户可用余额（以USDT为例）
+# balance = client.get_asset_balance(asset='USDT')
+# print(balance)
+# # 发送指定x价格，指定x金额的20笔订单（以买入BNB/BTC为例）
+# orders = []
+# for i in range(20):
+#     order = client.order_limit_buy(
+#         symbol='BNBBTC',
+#         quantity=0.1,
+#         price='0.001'
+#     )
+#     orders.append(order)
+# # 查询订单是否成交（以第一笔订单为例）
+# order_id = orders[0]['orderId']
+# order_status = client.get_order(
+#     symbol='BNBBTC',
+#     orderId=order_id
+# )
+# print(order_status)
+# # 撤销未成交订单（以第一笔订单为例）
+# result = client.cancel_order(
+#     symbol='BNBBTC',
+#     orderId=order_id
+# )
+# print(result)
+# # 根据成交均价，在盈利20%时下单卖出（以第二笔订单为例）
+# order_id = orders[1]['orderId']
+# order_status = client.get_order(
+#     symbol='BNBBTC',
+#     orderId=order_id
+# )
+# if order_status['status'] == 'FILLED':
+#     avg_price = float(
+#         order_status['cummulativeQuoteQty']) / float(order_status['executedQty'])
+#     sell_price = avg_price * 1.2  # 盈利20%
+#     sell_order = client.order_limit_sell(
+#         symbol='BNBBTC',
+#         quantity=0.1,
+#         price=str(sell_price)
+#     )
