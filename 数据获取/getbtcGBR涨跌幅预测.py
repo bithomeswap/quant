@@ -37,7 +37,7 @@ tezheng = [
     "timestamp",
     "开盘", "最高", "最低", "收盘",
     "涨跌幅", "是否涨跌停",
-    "MACD", "MACDsignal", "MACDhist", "MACD交叉状态",
+    "MACD", "MACDsignal", "MACDhist", 
     "KDJ_K", "KDJ_D", "KDJ_J"
 ]
 
