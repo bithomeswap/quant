@@ -35,12 +35,13 @@ df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
 tezheng = [
     "timestamp",
-    "开盘", "最高", "最低", "收盘", "标准时间间隔",
+    "开盘", "最高", "最低", "收盘",
     "涨跌幅", "是否涨跌停",
-    "MACD", "MACDsignal", "MACDhist", "KDJ_K", "KDJ_D", "KDJ_J", "slowk", "slowd"
+    "MACD", "MACDsignal", "MACDhist", "MACD交叉状态",
+    "KDJ_K", "KDJ_D", "KDJ_J"
 ]
 
-for n in range(2, 10):
+for n in range(2, 12):
     tezheng += [
         f'wr{n*n}', f'ATR{n*n}',
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值', f'EMA{n*n}成交量比值',

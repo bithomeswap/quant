@@ -88,3 +88,5 @@ schedule.every(5).minutes.do(buy)
 while True:
     schedule.run_pending()
     time.sleep(1)
+
+# 定时到第二三天直接卖出
