@@ -1,11 +1,8 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 指定解释器位置
-#!/root/miniconda3/bin/python
-# nohup /root/miniconda3/bin/python /root/binance_trade_tool_vpn/quant/数据获取/getbtc指标.py
-# 安装币安的python库
-# pip install python-binance
-import numpy as np
+
 import time
+import schedule
 from binance.client import Client
 from pymongo import MongoClient
 
@@ -15,67 +12,79 @@ api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 
 # 需要读取的数据库配置
 client_read = MongoClient(
-    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
-db_read = client_read['wth000']
+    'mongodb://username:password@127.0.0.1:27017/dbname?authSource=authdb')
+db_read = client_read['dbname']
 collection_read = db_read['BTC']
 
 # 需要写入的数据库配置
 client_write = MongoClient(
-    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
-db_write = client_write['wth000']
-name = 'BTC'
-collection_write = db_write[f'{name}order']
+    'mongodb://username:password@127.0.0.1:27017/dbname?authSource=authdb')
+db_write = client_write['dbname']
+collection_write = db_write['BTCorder']
 
 # 创建Binance客户端
 client = Client(api_key, api_secret)
 
-while True:
-    print('获取数据成功')
-    # 获取最新的15分钟K线
-    klines = client.get_klines(
-        symbol='BTCUSDT', interval=Client.KLINE_INTERVAL_1MINUTE)
-    # KLINE_INTERVAL_1MINUTE = '1m'
-    # KLINE_INTERVAL_3MINUTE = '3m'
-    # KLINE_INTERVAL_5MINUTE = '5m'
-    # KLINE_INTERVAL_15MINUTE = '15m'
-    # KLINE_INTERVAL_30MINUTE = '30m'
-    # KLINE_INTERVAL_1HOUR = '1h'
-    # KLINE_INTERVAL_2HOUR = '2h'
-    # KLINE_INTERVAL_4HOUR = '4h'
-    # KLINE_INTERVAL_6HOUR = '6h'
-    # KLINE_INTERVAL_8HOUR = '8h'
-    # KLINE_INTERVAL_12HOUR = '12h'
-    # KLINE_INTERVAL_1DAY = '1d'
-    # KLINE_INTERVAL_3DAY = '3d'
-    # KLINE_INTERVAL_1WEEK = '1w'
-    # KLINE_INTERVAL_1MONTH = '1M'
-    # 计算指标
-    close = np.array([float(kline[4]) for kline in klines])
-    ma5 = np.mean(close[-5:])
-    ma10 = np.mean(close[-10:])
-    ma20 = np.mean(close[-20:])
-    rsi14 = 100 - 100 / \
-        (1 + np.mean(np.maximum(0, close[-14:] -
-         np.roll(close[-14:], 1))))   # RSI14
-    rsi6 = 100 - 100 / \
-        (1 + np.mean(np.maximum(0, close[-6:] -
-         np.roll(close[-6:], 1))))     # RSI6
 
-    # 根据指标生成交易指令
-    if ma5 > ma10 and ma10 > ma20 and rsi14 < 30 and rsi6 < 20:
-        order = client.create_order(
-            symbol='BTCUSDT',
-            side='BUY',
-            type='MARKET',
-            quantity=0.01)
-        collection_write.insert_one(order)
-    elif ma5 < ma10 and ma10 < ma20 and rsi14 > 70 and rsi6 > 80:
-        order = client.create_order(
+def sell():
+    # 获取七天前的时间戳
+    time_7days_ago = int(time.time()) - 604800
+    # 查询七天前未卖出的买入订单
+    orders = collection_write.find({
+        "type": "buy",
+        "sell_time": {"$eq": None},
+        "create_time": {"$lte": time_7days_ago}
+    })
+
+    for order in orders:
+        # 卖出订单
+        sell_order = client.create_order(
             symbol='BTCUSDT',
             side='SELL',
             type='MARKET',
-            quantity=0.01)
-        collection_write.insert_one(order)
+            quantity=order["quantity"]
+        )
 
-    # 休眠1分钟
-    time.sleep(60)
+        # 更新订单信息
+        collection_write.update_one(
+            {"_id": order["_id"]},
+            {"$set": {
+                "sell_time": int(time.time()),
+                "sell_price": sell_order['price']
+            }}
+        )
+
+
+def buy():
+    # 获取最新的KDJ_J值
+    kdj_j_value = collection_read.find().sort(
+        [("time", -1)]).limit(1)[0]["kdj_j"]
+    if kdj_j_value < 8:
+        # 买入订单
+        buy_order = client.create_order(
+            symbol='BTCUSDT',
+            side='BUY',
+            type='MARKET',
+            quantity=0.01
+        )
+
+        # 插入订单信息
+        collection_write.insert_one({
+            "type": "buy",
+            "create_time": int(time.time()),
+            "quantity": buy_order["executedQty"],
+            "buy_price": buy_order["price"],
+            "sell_time": None,
+            "sell_price": None
+        })
+
+
+# 每天晚上9点执行卖出操作
+schedule.every().day.at('21:00').do(sell)
+
+# 每5分钟执行一次买入操作
+schedule.every(5).minutes.do(buy)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
