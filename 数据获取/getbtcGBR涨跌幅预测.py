@@ -41,7 +41,7 @@ tezheng = [
 
 for n in range(2, 12):
     tezheng += [
-        f'wr{n*n}', f'ATR{n*n}',
+        f'wr{n*n}',
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值', f'EMA{n*n}成交量比值',
         f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值', f'SMA{n*n}成交量比值',
     ]
