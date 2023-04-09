@@ -12,7 +12,7 @@ from pymongo import MongoClient
 # 连接MongoDB数据库
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
-db = client['wth000']
+db = client['wth000']  # 将dbname替换成实际的数据库名称
 name = "上证指数"
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
@@ -23,17 +23,12 @@ df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
 # 定义开盘幅
 df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
+df = df[df['开盘幅'] <= 9.5]
 # 定义收盘幅即涨跌幅
 df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
-
 # 定义振幅
 df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
-
-# 是否涨跌停
-df.loc[df['涨跌幅'] > 9.9, '是否涨跌停'] = 1
-df.loc[df['涨跌幅'] < -9.9, '是否涨跌停'] = -1
-df.loc[(df['涨跌幅'] >= -9.9) & (df['涨跌幅'] <= 9.9), '是否涨跌停'] = 0
 
 # 计算趋势确认指标MACD指标
 macd, macdsignal, macdhist = talib.MACD(

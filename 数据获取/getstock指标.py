@@ -25,16 +25,12 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     # 定义开盘幅
     df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
+    df = df[df['开盘幅'] <= 9.5]
     # 定义收盘幅即涨跌幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
     # 定义振幅
     df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
-
-    # 是否涨跌停
-    df.loc[df['涨跌幅'] > 9.9, '是否涨跌停'] = 1
-    df.loc[df['涨跌幅'] < -9.9, '是否涨跌停'] = -1
-    df.loc[(df['涨跌幅'] >= -9.9) & (df['涨跌幅'] <= 9.9), '是否涨跌停'] = 0
 
     # 计算趋势确认指标MACD指标
     macd, macdsignal, macdhist = talib.MACD(
@@ -46,14 +42,14 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 计算行情过滤指标KDJ指标
     high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
     k, d = talib.STOCH(high, low, close, fastk_period=9, slowk_period=3,
-                       slowk_matype=0, slowd_period=3, slowd_matype=0)
+                    slowk_matype=0, slowd_period=3, slowd_matype=0)
     j = 3 * k - 2 * d
     df['KDJ_K'] = k
     df['KDJ_D'] = d
     df['KDJ_J'] = j
 
     k0, d0 = talib.STOCH(low, high, close, fastk_period=9, slowk_period=3,
-                         slowk_matype=0, slowd_period=3, slowd_matype=0)
+                        slowk_matype=0, slowd_period=3, slowd_matype=0)
     j = 3 * k - 2 * d
     df['反向KDJ_K'] = k0
     df['反向KDJ_D'] = d0
@@ -87,7 +83,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
                                     df['收盘'].values, timeperiod=n*n)
         # 计算能量指标威廉指标
         df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
-                                     df['收盘'].values, timeperiod=n*n)
+                                    df['收盘'].values, timeperiod=n*n)
         # 计算相对强弱指标RSI指标
         df[f'RSI{n*n}'] = talib.RSI(close, timeperiod=n*n)
 
