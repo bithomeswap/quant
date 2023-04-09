@@ -36,9 +36,7 @@ df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 tezheng = [
     "timestamp",
     "开盘", "最高", "最低", "收盘",
-    "涨跌幅", "是否涨跌停",
-    "MACD", "MACDsignal", "MACDhist", 
-    "KDJ_K", "KDJ_D", "KDJ_J"
+    "涨跌幅",'开盘幅'
 ]
 
 for n in range(2, 12):

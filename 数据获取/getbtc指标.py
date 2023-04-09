@@ -29,28 +29,6 @@ df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 # 定义振幅
 df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
 
-# 计算趋势确认指标MACD指标
-macd, macdsignal, macdhist = talib.MACD(
-    df['收盘'].values, fastperiod=12, slowperiod=26, signalperiod=9)
-df['MACD'] = macd
-df['MACDsignal'] = macdsignal
-df['MACDhist'] = macdhist
-
-# 计算行情过滤指标KDJ指标
-high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
-k, d = talib.STOCH(high, low, close, fastk_period=9, slowk_period=3,
-                   slowk_matype=0, slowd_period=3, slowd_matype=0)
-j = 3 * k - 2 * d
-df['KDJ_K'] = k
-df['KDJ_D'] = d
-df['KDJ_J'] = j
-
-k0, d0 = talib.STOCH(low, high, close, fastk_period=9, slowk_period=3,
-                     slowk_matype=0, slowd_period=3, slowd_matype=0)
-j = 3 * k - 2 * d
-df['反向KDJ_K'] = k0
-df['反向KDJ_D'] = d0
-
 # 计算过去n日ema比值指标
 for n in range(2, 12):
     df[f'EMA{n*n}成交量比值'] = df['成交量'] / \

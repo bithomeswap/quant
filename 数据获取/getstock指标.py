@@ -4,6 +4,8 @@
 # nohup /root/miniconda3/bin/python /root/binance_trade_tool_vpn/quant/数据获取/getbtc指标.py
 # 安装币安的python库
 # pip install python-binance
+import json
+import requests
 import pandas as pd
 import talib
 import os
@@ -30,28 +32,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     # 定义振幅
     df['振幅'] = ((df['最高']-df['最低'])/df['开盘'])*100
-
-    # 计算趋势确认指标MACD指标
-    macd, macdsignal, macdhist = talib.MACD(
-        df['收盘'].values, fastperiod=12, slowperiod=26, signalperiod=9)
-    df['MACD'] = macd
-    df['MACDsignal'] = macdsignal
-    df['MACDhist'] = macdhist
-
-    # 计算行情过滤指标KDJ指标
-    high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
-    k, d = talib.STOCH(high, low, close, fastk_period=9, slowk_period=3,
-                    slowk_matype=0, slowd_period=3, slowd_matype=0)
-    j = 3 * k - 2 * d
-    df['KDJ_K'] = k
-    df['KDJ_D'] = d
-    df['KDJ_J'] = j
-
-    k0, d0 = talib.STOCH(low, high, close, fastk_period=9, slowk_period=3,
-                        slowk_matype=0, slowd_period=3, slowd_matype=0)
-    j = 3 * k - 2 * d
-    df['反向KDJ_K'] = k0
-    df['反向KDJ_D'] = d0
 
     # 计算过去n日ema比值指标
     for n in range(2, 12):
@@ -82,7 +62,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
                                     df['收盘'].values, timeperiod=n*n)
         # 计算能量指标威廉指标
         df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
-                                    df['收盘'].values, timeperiod=n*n)
+                                     df['收盘'].values, timeperiod=n*n)
         # 计算相对强弱指标RSI指标
         df[f'RSI{n*n}'] = talib.RSI(close, timeperiod=n*n)
 
@@ -111,8 +91,6 @@ print('准备插入数据')
 new_collection = db[f'{name}指标']
 new_collection.drop()  # 清空集合中的所有文档
 new_collection.insert_many(grouped.to_dict('records'))
-import requests
-import json
 
 url = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
 headers = {'Content-Type': 'application/json;charset=utf-8'}
