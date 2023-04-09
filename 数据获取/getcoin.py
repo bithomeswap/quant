@@ -25,8 +25,10 @@ client = Client(api_key, api_secret)
 
 # 获取所有USDT计价的现货交易对
 ticker_prices = client.get_exchange_info()['symbols']
+
 usdt_ticker_prices = [
-    ticker_price for ticker_price in ticker_prices if ticker_price['quoteAsset'] == 'USDT']
+    ticker_price for ticker_price in ticker_prices if ticker_price['quoteAsset'] == 'USDT' and ("DOWN" not in ticker_price['symbol']) and ("UP" not in ticker_price['symbol'])]
+
 print(f"当前币安现货有{len(ticker_prices)}个交易对")
 # 遍历所有现货交易对，并获取日K线数据
 for ticker_price in usdt_ticker_prices:
@@ -48,9 +50,6 @@ for ticker_price in usdt_ticker_prices:
 # KLINE_INTERVAL_8HOUR = '8h'
 # KLINE_INTERVAL_12HOUR = '12h'
 # KLINE_INTERVAL_1DAY = '1d'
-# KLINE_INTERVAL_3DAY = '3d'
-# KLINE_INTERVAL_1WEEK = '1w'
-# KLINE_INTERVAL_1MONTH = '1M'
     # 插入到集合中
     data_list = []
     for kline in klines:
