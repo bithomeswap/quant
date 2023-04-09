@@ -5,11 +5,21 @@ import numpy as np
 
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'SMA121收盘比值'
+mubiao = 'SMA9收盘比值'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 
 df = df[df['开盘幅'] <= 9.9].copy()
+# 开盘幅过滤
+df = df[df['SMA121收盘比值'] <= 0.8 & df['开盘幅'] >= 0.4].copy()
+# SMA121收盘比值过滤
+df = df[df['开盘'] <= 10].copy()
+# 开盘价过滤
+df = df[df['换手率'] <= 3.3].copy()
+# 换手率过滤
+df = df[df['振幅'] <= 6].copy()
+# 振幅过滤
+
 # 去掉开盘幅过高的噪音数据
 for n in range(1, 10):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
