@@ -25,7 +25,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     # 定义开盘幅
     df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-    df = df[df['开盘幅'] <= 9.5]
     # 定义收盘幅即涨跌幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
@@ -112,3 +111,18 @@ print('准备插入数据')
 new_collection = db[f'{name}指标']
 new_collection.drop()  # 清空集合中的所有文档
 new_collection.insert_many(grouped.to_dict('records'))
+import requests
+import json
+
+url = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
+headers = {'Content-Type': 'application/json;charset=utf-8'}
+
+data = {
+    "msgtype": "text",
+    "text": {
+        "content": "coin指标计算成功"
+    }
+}
+
+r = requests.post(url, headers=headers, data=json.dumps(data))
+print(r.content.decode('utf-8'))
