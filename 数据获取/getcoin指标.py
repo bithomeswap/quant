@@ -46,26 +46,17 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 计算行情过滤指标KDJ指标
     high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
     k, d = talib.STOCH(high, low, close, fastk_period=9, slowk_period=3,
-                    slowk_matype=0, slowd_period=3, slowd_matype=0)
+                       slowk_matype=0, slowd_period=3, slowd_matype=0)
     j = 3 * k - 2 * d
     df['KDJ_K'] = k
     df['KDJ_D'] = d
     df['KDJ_J'] = j
 
     k0, d0 = talib.STOCH(low, high, close, fastk_period=9, slowk_period=3,
-                        slowk_matype=0, slowd_period=3, slowd_matype=0)
+                         slowk_matype=0, slowd_period=3, slowd_matype=0)
     j = 3 * k - 2 * d
     df['反向KDJ_K'] = k0
     df['反向KDJ_D'] = d0
-
-    # 计算行情过滤指标KDJ指标
-    high, low, close = df['最高'].values, df['最低'].values, df['收盘'].values
-    k, d = talib.STOCH(high, low, close, fastk_period=9, slowk_period=3,
-                       slowk_matype=0, slowd_period=3, slowd_matype=0)
-    j = 3 * k - 2 * d
-    df['KDJ_K'] = k
-    df['KDJ_D'] = d
-    df['KDJ_J'] = j
 
     # 计算过去n日ema比值指标
     for n in range(2, 12):
@@ -99,7 +90,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
                                      df['收盘'].values, timeperiod=n*n)
         # 计算相对强弱指标RSI指标
         df[f'RSI{n*n}'] = talib.RSI(close, timeperiod=n*n)
-
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 10):  # 计算未来n日涨跌幅

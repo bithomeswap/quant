@@ -17,7 +17,7 @@ import time
 # 获取当前日期
 current_date = datetime.datetime.now().strftime('%Y-%m-%d')
 # 读取180天内的数据，这里面还得排除掉节假日
-date_ago = datetime.datetime.now() - datetime.timedelta(days=1080)
+date_ago = datetime.datetime.now() - datetime.timedelta(days=540)
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
@@ -36,11 +36,12 @@ for code in stock_info_df['代码']:
     if code.startswith(('600', '601', '603', '605', '000', '001')):
         k_data = ak.stock_zh_a_hist(
             symbol=code, start_date=start_date, adjust="qfq")
-        k_data['代码'] = code
+        
+        k_data['代码'] = float(code)
+
         k_data['成交量'] = k_data['成交量'].astype(float)
         # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
         collection.insert_many(k_data.to_dict('records'))
-
 
 print('任务已经完成')
 # time.sleep(3600)

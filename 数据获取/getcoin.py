@@ -36,7 +36,7 @@ for ticker_price in usdt_ticker_prices:
     klines = client.get_historical_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_1DAY,
-        limit=2000
+        limit=1000
     )
 # KLINE_INTERVAL_1MINUTE = '1m'
 # KLINE_INTERVAL_3MINUTE = '3m'
