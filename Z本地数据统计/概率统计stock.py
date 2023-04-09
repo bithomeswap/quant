@@ -5,7 +5,7 @@ import numpy as np
 
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = '开盘幅'
+mubiao = 'SMA121收盘比值'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 
