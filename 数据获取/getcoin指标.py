@@ -35,8 +35,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     # 计算过去n日ema比值指标
     for n in range(2, 12):
-        df[f'EMA{n*n}成交量比值'] = df['成交量'] / \
-            talib.MA(df['成交量'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
             talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
@@ -46,8 +44,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df[f'EMA{n*n}最低比值'] = df['最低'] / \
             talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
-        df[f'SMA{n*n}成交量比值'] = df['成交量'] / \
-            talib.SMA(df['成交量'].values, timeperiod=n*n)
         df[f'SMA{n*n}收盘比值'] = df['收盘'] / \
             talib.SMA(df['收盘'].values, timeperiod=n*n)
         df[f'SMA{n*n}开盘比值'] = df['开盘'] / \
@@ -57,14 +53,9 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df[f'SMA{n*n}最低比值'] = df['最低'] / \
             talib.SMA(df['最低'].values, timeperiod=n*n)
 
-        # 计算波动率指标ATR指标
-        df[f'ATR{n*n}'] = talib.ATR(df['最高'].values, df['最低'].values,
-                                    df['收盘'].values, timeperiod=n*n)
         # 计算能量指标威廉指标
         df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
-                                     df['收盘'].values, timeperiod=n*n)
-        # 计算相对强弱指标RSI指标
-        df[f'RSI{n*n}'] = talib.RSI(close, timeperiod=n*n)
+                                    df['收盘'].values, timeperiod=n*n)
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 10):  # 计算未来n日涨跌幅
