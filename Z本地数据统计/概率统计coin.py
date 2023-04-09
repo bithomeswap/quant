@@ -5,7 +5,7 @@ import numpy as np
 
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'KDJ_J'
+mubiao = '开盘幅'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 # 对指定列排序
@@ -24,16 +24,16 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 
-for n in range(1, 10):
-    for rank_range in ranges:
-        sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
-                           (df[f'{mubiao}'] <= rank_range[1])]
-        sub_df.round(decimals=6).to_csv(
-            f'{name}标的{mubiao}因子{rank_range[0]}至{rank_range[1]}区间样本分布.csv', index=False)
 
-        sub_df = sub_df[sub_df['开盘幅'] <= 8].copy()
-        sub_df = sub_df[sub_df['开盘幅'] >= -8].copy()
+for rank_range in ranges:
+    sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
+                       (df[f'{mubiao}'] <= rank_range[1])]
+    sub_df.round(decimals=6).to_csv(
+        f'{name}标的{mubiao}因子{rank_range[0]}至{rank_range[1]}区间样本分布.csv', index=False)
 
+    # sub_df = sub_df[sub_df['开盘幅'] <= 9.9].copy()
+    # sub_df = sub_df[sub_df['开盘幅'] >= -5].copy()
+    for n in range(1, 10):
         count = len(sub_df)
         future_returns = np.array(sub_df[f'{n}日后总涨跌幅（未来函数）']) / 100
         # 括号注意大小写的问题，要不就会报错没这个参数
