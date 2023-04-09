@@ -8,6 +8,13 @@ df = pd.read_csv(f'{name}指标.csv')
 mubiao = '开盘幅'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
+
+df = df[df['开盘幅'] <= 9.9].copy()
+# 去掉开盘幅过高的噪音数据
+for n in range(1, 10):
+    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
+# 去掉n日后总涨跌幅大于百分之三百的噪音数据
+
 # 对指定列排序
 sorted_data = np.sort(df[f'{mubiao}'])
 # 将数据划分成n个等距离的区间
@@ -24,18 +31,14 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 
-
-for rank_range in ranges:
-    sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
-                       (df[f'{mubiao}'] <= rank_range[1])]
-    sub_df.round(decimals=6).to_csv(
-        f'{name}标的{mubiao}因子{rank_range[0]}至{rank_range[1]}区间样本分布.csv', index=False)
-
-    # sub_df = sub_df[sub_df['开盘幅'] <= 9.9].copy()
-    # sub_df = sub_df[sub_df['开盘幅'] >= -5].copy()
-    for n in range(1, 10):
+for n in range(1, 10):
+    for rank_range in ranges:
+        sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
+                           (df[f'{mubiao}'] <= rank_range[1])]
+        # sub_df.round(decimals=6).to_csv(
+        #     f'{name}标的{mubiao}因子{rank_range[0]}至{rank_range[1]}区间样本分布.csv', index=False)
         count = len(sub_df)
-        future_returns = np.array(sub_df[f'{n}日后总涨跌幅（未来函数）']) / 100
+        future_returns = np.array(sub_df[f'{n}日后总涨跌幅（未来函数）'])
         # 括号注意大小写的问题，要不就会报错没这个参数
         up_rate = len(
             future_returns[future_returns >= 0]) / len(future_returns)
