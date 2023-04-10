@@ -17,7 +17,7 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 选择要分析的产品
-name = "上证指数"
+name = "BTC"
 collection = db[f'{name}待训练']
 print('数据库已链接')
 df = pd.DataFrame(list(collection.find()))
