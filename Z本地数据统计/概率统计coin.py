@@ -11,20 +11,25 @@ df = df.dropna()  # 删除含有空值的行
 
 df = df[df['开盘幅'] <= 9.9].copy()
 # 开盘幅过滤
+
 # df = df[df['SMA121收盘比值'] <= 0.8].copy()
 # df = df[df['SMA121开盘比值'] <= 0.8].copy()
 # df = df[df['SMA121最高比值'] <= 0.8].copy()
 # df = df[df['SMA121最低比值'] <= 0.8].copy()
-
 # # 四均线过滤STOCK0.8
+# df = df[df['开盘'] <= 31].copy()
+# # 开盘价过滤STOCk0.5
+# df = df[df['换手率'] <= 3.3].copy()
+# # 换手率过滤（仅限A股）
+
 df = df[df['SMA121收盘比值'] <= 0.5].copy()
 df = df[df['SMA121开盘比值'] <= 0.5].copy()
 df = df[df['SMA121最高比值'] <= 0.5].copy()
 df = df[df['SMA121最低比值'] <= 0.5].copy()
 # 四均线过滤COIN0.5
+df = df[df['开盘'] <= 0.9].copy()
+# 开盘价过滤COIN0.9
 
-# df = df[df['换手率'] <= 3.3].copy()
-# 换手率过滤（仅限A股）
 
 # 去掉开盘幅过高的噪音数据
 for n in range(1, 10):
