@@ -30,58 +30,35 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 定义收盘幅即涨跌幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
-    # 计算趋势确认指标MACD指标
-    macd, macdsignal, macdhist = talib.MACD(
-        df['收盘'].values, fastperiod=12, slowperiod=26, signalperiod=9)
-    df['MACD'] = macd
-    df['MACDsignal'] = macdsignal
-    df['MACDhist'] = macdhist
-
-    # 将MACD指标和MACD信号线转换为Pandas中的Series对象
-    macd = pd.Series(macd, index=df.index)
-    macdsignal = pd.Series(macdsignal, index=df.index)
-    macdhist = pd.Series(macdhist, index=df.index)
-
-    # 判断金叉和死叉的条件
-    cross_up = (macd > macdsignal) & (
-        macd.shift(1) < macdsignal.shift(1))  # 金叉
-    cross_down = (macd < macdsignal) & (
-        macd.shift(1) > macdsignal.shift(1))  # 死叉
-
-    # 判断低位金叉和高位金叉的条件
-    low_cross_up = cross_up & (macd < 0)  # 低位金叉，MACD指标在零轴以下
-    high_cross_up = cross_up & (macd >= 0)  # 高位金叉，MACD指标在零轴以上
-
-    # 判断低位死叉和高位死叉的条件
-    low_cross_down = cross_down & (macd > 0)  # 低位死叉，MACD指标在零轴以上
-    high_cross_down = cross_down & (macd <= 0)  # 高位死叉，MACD指标在零轴以下
-
-    # 将结果保存在一列中
-    df['MACD交叉状态'] = 0  # 先初始化为0，表示其他情况
-    df.loc[low_cross_up, 'MACD交叉状态'] = -1
-    df.loc[low_cross_down, 'MACD交叉状态'] = -2
-    df.loc[high_cross_up, 'MACD交叉状态'] = 1
-    df.loc[high_cross_down, 'MACD交叉状态'] = 2
-
     # 计算过去n日ema比值指标
     for n in range(2, 12):
         df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
             talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
-            talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+            talib.MA(df['开盘'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}最高比值'] = df['最高'] / \
-            talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
+            talib.MA(df['最高'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}最低比值'] = df['最低'] / \
             talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
-        df[f'SMA{n*n}收盘比值'] = df['收盘'] / \
-            talib.SMA(df['收盘'].values, timeperiod=n*n)
-        df[f'SMA{n*n}开盘比值'] = df['开盘'] / \
-            talib.SMA(df['开盘'].values, timeperiod=n*n)
-        df[f'SMA{n*n}最高比值'] = df['最高'] / \
-            talib.SMA(df['最高'].values, timeperiod=n*n)
-        df[f'SMA{n*n}最低比值'] = df['最低'] / \
-            talib.SMA(df['最低'].values, timeperiod=n*n)
+        if n > 2:
+            df[f'DIF收盘_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}收盘比值'] - \
+                df[f'EMA{n*n}收盘比值']
+            df[f'DIF开盘_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}开盘比值'] - \
+                df[f'EMA{n*n}开盘比值']
+            df[f'DIF最高_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}最高比值'] - \
+                df[f'EMA{n*n}最高比值']
+            df[f'DIF最低_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}最低比值'] - \
+                df[f'EMA{n*n}最低比值']
+
+            df[f'DEA收盘_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['收盘'] / \
+                talib.SMA(df[f'DIF收盘_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
+            df[f'DEA开盘_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['开盘'] / \
+                talib.SMA(df[f'DIF开盘_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
+            df[f'DEA最高_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['最高'] / \
+                talib.SMA(df[f'DIF最高_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
+            df[f'DEA最低_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['最低'] / \
+                talib.SMA(df[f'DIF最低_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 20):  # 计算未来n日涨跌幅
