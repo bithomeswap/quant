@@ -33,7 +33,7 @@ stock_info_df = ak.stock_zh_a_spot_em()
 stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
 # 迭代每只股票，获取每天的前复权日k数据
 for code in stock_info_df['代码']:
-    if code.startswith(('600', '601', '603', '605', '000', '001')):
+    if code.startswith(('60', '000', '001')):
         k_data = ak.stock_zh_a_hist(
             symbol=code, start_date=start_date, adjust="qfq")
         k_data['代码'] = float(code)
