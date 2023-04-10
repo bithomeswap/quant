@@ -43,25 +43,25 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         for m in range(5, 15):
             macd, macdsignal, macdhist = talib.MACD(
                 df['收盘'].values, fastperiod=n, slowperiod=m, signalperiod=n)
-            df[f'收盘MACD_{n}_{m}_{n}比值'] = df['收盘']/macd
-            df[f'收盘MACDsignal_{n}_{m}_{n}比值'] = df['收盘']/macdsignal
-            df[f'收盘MACDhist_{n}_{m}_{n}比值'] = df['收盘']/macdhist
+            df[f'收盘MACD_{n}_{m}_{n}比值'] = macd/df['收盘']
+            df[f'收盘MACDsignal_{n}_{m}_{n}比值'] = macdsignal/df['收盘']
+            df[f'收盘MACDhist_{n}_{m}_{n}比值'] = macdhist/df['收盘']
             macd, macdsignal, macdhist = talib.MACD(
                 df['开盘'].values, fastperiod=n, slowperiod=m, signalperiod=n)
-            df[f'开盘MACD_{n}_{m}_{n}比值'] = df['开盘']/macd
-            df[f'开盘MACDsignal_{n}_{m}_{n}比值'] = df['开盘']/macdsignal
-            df[f'开盘MACDhist_{n}_{m}_{n}比值'] = df['开盘']/macdhist
+            df[f'开盘MACD_{n}_{m}_{n}比值'] = macd/df['开盘']
+            df[f'开盘MACDsignal_{n}_{m}_{n}比值'] = macdsignal/df['开盘']
+            df[f'开盘MACDhist_{n}_{m}_{n}比值'] = macdhist/df['开盘']
             macd, macdsignal, macdhist = talib.MACD(
                 df['最高'].values, fastperiod=n, slowperiod=m, signalperiod=n)
-            df[f'最高MACD_{n}_{m}_{n}比值'] = df['最高']/macd
-            df[f'最高MACDsignal_{n}_{m}_{n}比值'] = df['最高']/macdsignal
-            df[f'最高MACDhist_{n}_{m}_{n}比值'] = df['最高']/macdhist
+            df[f'最高MACD_{n}_{m}_{n}比值'] = macd/df['最高']
+            df[f'最高MACDsignal_{n}_{m}_{n}比值'] = macdsignal/df['最高']
+            df[f'最高MACDhist_{n}_{m}_{n}比值'] = macdhist/df['最高']
             macd, macdsignal, macdhist = talib.MACD(
                 df['最低'].values, fastperiod=n, slowperiod=m, signalperiod=n)
-            df[f'最低MACD_{n}_{m}_{n}比值'] = df['最低']/macd
-            df[f'最低MACDsignal_{n}_{m}_{n}比值'] = df['最低']/macdsignal
-            df[f'最低MACDhist_{n}_{m}_{n}比值'] = df['最低']/macdhist
-            
+            df[f'最低MACD_{n}_{m}_{n}比值'] = macd/df['最低']
+            df[f'最低MACDsignal_{n}_{m}_{n}比值'] = macdsignal/df['最低']
+            df[f'最低MACDhist_{n}_{m}_{n}比值'] = macdhist/df['最低']
+
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 20):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
