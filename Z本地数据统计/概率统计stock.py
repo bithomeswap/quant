@@ -14,7 +14,7 @@ df = df[df['EMA121开盘比值'] <= 0.8].copy()
 df = df[df['EMA121最高比值'] <= 0.8].copy()
 df = df[df['EMA121最低比值'] <= 0.8].copy()
 # 四均线过滤STOCK0.8
-df = df[df['DIF收盘_4_9'] >= 0.04].copy()
+# df = df[df['DIF收盘_4_9'] >= 0.04].copy()
 # 动能强度过滤STOCK
 df = df[df['开盘'] <= 31].copy()
 # 开盘价过滤STOCk31

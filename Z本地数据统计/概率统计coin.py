@@ -29,7 +29,7 @@ df = df[df['EMA121开盘比值'] <= 0.5].copy()
 df = df[df['EMA121最高比值'] <= 0.5].copy()
 df = df[df['EMA121最低比值'] <= 0.5].copy()
 # 四均线过滤COIN0.5
-df = df[df['DIF收盘_4_9'] >= 0.16].copy()
+# df = df[df['DIF收盘_4_9'] >= 0.16].copy()
 # 动能强度过滤COIN0.16
 df = df[df['开盘'] <= 0.9].copy()
 # 开盘价过滤COIN0.9

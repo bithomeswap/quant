@@ -40,16 +40,13 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             talib.MA(df['最高'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}最低比值'] = df['最低'] / \
             talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
-
-        if n > 2:
-            df[f'DIF收盘_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}收盘比值'] - \
-                df[f'EMA{n*n}收盘比值']
-            df[f'DIF开盘_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}开盘比值'] - \
-                df[f'EMA{n*n}开盘比值']
-            df[f'DIF最高_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}最高比值'] - \
-                df[f'EMA{n*n}最高比值']
-            df[f'DIF最低_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}最低比值'] - \
-                df[f'EMA{n*n}最低比值']
+        for m in range(5, 15):
+            # 计算趋势确认指标MACD指标
+            macd, macdsignal, macdhist = talib.MACD(
+                df['收盘'].values, fastperiod=n, slowperiod=m, signalperiod=n)
+            df[f'MACD_{n}_{m}_{n}'] = macd
+            df[f'MACDsignal_{n}_{m}_{n}'] = macdsignal
+            df[f'MACDhist_{n}_{m}_{n}'] = macdhist
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 20):  # 计算未来n日涨跌幅
