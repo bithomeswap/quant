@@ -36,13 +36,9 @@ for code in stock_info_df['代码']:
     if code.startswith(('600', '601', '603', '605', '000', '001')):
         k_data = ak.stock_zh_a_hist(
             symbol=code, start_date=start_date, adjust="qfq")
-        
         k_data['代码'] = float(code)
-
-        k_data['成交量'] = k_data['成交量'].astype(float)
         # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
         collection.insert_many(k_data.to_dict('records'))
-
 print('任务已经完成')
 # time.sleep(3600)
 # limit = 400000

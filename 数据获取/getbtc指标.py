@@ -18,9 +18,9 @@ collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
-
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-
+# 成交量变成浮点数
+df['成交量'] = df['成交量'].astype(float)    
 # 定义开盘幅
 df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
 # 定义收盘幅即涨跌幅
