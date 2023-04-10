@@ -17,7 +17,7 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 选择要分析的产品
-name = "BTC"
+name = "上证指数"
 collection = db[f'{name}待训练']
 print('数据库已链接')
 df = pd.DataFrame(list(collection.find()))
@@ -29,18 +29,21 @@ print('数据获取成功')
 # df_numerical = df[numerical_cols]
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-
-
 # 计算过去n日ema比值指标
 tezheng = [
     'timestamp',
-    "涨跌幅", '开盘幅', 'MACD', 'MACDhist', 'MACDsignal',]
+    "涨跌幅", '开盘幅',]
 
 for n in range(2, 12):
     tezheng += [
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值',
         f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值',
     ]
+    if n > 2:
+        tezheng += [
+            f'DIF收盘_{(n-1)*(n-1)}_{n*n}', f'DIF开盘_{(n-1)*(n-1)}_{n*n}', f'DIF最高_{(n-1)*(n-1)}_{n*n}', f'DIF最高_{(n-1)*(n-1)}_{n*n}',
+        ]
+
 x = df[tezheng]
 print(x)
 # 预测七日后涨跌幅
