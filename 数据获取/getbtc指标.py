@@ -48,12 +48,8 @@ for n in range(2, 12):
     df[f'SMA{n*n}最低比值'] = df['最低'] / \
         talib.SMA(df['最低'].values, timeperiod=n*n)
 
-    # 计算能量指标威廉指标
-    df[f'wr{n*n}'] = talib.WILLR(df['最高'].values, df['最低'].values,
-                                 df['收盘'].values, timeperiod=n*n)
-
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-for n in range(1, 10):  # 计算未来n日涨跌幅
+for n in range(1, 20):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
 
 # 获取当前.py文件的绝对路径
