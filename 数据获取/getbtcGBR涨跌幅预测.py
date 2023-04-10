@@ -37,7 +37,6 @@ tezheng = [
 for n in range(2, 12):
     tezheng += [
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值',
-        f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值',
     ]
 
 x = df[tezheng]
