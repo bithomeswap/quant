@@ -15,6 +15,7 @@ df = df[df['开盘幅'] <= 9.9].copy()
 # df = df[df['SMA121开盘比值'] <= 0.8].copy()
 # df = df[df['SMA121最高比值'] <= 0.8].copy()
 # df = df[df['SMA121最低比值'] <= 0.8].copy()
+
 # # 四均线过滤STOCK0.8
 df = df[df['SMA121收盘比值'] <= 0.5].copy()
 df = df[df['SMA121开盘比值'] <= 0.5].copy()

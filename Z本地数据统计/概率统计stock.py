@@ -3,7 +3,7 @@ from pymongo import MongoClient
 import pandas as pd
 import numpy as np
 
-name = 'COIN'
+name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
 mubiao = '开盘'
 print('任务已经开始')
@@ -16,13 +16,14 @@ df = df[df['SMA121开盘比值'] <= 0.8].copy()
 df = df[df['SMA121最高比值'] <= 0.8].copy()
 df = df[df['SMA121最低比值'] <= 0.8].copy()
 # # 四均线过滤STOCK0.8
+
 # df = df[df['SMA121收盘比值'] <= 0.5].copy()
 # df = df[df['SMA121开盘比值'] <= 0.5].copy()
 # df = df[df['SMA121最高比值'] <= 0.5].copy()
 # df = df[df['SMA121最低比值'] <= 0.5].copy()
-# 四均线过滤COIN0.5
+# # 四均线过滤COIN0.5
 
-# df = df[df['换手率'] <= 3.3].copy()
+df = df[df['换手率'] <= 3.3].copy()
 # 换手率过滤（仅限A股）
 
 # 去掉开盘幅过高的噪音数据
