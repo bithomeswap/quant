@@ -51,15 +51,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             df[f'DIF最低_{(n-1)*(n-1)}_{n*n}'] = df[f'EMA{(n-1)*(n-1)}最低比值'] - \
                 df[f'EMA{n*n}最低比值']
 
-            df[f'DEA收盘_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['收盘'] / \
-                talib.SMA(df[f'DIF收盘_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
-            df[f'DEA开盘_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['开盘'] / \
-                talib.SMA(df[f'DIF开盘_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
-            df[f'DEA最高_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['最高'] / \
-                talib.SMA(df[f'DIF最高_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
-            df[f'DEA最低_{(n-1)*(n-1)}_{n*n}_{(n-1)*(n-1)}'] = df['最低'] / \
-                talib.SMA(df[f'DIF最低_{(n-1)*(n-1)}_{n*n}'].values, timeperiod=(n-1)*(n-1))
-
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
     for n in range(1, 20):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100

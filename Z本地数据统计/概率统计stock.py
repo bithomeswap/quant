@@ -5,17 +5,17 @@ import numpy as np
 
 name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'EMA121收盘比值'
+mubiao = 'MACD'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 
 df = df[df['开盘幅'] <= 9.9].copy()
 # 开盘幅过滤
 
-# df = df[df['EMA121收盘比值'] <= 0.75].copy()
-# df = df[df['EMA121开盘比值'] <= 0.75].copy()
-# df = df[df['EMA121最高比值'] <= 0.75].copy()
-# df = df[df['EMA121最低比值'] <= 0.75].copy()
+df = df[df['EMA121收盘比值'] <= 0.75].copy()
+df = df[df['EMA121开盘比值'] <= 0.75].copy()
+df = df[df['EMA121最高比值'] <= 0.75].copy()
+df = df[df['EMA121最低比值'] <= 0.75].copy()
 # 四均线过滤STOCK0.8
 df = df[df['开盘'] <= 31].copy()
 # 开盘价过滤STOCk0.5
@@ -43,7 +43,7 @@ a = 40
 indices = np.linspace(0, len(df[f'{mubiao}']),
                       num=a+1, endpoint=True, dtype=int)
 # 得到每一个区间的上界，并作为该部分对应的区间范围
-# df.round(decimals=6).to_csv(f'{name}标的{mubiao}因子样本分布.csv', index=False)
+df.round(decimals=6).to_csv(f'{name}标的{mubiao}因子样本分布.csv', index=False)
 ranges = []
 for i in range(len(indices) - 1):
     start_idx = indices[i]
@@ -53,7 +53,7 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 
-for n in range(1, 10):
+for n in range(1, 20):
     for rank_range in ranges:
         sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
                            (df[f'{mubiao}'] <= rank_range[1])]
@@ -75,7 +75,7 @@ for n in range(1, 10):
         result_dicts.append(result_dict)
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
-for n in range(1, 10):
+for n in range(1, 20):
     cols_to_shift = [f'{n}日统计次数（已排除涨停）',
                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))
