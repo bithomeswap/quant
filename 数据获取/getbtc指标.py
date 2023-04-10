@@ -37,13 +37,27 @@ for n in range(2, 12):
     df[f'EMA{n*n}最低比值'] = df['最低'] / \
         talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
     for m in range(5, 15):
-        # 计算趋势确认指标MACD指标
         macd, macdsignal, macdhist = talib.MACD(
             df['收盘'].values, fastperiod=n, slowperiod=m, signalperiod=n)
-        df[f'MACD_{n}_{m}_{n}'] = macd
-        df[f'MACDsignal_{n}_{m}_{n}'] = macdsignal
-        df[f'MACDhist_{n}_{m}_{n}'] = macdhist
-
+        df[f'收盘MACD_{n}_{m}_{n}比值'] = df['收盘']/macd
+        df[f'收盘MACDsignal_{n}_{m}_{n}比值'] = df['收盘']/macdsignal
+        df[f'收盘MACDhist_{n}_{m}_{n}比值'] = df['收盘']/macdhist
+        macd, macdsignal, macdhist = talib.MACD(
+            df['开盘'].values, fastperiod=n, slowperiod=m, signalperiod=n)
+        df[f'开盘MACD_{n}_{m}_{n}比值'] = df['开盘']/macd
+        df[f'开盘MACDsignal_{n}_{m}_{n}比值'] = df['开盘']/macdsignal
+        df[f'开盘MACDhist_{n}_{m}_{n}比值'] = df['开盘']/macdhist
+        macd, macdsignal, macdhist = talib.MACD(
+            df['最高'].values, fastperiod=n, slowperiod=m, signalperiod=n)
+        df[f'最高MACD_{n}_{m}_{n}比值'] = df['最高']/macd
+        df[f'最高MACDsignal_{n}_{m}_{n}比值'] = df['最高']/macdsignal
+        df[f'最高MACDhist_{n}_{m}_{n}比值'] = df['最高']/macdhist
+        macd, macdsignal, macdhist = talib.MACD(
+            df['最低'].values, fastperiod=n, slowperiod=m, signalperiod=n)
+        df[f'最低MACD_{n}_{m}_{n}比值'] = df['最低']/macd
+        df[f'最低MACDsignal_{n}_{m}_{n}比值'] = df['最低']/macdsignal
+        df[f'最低MACDhist_{n}_{m}_{n}比值'] = df['最低']/macdhist
+        
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 for n in range(1, 20):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
