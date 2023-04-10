@@ -39,10 +39,6 @@ for n in range(2, 12):
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值',
         f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值',
     ]
-    if n > 2:
-        tezheng += [
-            f'DIF收盘_{(n-1)*(n-1)}_{n*n}', f'DIF开盘_{(n-1)*(n-1)}_{n*n}', f'DIF最高_{(n-1)*(n-1)}_{n*n}', f'DIF最高_{(n-1)*(n-1)}_{n*n}',
-        ]
 
 x = df[tezheng]
 print(x)
