@@ -32,15 +32,14 @@ df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
 
 # 计算过去n日ema比值指标
-
 tezheng = [
-    "涨跌幅", '开盘幅'
-]
+    'timestamp',
+    "涨跌幅", '开盘幅', 'MACD', 'MACDhist', 'MACDsignal',]
 
 for n in range(2, 12):
     tezheng += [
-        f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值', f'EMA{n*n}成交量比值',
-        f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值', f'SMA{n*n}成交量比值',
+        f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值',
+        f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值',
     ]
 x = df[tezheng]
 print(x)
