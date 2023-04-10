@@ -3,22 +3,27 @@ from pymongo import MongoClient
 import pandas as pd
 import numpy as np
 
-name = 'STOCK'
+name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'SMA9收盘比值'
+mubiao = '开盘'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 
 df = df[df['开盘幅'] <= 9.9].copy()
 # 开盘幅过滤
 df = df[df['SMA121收盘比值'] <= 0.8].copy()
-# SMA121收盘比值过滤
-df = df[df['开盘'] <= 10].copy()
-# 开盘价过滤
-df = df[df['换手率'] <= 3.3].copy()
-# 换手率过滤
-df = df[df['振幅'] <= 6].copy()
-# 振幅过滤
+df = df[df['SMA121开盘比值'] <= 0.8].copy()
+df = df[df['SMA121最高比值'] <= 0.8].copy()
+df = df[df['SMA121最低比值'] <= 0.8].copy()
+# # 四均线过滤STOCK0.8
+# df = df[df['SMA121收盘比值'] <= 0.5].copy()
+# df = df[df['SMA121开盘比值'] <= 0.5].copy()
+# df = df[df['SMA121最高比值'] <= 0.5].copy()
+# df = df[df['SMA121最低比值'] <= 0.5].copy()
+# 四均线过滤COIN0.5
+
+# df = df[df['换手率'] <= 3.3].copy()
+# 换手率过滤（仅限A股）
 
 # 去掉开盘幅过高的噪音数据
 for n in range(1, 10):
@@ -32,6 +37,7 @@ a = 40
 indices = np.linspace(0, len(df[f'{mubiao}']),
                       num=a+1, endpoint=True, dtype=int)
 # 得到每一个区间的上界，并作为该部分对应的区间范围
+df.round(decimals=6).to_csv(f'{name}标的{mubiao}因子样本分布.csv', index=False)
 ranges = []
 for i in range(len(indices) - 1):
     start_idx = indices[i]

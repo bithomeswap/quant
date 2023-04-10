@@ -34,14 +34,11 @@ df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 # 计算过去n日ema比值指标
 
 tezheng = [
-    "timestamp",
-    "开盘", "最高", "最低", "收盘",
     "涨跌幅", '开盘幅'
 ]
 
 for n in range(2, 12):
     tezheng += [
-        f'wr{n*n}',
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值', f'EMA{n*n}成交量比值',
         f'SMA{n*n}最高比值', f'SMA{n*n}最低比值', f'SMA{n*n}开盘比值', f'SMA{n*n}收盘比值', f'SMA{n*n}成交量比值',
     ]
