@@ -17,9 +17,6 @@ collection = db[f'{name}指标']
 print('数据库已链接')
 df = pd.DataFrame(list(collection.find()))
 print('数据获取成功')
-
-# 数据预处理
-
 # 提取数值类型数据
 numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 df_numerical = df[numerical_cols]

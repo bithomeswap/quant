@@ -17,6 +17,19 @@ collection = db[f'{name}指标']
 print('数据库已链接')
 df = pd.DataFrame(list(collection.find()))
 print('数据获取成功')
+df = df[df['EMA121收盘比值'] <= 0.5].copy()
+df = df[df['EMA121开盘比值'] <= 0.5].copy()
+df = df[df['EMA121最高比值'] <= 0.5].copy()
+df = df[df['EMA121最低比值'] <= 0.5].copy()
+# 四均线过滤COIN0.5
+# df = df[df['DIF收盘_4_9'] >= 0.16].copy()
+# 动能强度过滤COIN0.16
+df = df[df['开盘'] <= 0.9].copy()
+# 开盘价过滤COIN0.9
+df = df[df['开盘幅'] <= 9.9].copy()
+df = df[df['开盘幅'] >= -0.01].copy()
+# 开盘幅过滤COIN-0.01~9.9
+print('数据预处理成功')
 # 提取数值类型数据
 numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 df_numerical = df[numerical_cols]
