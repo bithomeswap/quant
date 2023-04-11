@@ -32,7 +32,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
     # 计算过去n日ema比值指标
-    for n in range(2, 16):
+    for n in range(2, 12):
         df[f'EMA{n*n}收盘比值'] = df['收盘'] / \
             talib.MA(df['收盘'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
@@ -41,6 +41,26 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             talib.MA(df['最高'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n*n}最低比值'] = df['最低'] / \
             talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
+
+        df[f'EMA{n}收盘比值'] = df['收盘'] / \
+            talib.MA(df['收盘'].values, timeperiod=n, matype=0)
+        df[f'EMA{n}开盘比值'] = df['开盘'] / \
+            talib.MA(df['开盘'].values, timeperiod=n, matype=0)
+        df[f'EMA{n}最高比值'] = df['最高'] / \
+            talib.MA(df['最高'].values, timeperiod=n, matype=0)
+        df[f'EMA{n}最低比值'] = df['最低'] / \
+            talib.MA(df['最低'].values, timeperiod=n, matype=0)
+    # 计算过去n日ema比值指标
+    for n in range(2, 12):
+        df[f'EMA9收盘动能{n*n}'] = df[f'EMA{n*n}收盘比值']/df[f'EMA9收盘比值']
+        df[f'EMA9开盘动能{n*n}'] = df[f'EMA{n*n}开盘比值']/df[f'EMA9开盘比值']
+        df[f'EMA9最高动能{n*n}'] = df[f'EMA{n*n}最高比值']/df[f'EMA9最高比值']
+        df[f'EMA9最低动能{n*n}'] = df[f'EMA{n*n}最低比值']/df[f'EMA9最低比值']
+
+        df[f'EMA9收盘动能{n}'] = df[f'EMA{n}收盘比值']/df[f'EMA9收盘比值']
+        df[f'EMA9开盘动能{n}'] = df[f'EMA{n}开盘比值']/df[f'EMA9开盘比值']
+        df[f'EMA9最高动能{n}'] = df[f'EMA{n}最高比值']/df[f'EMA9最高比值']
+        df[f'EMA9最低动能{n}'] = df[f'EMA{n}最低比值']/df[f'EMA9最低比值']
 
         macd, macdsignal, macdhist = talib.MACD(
             df['收盘'].values, fastperiod=2, slowperiod=n, signalperiod=10)
