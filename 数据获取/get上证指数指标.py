@@ -20,7 +20,7 @@ df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 # 成交量变成浮点数
-df['成交量'] = df['成交量'].astype(float)    
+df['成交量'] = df['成交量'].astype(float)
 # 定义开盘幅
 df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
 # 定义收盘幅即涨跌幅
@@ -38,22 +38,22 @@ for n in range(2, 16):
         talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
     macd, macdsignal, macdhist = talib.MACD(
-        df['收盘'].values, fastperiod=1, slowperiod=m, signalperiod=1)
+        df['收盘'].values, fastperiod=1, slowperiod=n, signalperiod=1)
     df[f'收盘MACD_1_{n}_1比值'] = macd/df['收盘']
     df[f'收盘MACDsignal_1_{n}_1比值'] = macdsignal/df['收盘']
     df[f'收盘MACDhist_1_{n}_1比值'] = macdhist/df['收盘']
     macd, macdsignal, macdhist = talib.MACD(
-        df['开盘'].values, fastperiod=1, slowperiod=m, signalperiod=1)
+        df['开盘'].values, fastperiod=1, slowperiod=n, signalperiod=1)
     df[f'开盘MACD_1_{n}_1比值'] = macd/df['开盘']
     df[f'开盘MACDsignal_1_{n}_1比值'] = macdsignal/df['开盘']
     df[f'开盘MACDhist_1_{n}_1比值'] = macdhist/df['开盘']
     macd, macdsignal, macdhist = talib.MACD(
-        df['最高'].values, fastperiod=1, slowperiod=m, signalperiod=1)
+        df['最高'].values, fastperiod=1, slowperiod=n, signalperiod=1)
     df[f'最高MACD_1_{n}_1比值'] = macd/df['最高']
     df[f'最高MACDsignal_1_{n}_1比值'] = macdsignal/df['最高']
     df[f'最高MACDhist_1_{n}_1比值'] = macdhist/df['最高']
     macd, macdsignal, macdhist = talib.MACD(
-        df['最低'].values, fastperiod=1, slowperiod=m, signalperiod=1)
+        df['最低'].values, fastperiod=1, slowperiod=n, signalperiod=1)
     df[f'最低MACD_1_{n}_1比值'] = macd/df['最低']
     df[f'最低MACDsignal_1_{n}_1比值'] = macdsignal/df['最低']
     df[f'最低MACDhist_1_{n}_1比值'] = macdhist/df['最低']
