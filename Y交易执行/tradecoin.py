@@ -30,39 +30,46 @@ def buy():
     # 首先需要获取所有可交易的COIN，使用Binance的API可通过以下代码实现：
     exchange_info = client.get_exchange_info()
     symbols = [symbol['symbol'] for symbol in exchange_info['symbols']]
+    
 
-    对以上交易对进行筛选，遍历数据库当中已经处理完毕的，当天收盘日k处理完之后，所有能够满足某个条件的COIN，遍历每一个能够下单的COIN进行下单。
+    这里通过访问数据库对之前的symbols进行过滤，确定今天可以执行的标的
+
 
     for symbol in symbols:
-        # 实时获取当前卖一和卖二价格
-        depth = client.get_order_book(symbol=symbol, limit=5)
-        ask_price_1 = float(depth['asks'][0][0])
-        ask_price_2 = float(depth['asks'][1][0])
+        try:
+            # 实时获取当前卖一和卖二价格
+            depth = client.get_order_book(symbol=symbol, limit=5)
+            ask_price_1 = float(depth['asks'][0][0])
+            ask_price_2 = float(depth['asks'][1][0])
 
-        # 计算预定价格
-        target_price = ask_price_2 * 1.001
+            # 计算预定价格
+            target_price = ask_price_2 * 1.001
 
-        # 判断当前卖一不高于预定价格，卖二卖一差距较小
-        if ask_price_1 <= target_price and ask_price_2/ask_price_1 <= 1.01:
-            # 下单
-            symbol = str(symbol)
-            quantity = 1
-            order = client.order_market_buy(
-                symbol=symbol,
-                quantity=quantity
-            )
-            print("下单信息：", order)
+            # 判断当前卖一不高于预定价格，卖二卖一差距较小
+            if ask_price_1 <= target_price and ask_price_2/ask_price_1 <= 1.01:
+                # 下单
+                symbol = str(symbol)
+                quantity = 1
+                order = client.order_market_buy(
+                    symbol=symbol,
+                    quantity=quantity
+                )
+                print("下单信息：", order)
 
-            collection_write_order.insert_one({
-                'orderId': order['orderId'],
-                'time': int(time.time()),
-                'symbol': symbol,
-                'quantity': quantity,
-                'buy_price': float(order['fills'][0]['price']),
-                'sell_time': None,
-                'sell_price': None,
-                'status': 'pending'
-            })
+                collection_write_order.insert_one({
+                    'orderId': order['orderId'],
+                    'time': int(time.time()),
+                    'symbol': symbol,
+                    'quantity': quantity,
+                    'buy_price': float(order['fills'][0]['price']),
+                    'sell_time': None,
+                    'sell_price': None,
+                    'status': 'pending'
+                })
+        except:
+            print(f"发生bug")
+            continue
+
 
 
 def sell():
@@ -121,10 +128,10 @@ def sell():
 
 
 # 每5分钟执行一次买入操作
-schedule.every(5).minutes.do(buy)
+schedule.every(60).minutes.do(buy)
 
 # 每分钟执行一次卖出操作
-schedule.every().minutes.do(sell)
+schedule.every(60).minutes.do(sell)
 
 while True:
     schedule.run_pending()

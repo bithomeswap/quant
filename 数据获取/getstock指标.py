@@ -86,7 +86,14 @@ print('准备插入数据')
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']
 new_collection.drop()  # 清空集合中的所有文档
-new_collection.insert_many(grouped.to_dict('records'))
+# 将数据分批插入
+batch_size = 5000  # 批量插入的大小
+num_batches = len(grouped) // batch_size + 1
+for i in range(num_batches):
+    start_idx = i * batch_size
+    end_idx = (i + 1) * batch_size
+    data_slice = grouped[start_idx:end_idx]
+    new_collection.insert_many(data_slice.to_dict('records'))
 
 url = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
 headers = {'Content-Type': 'application/json;charset=utf-8'}
