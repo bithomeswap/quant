@@ -6,10 +6,6 @@ import schedule
 from binance.client import Client
 from pymongo import MongoClient
 
-# 币安的api配置
-api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
-api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
-
 # 需要读取的数据库配置
 client_read = MongoClient(
     'mongodb://username:password@127.0.0.1:27017/dbname?authSource=authdb')
@@ -20,73 +16,116 @@ collection_read = db_read['BTC']
 client_write = MongoClient(
     'mongodb://username:password@127.0.0.1:27017/dbname?authSource=authdb')
 db_write = client_write['dbname']
-collection_write = db_write['BTCorder']
+collection_write_order = db_write['BTCorder']
+collection_write_sell = db_write['BTCsell']
 
+# 币安的api配置
+api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
+api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 # 创建Binance客户端
 client = Client(api_key, api_secret)
 
 
+def buy():
+    # 首先需要获取所有可交易的COIN，使用Binance的API可通过以下代码实现：
+    exchange_info = client.get_exchange_info()
+    symbols = [symbol['symbol'] for symbol in exchange_info['symbols']]
+
+    对以上交易对进行筛选，遍历数据库当中已经处理完毕的，当天收盘日k处理完之后，所有能够满足某个条件的COIN，遍历每一个能够下单的COIN进行下单。
+
+    for symbol in symbols:
+        # 实时获取当前卖一和卖二价格
+        depth = client.get_order_book(symbol=symbol, limit=5)
+        ask_price_1 = float(depth['asks'][0][0])
+        ask_price_2 = float(depth['asks'][1][0])
+
+        # 计算预定价格
+        target_price = ask_price_2 * 1.001
+
+        # 判断当前卖一不高于预定价格，卖二卖一差距较小
+        if ask_price_1 <= target_price and ask_price_2/ask_price_1 <= 1.01:
+            # 下单
+            symbol = str(symbol)
+            quantity = 1
+            order = client.order_market_buy(
+                symbol=symbol,
+                quantity=quantity
+            )
+            print("下单信息：", order)
+
+            collection_write_order.insert_one({
+                'orderId': order['orderId'],
+                'time': int(time.time()),
+                'symbol': symbol,
+                'quantity': quantity,
+                'buy_price': float(order['fills'][0]['price']),
+                'sell_time': None,
+                'sell_price': None,
+                'status': 'pending'
+            })
+
+
 def sell():
-    # 获取七天前的时间戳
-    time_7days_ago = int(time.time()) - 604800
-    # 查询七天前未卖出的买入订单
-    orders = collection_write.find({
-        "type": "buy",
-        "sell_time": {"$eq": None},
-        "create_time": {"$lte": time_7days_ago}
+    # 获取当前时间戳
+    current_time = int(time.time())
+
+    # 查询已下单且未卖出的订单
+    orders = collection_write_order.find({
+        'status': 'pending',
+        'sell_time': None
     })
 
     for order in orders:
-        # 卖出订单
-        sell_order = client.create_order(
-            symbol='BTCUSDT',
-            side='SELL',
-            type='MARKET',
-            quantity=order["quantity"]
-        )
+        # 计算卖出时间
+        sell_time = order['time'] + 86400
 
-        # 更新订单信息
-        collection_write.update_one(
-            {"_id": order["_id"]},
-            {"$set": {
-                "sell_time": int(time.time()),
-                "sell_price": sell_order['price']
-            }}
-        )
+        # 如果卖出时间已经到了，就执行卖出操作
+        if current_time >= sell_time:
+            # 卖出订单
+            sell_order = client.order_market_sell(
+                symbol=order['symbol'],
+                quantity=order['quantity']
+            )
+            print("卖出信息：", sell_order)
 
+            # 更新订单信息
+            collection_write_order.update_one(
+                {'orderId': order['orderId']},
+                {'$set': {
+                    'sell_time': int(time.time()),
+                    'sell_price': float(sell_order['fills'][0]['price']),
+                    'status': 'done'
+                }}
+            )
 
-def buy():
-    # 获取最新的KDJ_J值
-    kdj_j_value = collection_read.find().sort(
-        [("time", -1)]).limit(1)[0]["kdj_j"]
-    if kdj_j_value < 8:
-        # 买入订单
-        buy_order = client.create_order(
-            symbol='BTCUSDT',
-            side='BUY',
-            type='MARKET',
-            quantity=0.01
-        )
+            # 插入卖出订单信息
+            collection_write_sell.insert_one({
+                'orderId': sell_order['orderId'],
+                'time': int(time.time()),
+                'symbol': order['symbol'],
+                'quantity': order['quantity'],
+                'buy_price': order['buy_price'],
+                'sell_price': float(sell_order['fills'][0]['price'])
+            })
+            print("已卖出信息：", {
+                'orderId': sell_order['orderId'],
+                'time': int(time.time()),
+                'symbol': order['symbol'],
+                'quantity': order['quantity'],
+                'buy_price': order['buy_price'],
+                'sell_price': float(sell_order['fills'][0]['price'])
+            })
 
-        # 插入订单信息
-        collection_write.insert_one({
-            "type": "buy",
-            "create_time": int(time.time()),
-            "quantity": buy_order["executedQty"],
-            "buy_price": buy_order["price"],
-            "sell_time": None,
-            "sell_price": None
-        })
+            # 删除已下单信息
+            collection_write_order.delete_one({'orderId': order['orderId']})
 
-
-# 每天晚上9点执行卖出操作
-schedule.every().day.at('21:00').do(sell)
 
 # 每5分钟执行一次买入操作
 schedule.every(5).minutes.do(buy)
 
+# 每分钟执行一次卖出操作
+schedule.every().minutes.do(sell)
+
 while True:
     schedule.run_pending()
     time.sleep(1)
-
-# 定时到第二三天直接卖出
