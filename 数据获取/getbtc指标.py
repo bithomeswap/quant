@@ -38,25 +38,25 @@ for n in range(2, 16):
         talib.MA(df['最低'].values, timeperiod=n*n, matype=0)
 
     macd, macdsignal, macdhist = talib.MACD(
-        df['收盘'].values, fastperiod=2, slowperiod=n, signalperiod=1)
-    df[f'收盘MACD_1_{n}_1比值'] = macd/df['收盘']
-    df[f'收盘MACDsignal_1_{n}_1比值'] = macdsignal/df['收盘']
-    df[f'收盘MACDhist_1_{n}_1比值'] = macdhist/df['收盘']
+        df['收盘'].values, fastperiod=2, slowperiod=n, signalperiod=10)
+    df[f'收盘MACD_1_{n}_10比值'] = macd/df['收盘']
+    df[f'收盘MACDsignal_1_{n}_10比值'] = macdsignal/df['收盘']
+    df[f'收盘MACDhist_1_{n}_10比值'] = macdhist/df['收盘']
     macd, macdsignal, macdhist = talib.MACD(
-        df['开盘'].values, fastperiod=2, slowperiod=n, signalperiod=1)
-    df[f'开盘MACD_1_{n}_1比值'] = macd/df['开盘']
-    df[f'开盘MACDsignal_1_{n}_1比值'] = macdsignal/df['开盘']
-    df[f'开盘MACDhist_1_{n}_1比值'] = macdhist/df['开盘']
+        df['开盘'].values, fastperiod=2, slowperiod=n, signalperiod=10)
+    df[f'开盘MACD_1_{n}_10比值'] = macd/df['开盘']
+    df[f'开盘MACDsignal_1_{n}_10比值'] = macdsignal/df['开盘']
+    df[f'开盘MACDhist_1_{n}_10比值'] = macdhist/df['开盘']
     macd, macdsignal, macdhist = talib.MACD(
-        df['最高'].values, fastperiod=2, slowperiod=n, signalperiod=1)
-    df[f'最高MACD_1_{n}_1比值'] = macd/df['最高']
-    df[f'最高MACDsignal_1_{n}_1比值'] = macdsignal/df['最高']
-    df[f'最高MACDhist_1_{n}_1比值'] = macdhist/df['最高']
+        df['最高'].values, fastperiod=2, slowperiod=n, signalperiod=10)
+    df[f'最高MACD_1_{n}_10比值'] = macd/df['最高']
+    df[f'最高MACDsignal_1_{n}_10比值'] = macdsignal/df['最高']
+    df[f'最高MACDhist_1_{n}_10比值'] = macdhist/df['最高']
     macd, macdsignal, macdhist = talib.MACD(
-        df['最低'].values, fastperiod=2, slowperiod=n, signalperiod=1)
-    df[f'最低MACD_1_{n}_1比值'] = macd/df['最低']
-    df[f'最低MACDsignal_1_{n}_1比值'] = macdsignal/df['最低']
-    df[f'最低MACDhist_1_{n}_1比值'] = macdhist/df['最低']
+        df['最低'].values, fastperiod=2, slowperiod=n, signalperiod=10)
+    df[f'最低MACD_1_{n}_10比值'] = macd/df['最低']
+    df[f'最低MACDsignal_1_{n}_10比值'] = macdsignal/df['最低']
+    df[f'最低MACDhist_1_{n}_10比值'] = macdhist/df['最低']
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 for n in range(1, 20):  # 计算未来n日涨跌幅
