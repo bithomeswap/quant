@@ -38,7 +38,11 @@ for code in stock_info_df['代码']:
             symbol=code, start_date=start_date, adjust="qfq")
         k_data['代码'] = float(code)
         # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
-        collection.insert_many(k_data.to_dict('records'))
+        try:
+            collection.insert_many(k_data.to_dict('records'))
+        except:
+            print(f"{name}({code}) 已停牌")
+            continue
 print('任务已经完成')
 # time.sleep(3600)
 # limit = 400000
