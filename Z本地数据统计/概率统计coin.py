@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 name = 'COIN'
-df = pd.read_csv(f'{name}指标.csv')
+df = pd.read_csv(f'{name}指标.csv', encoding='gbk')
 mubiao = '开盘'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
