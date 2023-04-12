@@ -1,6 +1,6 @@
 import pandas as pd
 
-name = 'STOCK'
+name = 'STOCk'
 df = pd.read_csv(f'{name}指标.csv')
 df = df.dropna()
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
@@ -27,13 +27,14 @@ df = df.groupby('日期').apply(
 # #  过滤COIN(df['开盘'] <= 0.9)(df['开盘幅'] <= 9.9)(df['开盘幅'] >= -0.01)
 # df_stock_filtered = df[(df['开盘'] <= 0.9)
 #                        & (df['开盘幅'] <= 9.9)
-#                        & (df['开盘幅'] >= -0.01)]
+#                        ]
 
 # 过滤COIN(df['开盘'] <= 31)(df['开盘幅'] <= 9.9)(df['开盘幅'] >= -2)(df['换手率'] <= 3.3)
 df_stock_filtered = df[(df['开盘'] <= 31)
                        & (df['开盘幅'] <= 9.9)
                        & (df['开盘幅'] >= -2)
-                       & (df['换手率'] <= 3.3)]
+                       & (df['换手率'] <= 3.3)
+                       ]
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
@@ -48,7 +49,7 @@ cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 
-n = 6
+n = 9
 for date, group in df_stock_filtered.groupby('日期'):
     # 如果当日没有入选标的，则单日收益率为0
     if group.empty:
