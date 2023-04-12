@@ -25,7 +25,7 @@ print("数据读取成功")
 def get_technical_indicators(df):  # 定义计算技术指标的函数
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
     # 成交量变成浮点数
-    df['成交量'] = df['成交量'].astype(float)    
+    df['成交量'] = df['成交量'].astype(float)
     # 定义开盘幅
     df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
     # 定义收盘幅即涨跌幅
@@ -51,19 +51,14 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df[f'EMA{n}最低比值'] = df['最低'] / \
             talib.MA(df['最低'].values, timeperiod=n, matype=0)
     # 计算过去n日ema比值指标
-    for n in range(2, 12):
-        df[f'EMA9收盘动能{n*n}'] = df[f'EMA{n*n}收盘比值']/df[f'EMA9收盘比值']
-        df[f'EMA9开盘动能{n*n}'] = df[f'EMA{n*n}开盘比值']/df[f'EMA9开盘比值']
-        df[f'EMA9最高动能{n*n}'] = df[f'EMA{n*n}最高比值']/df[f'EMA9最高比值']
-        df[f'EMA9最低动能{n*n}'] = df[f'EMA{n*n}最低比值']/df[f'EMA9最低比值']
-
+    for n in range(2, 8):
         df[f'EMA9收盘动能{n}'] = df[f'EMA{n}收盘比值']/df[f'EMA9收盘比值']
         df[f'EMA9开盘动能{n}'] = df[f'EMA{n}开盘比值']/df[f'EMA9开盘比值']
         df[f'EMA9最高动能{n}'] = df[f'EMA{n}最高比值']/df[f'EMA9最高比值']
         df[f'EMA9最低动能{n}'] = df[f'EMA{n}最低比值']/df[f'EMA9最低比值']
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-    for n in range(1, 20):  # 计算未来n日涨跌幅
+    for n in range(1,10):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
 
     return df
