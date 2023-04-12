@@ -53,7 +53,7 @@ cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 
-n = 9
+n = 6
 for date, group in df_stock_filtered.groupby('日期'):
     # 如果当日没有入选标的，则单日收益率为0
     if group.empty:

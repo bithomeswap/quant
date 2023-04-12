@@ -1,11 +1,9 @@
 import pandas as pd
 
-name = 'STOCk'
+name = 'BTC'
 df = pd.read_csv(f'{name}指标.csv')
 df = df.dropna()
-# 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 10):
-    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
+
 
 # 四均线过滤COIN0.8这里的阈值也应该是动态的，只是多久进行一次调整的问题
 df = df[df['EMA121收盘比值'] <= 0.5].copy()
@@ -13,36 +11,15 @@ df = df[df['EMA121开盘比值'] <= 0.5].copy()
 df = df[df['EMA121最高比值'] <= 0.5].copy()
 df = df[df['EMA121最低比值'] <= 0.5].copy()
 
-# # 四均线过滤STOCK0.8这里的阈值也应该是动态的，只是多久进行一次调整的问题
-# df = df[df['EMA121收盘比值'] <= 0.8].copy()
-# df = df[df['EMA121开盘比值'] <= 0.8].copy()
-# df = df[df['EMA121最高比值'] <= 0.8].copy()
-# df = df[df['EMA121最低比值'] <= 0.8].copy()
-
-# # COIN动能过滤只要最佳的四只
-# n_stock = 4
-
-# STOCk动能过滤只要最佳的四只
-n_stock = 6
-
-df = df.groupby('日期').apply(
-    lambda x: x.nlargest(n_stock, 'EMA9收盘动能3')).reset_index(drop=True)
-
-# #  过滤COIN(df['开盘'] <= 0.9)(df['开盘幅'] <= 9.9)(df['开盘幅'] >= -0.01)
-# df_stock_filtered = df[(df['开盘'] <= 0.9)
-#                        & (df['开盘幅'] <= 9.9)
-#                        ]
-
-# 过滤COIN(df['开盘'] <= 31)(df['开盘幅'] <= 9.9)(df['开盘幅'] >= -2)(df['换手率'] <= 3.3)
-df_stock_filtered = df[(df['开盘'] <= 31)
-                       & (df['开盘幅'] <= 9.9)
-                       & (df['开盘幅'] >= -2)
-                       & (df['换手率'] <= 3.3)
-                       ]
+# 四均线过滤COIN0.8这里的阈值也应该是动态的，只是多久进行一次调整的问题
+df = df[df['EMA9收盘动能3'] >= 1.06].copy()
+df = df[df['EMA9开盘动能3'] >= 1.06].copy()
+df = df[df['EMA9最高动能3'] >= 1.06].copy()
+df = df[df['EMA9最低动能3'] >= 1.06].copy()
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
-df_stock_filtered.to_csv(trading_detail_filename, index=False)
+df.to_csv(trading_detail_filename, index=False)
 
 # 计算每日收益率=100*(100+FJ2-2)/100
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
@@ -54,7 +31,8 @@ cash_balance = 10000
 daily_cash_balance = {}
 
 n = 6
-for date, group in df_stock_filtered.groupby('日期'):
+for date in df['日期'].unique():
+    group = df[df['日期'] == date]
     # 如果当日没有入选标的，则单日收益率为0
     if group.empty:
         daily_return = 0
