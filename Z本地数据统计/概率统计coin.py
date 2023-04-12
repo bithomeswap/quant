@@ -19,8 +19,12 @@ df = df[df['EMA121最低比值'] <= 0.5].copy()
 # df = df[df['EMA121最高比值'] <= 0.8].copy()
 # df = df[df['EMA121最低比值'] <= 0.8].copy()
 
-# 动能过滤只要最佳的四只
+# COIN动能过滤只要最佳的四只
 n_stock = 4
+
+# # STOCk动能过滤只要最佳的四只
+# n_stock = 20
+
 df = df.groupby('日期').apply(
     lambda x: x.nlargest(n_stock, 'EMA9收盘动能3')).reset_index(drop=True)
 

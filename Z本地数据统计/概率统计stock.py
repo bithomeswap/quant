@@ -19,8 +19,12 @@ df = df[df['EMA121开盘比值'] <= 0.8].copy()
 df = df[df['EMA121最高比值'] <= 0.8].copy()
 df = df[df['EMA121最低比值'] <= 0.8].copy()
 
-# 动能过滤只要最佳的四只
-n_stock = 4
+# # COIN动能过滤只要最佳的四只
+# n_stock = 4
+
+# STOCk动能过滤只要最佳的四只
+n_stock = 20
+
 df = df.groupby('日期').apply(
     lambda x: x.nlargest(n_stock, 'EMA9收盘动能3')).reset_index(drop=True)
 
@@ -49,14 +53,14 @@ cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 
-n = 9
+n = 1
 for date, group in df_stock_filtered.groupby('日期'):
     # 如果当日没有入选标的，则单日收益率为0
     if group.empty:
         daily_return = 0
     else:
         # 计算单日收益率(平均法)
-        group['daily_return'] = group[f'{n}日后总涨跌幅（未来函数）'].mean()/100-0.01
+        group['daily_return'] = group[f'{n}日后总涨跌幅（未来函数）'].mean()/100
 
         # 计算平均收益率
         daily_return = group['daily_return'].mean()
