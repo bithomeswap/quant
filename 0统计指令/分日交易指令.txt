@@ -9,48 +9,60 @@
 4.可以使用参考资料，但是不一定准确，请你批判的使用
 二、规则说明
 1.以日期为索引进行分组
-2.选取每天‘EMA9收盘动能3’最大的四十分之一股票进入备选池
-3.继续选取其中‘EMA121收盘比值’最小的四十分之一股票进入统计范围，作为交易标的
-4.然后进行过滤
-# 分组计算
-# # 动能强度过滤COIN0.16
-# df = df[df['开盘'] <= 0.9].copy()
-# # 开盘价过滤COIN0.9
-# df = df[df['开盘幅'] <= 9.9].copy()
-# df = df[df['开盘幅'] >= -0.01].copy()
-# # 开盘幅过滤COIN-0.01~9.9
-# # 去掉开盘幅过高的噪音数据
-# for n in range(1, 20):
-#     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
-# # 去掉n日后总涨跌幅大于百分之三百的噪音数据
-5.输出每天对所有股票的交易标的细节
-6.输出每天对所有股票的平均收益率
-
-
-参考资料（不一定准确）：
-import time
-from pymongo import MongoClient
+2.选取每一天内‘EMA9收盘动能3’最大的四十分之一股票进入备选池
+3.继续选取每一天内‘EMA9收盘动能3’最大的四十分之一股票中‘EMA121收盘比值’最小的四十分之一股票进入统计范围，作为交易标的
+4.每天对所有股票的交易标的细节输出为对应的交易细节.csv
+6.每天对所有股票的平均收益率输出为对应的收益率.csv
+三、参考代码
 import pandas as pd
-import numpy as np
 
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
+df = df.dropna()
 
-print('任务已经开始')
+# 日期分组
+df_grouped = df.groupby('日期')
 
-df = df.dropna()  # 删除含有空值的行
+# 选取每天EMA9收盘动能3最大的四十分之一股票进入备选池
+n_stock = len(df)//40
+df_sorted = df_grouped.apply(lambda x: x.nlargest(n_stock, 'EMA9收盘动能3'))
 
+# 继续选取EMA121收盘比值最小的四十分之一股票进入统计范围，作为交易标的
+n_tradable = len(df_sorted)//40
+df_tradable = df_sorted.nsmallest(n_tradable, 'EMA121收盘比值')
 
-
-# 将结果持久化
-result_df = pd.DataFrame(result_dicts)
+# 添加过滤条件
+df_filtered = df_tradable[(df_tradable['开盘'] <= 0.9) &
+                          (df_tradable['开盘幅'] <= 9.9) &
+                          (df_tradable['开盘幅'] >= -0.01)]
 for n in range(1, 20):
-    cols_to_shift = [f'{n}日统计次数（已排除涨停）',
-                     f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
-    result_df[cols_to_shift] = result_df[cols_to_shift].shift(-len(df_grouped))
+    column_name = f'{n}日后总涨跌幅（未来函数）'
+    df_filtered = df_filtered[df_filtered[column_name] <= 300*(1+n*0.2)]
+# 将交易标的细节输出到一个csv文件
+trading_detail_filename = '交易标的细节.csv'
+df_filtered.to_csv(trading_detail_filename, index=False)
+# 设置交易股票代码
+tradables = set(df_filtered['代码'].to_list())
 
-# 删除含有空值的行
-result_df = result_df.dropna()
+avg_returns = {}
+for days in range(1, 21):
+    
+    column_name = f'{days}日后总涨跌幅（未来函数）'
+    returns = []
+    for stock in tradables:
+        df_stock = df[df['代码'] == stock]
+        df_stock_filtered = df_stock[(df_stock['开盘'] <= 0.9) &
+                                     (df_stock['开盘幅'] <= 9.9) &
+                                     (df_stock['开盘幅'] >= -0.01)]
+        for n in range(1, days+1):
+            future_returns_column = f'{n}日后总涨跌幅（未来函数）'
+            df_stock_filtered = df_stock_filtered[df_stock_filtered[future_returns_column] <= 300*(
+                1+n*0.2)]
+        avg_return = df_stock_filtered[column_name].mean()
+        if not pd.isnull(avg_return):
+            returns.append(avg_return)
+    avg_return = sum(returns)/len(returns)
+    avg_returns[f'{days}日后'] = [avg_return]
+avg_returns_df = pd.DataFrame.from_dict(avg_returns)
+avg_returns_df.to_csv('收益率.csv', index=False)
 
-# 将结果保存至CSV文件
-result_df.to_csv(f'{name}标的{mubiao}涨幅分布.csv', index=False)
