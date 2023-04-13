@@ -27,13 +27,8 @@ client = Client(api_key, api_secret)
 
 
 def buy():
-    # 首先需要获取所有可交易的COIN，使用Binance的API可通过以下代码实现：
-    exchange_info = client.get_exchange_info()
-    symbols = [symbol['symbol'] for symbol in exchange_info['symbols']]
-    
-
-    这里通过访问数据库对之前的symbols进行过滤，确定今天可以执行的标的
-
+    # 首先需要获取所有计划交易的标的，包含symbol、时间、价格、日交易量等等信息
+    symbols = db_read['COINsymbols']
 
     for symbol in symbols:
         try:

@@ -12,8 +12,8 @@ window_size = 12  # 滚动窗口大小
 
 # 连接数据库并读取数据
 client = MongoClient(
-    'mongodb://YourDBUsername:YourDBPassword@YourDBIP:27017/YourDBName?authSource=YourAuthSource')
-db = client['YourDBName']
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
 name = 'BTC'
 collection = db[f'{name}待训练']
 df = pd.DataFrame(list(collection.find()))
