@@ -32,26 +32,21 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
     df[f'EMA{121}开盘比值'] = df['开盘'] / \
-            talib.MA(df['开盘'].values, timeperiod=121, matype=0)
-    df[f'EMA{121}开盘比值'] = df['开盘'] / \
-            talib.MA(df['开盘'].values, timeperiod=121, matype=0)
-    df[f'EMA{121}最高比值'] = df['最高'] / \
-            talib.MA(df['最高'].values, timeperiod=121, matype=0)
-    df[f'EMA{121}最低比值'] = df['最低'] / \
-            talib.MA(df['最低'].values, timeperiod=121, matype=0)
+        talib.MA(df['开盘'].values, timeperiod=121, matype=0)
 
-    for n in range(1, 6):
+    for n in range(2, 6):
         df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n*n, matype=0)
         df[f'EMA{n}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n, matype=0)
-        df[f'EMA{n*n}开盘动能{n}'] = talib.MA(df['开盘'].values, timeperiod=n*n, matype=0)/talib.MA(df['开盘'].values, timeperiod=n, matype=0)
+        df[f'EMA{n*n}开盘动能{n}'] = talib.MA(df['开盘'].values, timeperiod=n*n,
+                                          matype=0)/talib.MA(df['开盘'].values, timeperiod=n, matype=0)
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-    for n in range(1, 10):  # 计算未来n日涨跌幅
+    for n in range(1, 12):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
-        df[f'{n*6}日最高开盘（未来函数）'] = df['开盘'].rolling(-n*6).max()
-        df[f'{n*6}日最低开盘（未来函数）'] = df['开盘'].rolling(-n*6).min()
+        df[f'{n*6}日最高开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
+        df[f'{n*6}日最低开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
     return df
 
 
