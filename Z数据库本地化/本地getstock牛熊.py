@@ -21,6 +21,7 @@ for code in stock_info_df['代码']:
         try:
             # 将数据存储到df中
             df = pd.concat([df, k_data], ignore_index=True)
+            print(f"任务执行中")
         except:
             print(f"({code}) 已停牌")
             continue
