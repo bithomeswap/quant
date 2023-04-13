@@ -47,7 +47,7 @@ for n in range(1, 10):
         result_dicts.append(result_dict)
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
-for n in range(1, 10):
+for n in range(1, 9):
     cols_to_shift = [f'{n}日统计次数（已排除涨停）',
                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))

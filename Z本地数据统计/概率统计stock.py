@@ -7,7 +7,7 @@ df = df.dropna()
 for n in range(1, 10):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 # 所有行业的超跌阈值0.5
-df = df[df['EMA121开盘比值'] <= 0.5].copy()
+df = df[df['EMA121开盘比值'] <= 0.8].copy()
 # 安装日期分组
 df = df.groupby('日期')
 # 每日选取动能最强的一百分之一的标的
@@ -21,8 +21,8 @@ df = df.apply(lambda x: x.nsmallest(
 # STOCk价格过滤31，COIN高开低开过滤9.9
 df = df[
     (df['开盘'] <= 31) &
-    (df['开盘幅'] <= 8)
-    & (df['开盘幅'] >= 1)
+    (df['开盘收盘幅'] <= 8)
+    & (df['开盘收盘幅'] >= 1)
 ]
 
 # 将交易标的细节输出到一个csv文件
