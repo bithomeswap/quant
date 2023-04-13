@@ -24,7 +24,7 @@ for i in range(len(indices) - 1):
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
 
-for n in range(1, 10):
+for n in range(1, 9):
     for rank_range in ranges:
         sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
                            (df[f'{mubiao}'] <= rank_range[1])]
