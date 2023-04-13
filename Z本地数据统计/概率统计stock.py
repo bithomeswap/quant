@@ -12,17 +12,18 @@ df = df[df['EMA121开盘比值'] <= 0.5].copy()
 df = df.groupby('日期')
 # 每日选取动能最强的一百分之一的标的
 n_stock = len(df)//100
-df=df.apply(lambda x: x.nlargest(n_stock, 'EMA9开盘动能3')).reset_index(drop=True)
+df = df.apply(lambda x: x.nlargest(
+    n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
 
 # #  COIN价格过滤0.9
 # df = df[(df['开盘'] <= 0.9)]
 
 # STOCk价格过滤31，COIN高开低开过滤9.9
-df = df[(df['开盘'] <= 31)
-                       & (df['开盘幅'] <= 9.9)
-                       & (df['开盘幅'] >= -2)
-                       & (df['换手率'] <=10)
-                      ]
+df = df[
+    (df['开盘'] <= 31) &
+    (df['开盘幅'] <= 8)
+    & (df['开盘幅'] >= -1)
+]
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
@@ -58,7 +59,8 @@ for date, group in df.groupby('日期'):
     daily_cash_balance[date] = cash_balance
 
     # 记录每日净资产收益率
-    df_daily_return = pd.concat([df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
+    df_daily_return = pd.concat(
+        [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
 
 # 输出每日净资产收益率到csv文件
 df_daily_return.to_csv(f'{name}每日净资产收益率.csv', index=False)

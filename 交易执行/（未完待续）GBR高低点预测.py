@@ -28,10 +28,10 @@ for n in range(2, 12):
         f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值',
     ]
 # 计算技术指标
-
-df[f'{n}日最高开盘（未来函数）'] = df['开盘'].rolling(-20).max()
-df[f'{n}日最低开盘（未来函数）'] = df['开盘'].rolling(-20).min()
-
+for n in range(1, 12):  # 计算未来n日涨跌幅
+        df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
+        df[f'{n*6}日最高开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
+        df[f'{n*6}日最低开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
 # 计算滚动窗口内的整体高低点
 
 
