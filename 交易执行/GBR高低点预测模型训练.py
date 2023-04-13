@@ -22,8 +22,8 @@ db = client['wth000']
 name = 'BTC'
 collection = db[f'{name}待训练']
 df = pd.DataFrame(list(collection.find()))
-df = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
-
+df = df.dropna()  # 删除缺失值
+# df = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
 tezheng = [
     'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
     f'EMA{9}开盘比值', f'EMA{121}开盘比值',
@@ -51,6 +51,7 @@ model = GradientBoostingRegressor(
 # subsample：样本采样比例，用于控制每个弱分类器的训练集采样比例，取值范围在(0,1]之间，默认为1.0，不进行采样。
 # criterion：用于衡量节点分裂质量的评价标准，支持平均方差（'mse'）、平均绝对误差（'mae'）、Friedman增益（'friedman_mse'）等。
 model.fit(x_train, y_train)
+
 
 y_pred = model.predict(x_test)  # 对模型预测准确率进行统计
 # 将测试集的真实值和模型的预测值保存为CSV文件

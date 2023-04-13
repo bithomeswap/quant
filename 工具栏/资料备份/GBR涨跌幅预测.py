@@ -12,28 +12,33 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 import dateutil
 from pymongo import MongoClient
-
-# 连接数据库并读取数据
+# 连接MongoDB数据库
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-name = 'BTC'
+# 选择要分析的产品
+name = "BTC"
 collection = db[f'{name}待训练']
+print('数据库已链接')
 df = pd.DataFrame(list(collection.find()))
-df = df.dropna()  # 删除缺失值
+print('数据获取成功')
+
+# # 之前提取过了
+# # 提取数值类型数据
+# numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+# df_numerical = df[numerical_cols]
+
+df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+# 计算过去n日ema比值指标
 tezheng = [
-    'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
+    'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
     f'EMA{9}开盘比值', f'EMA{121}开盘比值',
 ]
 x = df[tezheng]
 print(x)
-mubiao = []
-# for n in range(1, 9):
-#     mubiao += [
-#         f'{n*60}日最高开盘（未来函数）',
-#     ]
-n = 1
-y = df[f'{n*60}日最高开盘（未来函数）']
+# 预测七日后涨跌幅
+n = 7
+y = df[f'{n}日后总涨跌幅（未来函数）']
 
 # 将数据集划分训练集和测试集
 x_train, x_test, y_train, y_test = train_test_split(
