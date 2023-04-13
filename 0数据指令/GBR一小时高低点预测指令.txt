@@ -3,20 +3,23 @@
 此外，你在从数据库获得数据后，习惯性添加一句print（'已经从数据库获取数据'），以方便测试
 
 工作任务：
-1.参考以下代码（仅供参考，不一定对）改造成计算未来60分钟范围内的整体高低点，也许需要在指标计算中单独计算这个指标然后在滚动下去，作为预测值（这个你自由发挥，我只是提供建议）
-2.改成每分钟一次，对最后传入f'{name}待训练'数据集合的数据进行下一个60分钟最高最低两个点的价格和时间，并且使用最后传入f'{name}待训练'数据集合的数据更新训练模型、
-根据分钟k预测未来一小时的最低价格和时间的大概区间（以时间为主），通过日内择时优化掉手续费，也就是说机器学习的拟合目标应该是高低点的价格及时间。
+改成每分钟一次，对最后传入f'{name}待训练'数据集合的数据进行下一个60分钟最高最低两个点的价格和时间，并且使用最后传入f'{name}待训练'数据集合的数据更新训练模型、
 
 参考资料：
-# 导入必要的库
-import numpy as np
+# 机器学习容易过拟合，一般适合微观层面的研究，宏观上受价值等因素影响有点大
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
+import pickle
+from sklearn.metrics import mean_squared_error, r2_score
+from datetime import datetime
+import os
 import pandas as pd
+import numpy as np
+import akshare as ak
 import talib
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
-from datetime import datetime, timedelta
+from sklearn.model_selection import train_test_split
+import dateutil
 from pymongo import MongoClient
-
 n = 60  # 预测未来60分钟范围内的整体高低点
 window_size = 12  # 滚动窗口大小
 
@@ -28,155 +31,68 @@ name = 'BTC'
 collection = db[f'{name}待训练']
 df = pd.DataFrame(list(collection.find()))
 df = df.dropna()  # 删除缺失值
-
 tezheng = [
-    'timestamp',
-    "涨跌幅", '开盘幅',
+    'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
+    f'EMA{9}开盘比值', f'EMA{121}开盘比值',
 ]
-for n in range(2, 12):
-    tezheng += [
-        f'EMA{n*n}最高比值', f'EMA{n*n}最低比值', f'EMA{n*n}开盘比值', f'EMA{n*n}收盘比值',
-    ]
-# 计算技术指标
-for n in range(1, 12):  # 计算未来n日涨跌幅
-        df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
-        df[f'{n*6}日最高开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
-        df[f'{n*6}日最低开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
-# 计算滚动窗口内的整体高低点
-
-
-def get_high_low(df, n):
-    ts = df['timestamp'].iloc[-1]
-    start_ts = ts - timedelta(minutes=60)
-    end_ts = ts + timedelta(minutes=n)
-
-    sub_df = df[(df['timestamp'] >= start_ts) & (df['timestamp'] <= end_ts)]
-    high_point = sub_df['最高价'].max()
-    low_point = sub_df['最低价'].min()
-
-    return high_point, low_point
-
-
-df['整体高点'] = np.nan
-df['整体低点'] = np.nan
-for i in range(window_size, len(df)):
-    high_point, low_point = get_high_low(df[:i], n)
-    df.at[i, '整体高点'] = high_point
-    df.at[i, '整体低点'] = low_point
-
-# 提取特征和前n期涨跌幅作为标签
 x = df[tezheng]
-y = df[f'{n}日后总涨跌幅（未来函数）']
+print(x)
+mubiao = []
+# for n in range(1, 9):
+#     mubiao += [
+#         f'{n*60}日最高开盘（未来函数）',
+#     ]
+n=1
+y = df[f'{n*60}日最高开盘（未来函数）']
 
-# 切分训练集和测试集
-train_size = int(len(df) * 0.7)
-x_train, x_test = x[:train_size], x[train_size:]
-y_train, y_test = y[:train_size], y[train_size:]
+# 将数据集划分训练集和测试集
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.3, random_state=24)
 
-# 建立模型并训练
+# 训练集和测试集切片中的随机状态参数会进行随机偏移，取消以后才能指定偏移
 model = GradientBoostingRegressor(
-    loss='squared_error', learning_rate=0.1, n_estimators=1000, subsample=1.0, criterion='friedman_mse')
+    loss='squared_error', learning_rate=0.1, n_estimators=100, subsample=1.0, criterion='friedman_mse')
+# loss：损失函数，支持均方误差（'ls'）、绝对误差（'lad'）等，默认为'ls'。
+# learning_rate：学习率，用于控制每个弱分类器的权重更新幅度，默认为0.1。
+# n_estimators：弱分类器迭代次数，表示总共有多少个弱分类器组成，也是GBDT的主要超参数之一，默认为100。
+# subsample：样本采样比例，用于控制每个弱分类器的训练集采样比例，取值范围在(0,1]之间，默认为1.0，不进行采样。
+# criterion：用于衡量节点分裂质量的评价标准，支持平均方差（'mse'）、平均绝对误差（'mae'）、Friedman增益（'friedman_mse'）等。
 model.fit(x_train, y_train)
 
-# 预测未来60分钟范围内的整体高低点
-last_record = list(collection.find().sort('_id', -1).limit(1))[0]
-last_timestamp = last_record['timestamp']
-start_ts = last_timestamp + 60
-end_ts = start_ts + timedelta(minutes=n)
-data = list(collection.find({'timestamp': {"$gte": start_ts, "$lte": end_ts}}))
-new_df = pd.DataFrame(data)
-new_df = new_df.dropna()
+y_pred = model.predict(x_test)  # 对模型进行预测
 
-# 获取新数据集的特征
-new_df['20日最高价'] = new_df['收盘价'].rolling(20).max()
-new_df['20日最低价'] = new_df['收盘价'].rolling(20).min()
-new_df['20日区间'] = (new_df['20日最高价'] - new_df['20日最低价']) / new_df['20日最高价']
-new_x = new_df[tezheng]
 
-# 预测涨跌幅并更新模型
-new_y_pred = model.predict(new_x)
-new_y_true = new_df['未来N日涨跌幅'].values
-new_mape = mean_absolute_percentage_error(new_y_true, new_y_pred)
-if new_mape < 1000:
-    model.fit(x, y)
+# 将测试集的真实值和模型的预测值保存为CSV文件
+dfpred = pd.DataFrame({'True values': y_test, 'Predicted values': y_pred,
+                      'timestamp': pd.to_datetime(x_test['timestamp'], unit='s', utc=True)})
 
-# 将预测结果保存到数据库
-new_timestamps = new_df['timestamp'].values
-new_high_points = np.zeros_like(new_timestamps)
-new_low_points = np.zeros_like(new_timestamps)
-for i in range(len(new_timestamps)):
-    high_point, low_point = get_high_low(df, n)
-    new_high_points[i] = high_point
-    new_low_points[i] = low_point
+db[f'{name}predictions'].drop()  # 清空集合中的所有文档
+db[f'{name}predictions'].insert_many(dfpred.to_dict('records'))
+# 展示时间和timestamp差的八个小时是时区问题，即我本地（本地时间是utf8，东八区北京时间）转换的时候，自动加了八小时
 
-results = {
-    'timestamp': new_timestamps,
-    '整体高点': new_high_points,
-    '整体低点': new_low_points,
+
+# 设置要插入的数据
+data = {
+    "MAPE": mean_absolute_percentage_error(y_test, y_pred),
+    "MSE": mean_squared_error(y_test, y_pred),
+    "R2_score": r2_score(y_test, y_pred)
 }
-db[f'{name}预测结果'].insert_many(results.to_dict('records'))
+db[f"{name}预测误差"].drop()  # 清空集合中的所有文档
+# 插入数据到 mongodb
+db[f"{name}预测误差"].insert_one(data)
 
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上两级目录的路径
+parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
 
-数据结构：
-
-{
-    "_id": ObjectId("6437756786a970d76d063363"),
-    "timestamp": 1680407100,
-    "开盘": 28486.25,
-    "最高": 28486.26,
-    "最低": 28486.25,
-    "收盘": 28486.26,
-    "成交量": 12.1436,
-    "收盘timestamp": 1680407159.999,
-    "成交额": 345925.6361648,
-    "成交笔数": 241,
-    "主动买入成交量": 1.06648,
-    "主动买入成交额": 30380.0265648,
-    "开盘幅": -0.0000351046434254876,
-    "涨跌幅": 0,
-    "EMA121开盘比值": 1.00209937145237,
-    "EMA4开盘比值": 0.99961934719843,
-    "EMA2开盘比值": 0.999917510863995,
-    "EMA4开盘动能2": 1.00029827720562,
-    "EMA9开盘比值": 0.999351608635431,
-    "EMA3开盘比值": 0.999719943300802,
-    "EMA9开盘动能3": 1.00036857364534,
-    "EMA16开盘比值": 0.999525588287081,
-    "EMA16开盘动能4": 1.00009380341279,
-    "EMA25开盘比值": 0.99993508868433,
-    "EMA5开盘比值": 0.99958348129631,
-    "EMA25开盘动能5": 0.9996483697872,
-    "1日后总涨跌幅（未来函数）": -0.0265742150777237,
-    "6日最高开盘（未来函数）": 28486.25,
-    "6日最低开盘（未来函数）": 28486.25,
-    "2日后总涨跌幅（未来函数）": -0.0502698493940579,
-    "12日最高开盘（未来函数）": 28486.25,
-    "12日最低开盘（未来函数）": 28486.25,
-    "3日后总涨跌幅（未来函数）": -0.049567756525426,
-    "18日最高开盘（未来函数）": 28486.25,
-    "18日最低开盘（未来函数）": 28486.25,
-    "4日后总涨跌幅（未来函数）": -0.0661722528685682,
-    "24日最高开盘（未来函数）": 28486.25,
-    "24日最低开盘（未来函数）": 28486.25,
-    "5日后总涨跌幅（未来函数）": -0.0346131784235482,
-    "30日最高开盘（未来函数）": 28486.25,
-    "30日最低开盘（未来函数）": 28486.25,
-    "6日后总涨跌幅（未来函数）": -0.0570801502197793,
-    "36日最高开盘（未来函数）": 28486.25,
-    "36日最低开盘（未来函数）": 28486.25,
-    "7日后总涨跌幅（未来函数）": -0.0604501959892145,
-    "42日最高开盘（未来函数）": 28486.25,
-    "42日最低开盘（未来函数）": 28486.25,
-    "8日后总涨跌幅（未来函数）": -0.082039551699653,
-    "48日最高开盘（未来函数）": 28486.25,
-    "48日最低开盘（未来函数）": 28486.25,
-    "9日后总涨跌幅（未来函数）": -0.0679625896835789,
-    "54日最高开盘（未来函数）": 28486.25,
-    "54日最低开盘（未来函数）": 28486.25,
-    "10日后总涨跌幅（未来函数）": -0.0721751468953702,
-    "60日最高开盘（未来函数）": 28486.25,
-    "60日最低开盘（未来函数）": 28486.25,
-    "11日后总涨跌幅（未来函数）": -0.0571152548632159,
-    "66日最高开盘（未来函数）": 28486.25,
-    "66日最低开盘（未来函数）": 28486.25
-}
+# 保存数据到指定目录
+file_path = os.path.join(parent_dir_path, f'{name}model.pickle')
+# 假设model是我们训练好的模型
+with open(file_path, 'wb') as f:
+    pickle.dump(model, f)
+# # 从'model.pickle'文件中加载模型
+# with open('model.pickle', 'rb') as f:
+#     model = pickle.load(f)
