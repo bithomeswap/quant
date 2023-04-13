@@ -18,30 +18,29 @@ collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
+
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 # 成交量变成浮点数
 df['成交量'] = df['成交量'].astype(float)
 # 定义开盘幅
-df['开盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
+df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
+# 定义开盘幅
+df['开盘收盘幅'] = (df['开盘']/df.shift(1)['开盘'] - 1)*100
 # 定义收盘幅即涨跌幅
 df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
 df[f'EMA{121}开盘比值'] = df['开盘'] / \
     talib.MA(df['开盘'].values, timeperiod=121, matype=0)
-
-for n in range(2, 6):
-    df[f'EMA{n*n}开盘比值'] = df['开盘'] / \
-        talib.MA(df['开盘'].values, timeperiod=n*n, matype=0)
-    df[f'EMA{n}开盘比值'] = df['开盘'] / \
-        talib.MA(df['开盘'].values, timeperiod=n, matype=0)
-    df[f'EMA{n*n}开盘动能{n}'] = talib.MA(df['开盘'].values, timeperiod=n*n,
-                                      matype=0)/talib.MA(df['开盘'].values, timeperiod=n, matype=0)
+df[f'EMA{9}开盘比值'] = df['开盘'] / \
+    talib.MA(df['开盘'].values, timeperiod=9, matype=0)
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-for n in range(1, 12):  # 计算未来n日涨跌幅
+for n in range(1, 9):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
-    df[f'{n*6}日最高开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
-    df[f'{n*6}日最低开盘（未来函数）'] = df['开盘'].rolling(n*6).max().shift(-n*6)
+for n in range(1, 9):  # 计算未来n日总的最高和最低
+    df[f'{n*60}日最高开盘（未来函数）'] = df['开盘'].rolling(n*60).max().shift(-n*60)
+    df[f'{n*60}日最低开盘（未来函数）'] = df['开盘'].rolling(n*60).max().shift(-n*60)
+
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径

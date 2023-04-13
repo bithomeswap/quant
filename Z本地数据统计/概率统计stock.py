@@ -12,8 +12,8 @@ df = df[df['EMA121开盘比值'] <= 0.5].copy()
 df = df.groupby('日期')
 # 每日选取动能最强的一百分之一的标的
 n_stock = len(df)//100
-df = df.apply(lambda x: x.nlargest(
-    n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
+df = df.apply(lambda x: x.nsmallest(
+    n_stock, 'EMA121开盘比值')).reset_index(drop=True)
 
 # #  COIN价格过滤0.9
 # df = df[(df['开盘'] <= 0.9)]
@@ -22,7 +22,7 @@ df = df.apply(lambda x: x.nlargest(
 df = df[
     (df['开盘'] <= 31) &
     (df['开盘幅'] <= 8)
-    & (df['开盘幅'] >= -1)
+    & (df['开盘幅'] >= 1)
 ]
 
 # 将交易标的细节输出到一个csv文件
