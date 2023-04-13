@@ -2,12 +2,8 @@ import akshare as ak
 import pandas as pd
 import datetime
 
-# 获取当前日期
-current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-# 读取180天内的数据，这里面还得排除掉节假日
-date_ago = datetime.datetime.now() - datetime.timedelta(days=1080)
-start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
-
+start_date = '20060101'  # 要求格式"19700101"
+end_date = '20090101'  # 要求格式"19700101"
 # 从akshare获取A股主板股票的代码和名称
 stock_info_df = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
@@ -28,7 +24,7 @@ for code in stock_info_df['代码']:
         except:
             print(f"({code}) 已停牌")
             continue
-        
+
 
 # 过滤掉停牌的股票数据
 df = df.dropna()
