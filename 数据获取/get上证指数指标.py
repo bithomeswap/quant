@@ -33,6 +33,9 @@ df[f'EMA{121}开盘比值'] = df['开盘'] / \
     talib.MA(df['开盘'].values, timeperiod=121, matype=0)
 df[f'EMA{9}开盘比值'] = df['开盘'] / \
     talib.MA(df['开盘'].values, timeperiod=9, matype=0)
+df[f'EMA{4}开盘比值'] = df['开盘'] / \
+    talib.MA(df['开盘'].values, timeperiod=4, matype=0)
+df[f'EMA9收盘动能4'] = df[f'EMA4收盘比值']/df[f'EMA9收盘比值']
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 for n in range(1, 9):  # 计算未来n日涨跌幅

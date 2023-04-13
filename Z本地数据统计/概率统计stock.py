@@ -1,17 +1,17 @@
 import pandas as pd
-
-name = 'STOCK'
+import math
+name = 'STOCk'
 df = pd.read_csv(f'{name}指标.csv')
 df = df.dropna()
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 10):
+for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 # 所有行业的超跌阈值0.5
-df = df[df['EMA121开盘比值'] <= 0.8].copy()
+df = df[df['EMA121开盘比值'] <= 0.5].copy()
 # 安装日期分组
 df = df.groupby('日期')
 # 每日选取动能最强的一百分之一的标的
-n_stock = len(df)//100
+n_stock = math.ceil(len(df) / 100)  # 使用math.ceil函数向上取整
 df = df.apply(lambda x: x.nsmallest(
     n_stock, 'EMA121开盘比值')).reset_index(drop=True)
 
@@ -22,7 +22,7 @@ df = df.apply(lambda x: x.nsmallest(
 df = df[
     (df['开盘'] <= 31) &
     (df['开盘收盘幅'] <= 8)
-    & (df['开盘收盘幅'] >= 1)
+    & (df['开盘收盘幅'] >= 0)
 ]
 
 # 将交易标的细节输出到一个csv文件
