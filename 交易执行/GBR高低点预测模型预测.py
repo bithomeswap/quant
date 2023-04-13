@@ -15,13 +15,18 @@ from sklearn.model_selection import train_test_split
 import dateutil
 from pymongo import MongoClient
 
+
+
 # 连接数据库并读取数据
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 name = 'BTC'
-collection = db[f'{name}待训练']
+collection = db[f'{name}指标']
 df = pd.DataFrame(list(collection.find()))
+# 从'model.pickle'文件中加载模型
+with open(f'{name}model.pickle', 'rb') as f:
+    model = pickle.load(f)
 
 dfwill = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
 df = df.dropna()  # 删除缺失值

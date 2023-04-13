@@ -82,6 +82,3 @@ file_path = os.path.join(parent_dir_path, f'{name}model.pickle')
 # 假设model是我们训练好的模型
 with open(file_path, 'wb') as f:
     pickle.dump(model, f)
-# # 从'model.pickle'文件中加载模型
-# with open('model.pickle', 'rb') as f:
-#     model = pickle.load(f)
