@@ -3,9 +3,9 @@ from pymongo import MongoClient
 import pandas as pd
 import numpy as np
 
-name = 'COIN'
+name = '上证指数'
 df = pd.read_csv(f'{name}指标.csv')
-mubiao = 'KDJ_D'
+mubiao = 'EMA9开盘动能3'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 # 对指定列排序
