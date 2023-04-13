@@ -29,7 +29,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 定义开盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
     # 定义开盘幅
-    df['开盘收盘幅'] = (df['开盘']/df.shift(1)['开盘'] - 1)*100
+    df['开盘开盘幅'] = (df['开盘']/df.shift(1)['开盘'] - 1)*100
     # 定义收盘幅即涨跌幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
@@ -46,6 +46,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df[f'{n*60}日最低开盘（未来函数）'] = df['开盘'].rolling(n*60).max().shift(-n*60)
 
     return df
+
 
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码').apply(get_technical_indicators)
