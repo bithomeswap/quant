@@ -50,16 +50,19 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             talib.MA(df['最高'].values, timeperiod=n, matype=0)
         df[f'EMA{n}最低比值'] = df['最低'] / \
             talib.MA(df['最低'].values, timeperiod=n, matype=0)
+
     # 计算过去n日ema比值指标
     for n in range(2, 8):
         df[f'EMA9收盘动能{n}'] = df[f'EMA{n}收盘比值']/df[f'EMA9收盘比值']
         df[f'EMA9开盘动能{n}'] = df[f'EMA{n}开盘比值']/df[f'EMA9开盘比值']
         df[f'EMA9最高动能{n}'] = df[f'EMA{n}最高比值']/df[f'EMA9最高比值']
         df[f'EMA9最低动能{n}'] = df[f'EMA{n}最低比值']/df[f'EMA9最低比值']
-        
+
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-    for n in range(1,10):  # 计算未来n日涨跌幅
+    for n in range(1, 10):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
+        df[f'{n}日最高开盘（未来函数）'] = df['开盘'].rolling(-20).max()
+        df[f'{n}日最高开盘（未来函数）'] = df['开盘'].rolling(-20).min()
 
     return df
 
