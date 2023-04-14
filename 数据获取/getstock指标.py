@@ -21,9 +21,9 @@ collection = db[f'{name}']
 data = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 
-
 def get_technical_indicators(df):  # 定义计算技术指标的函数
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+
     # 成交量变成浮点数
     df['成交量'] = df['成交量'].astype(float)
     # 定义开盘幅
@@ -68,8 +68,12 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
-    df[f'{60}日最高开盘（未来函数）'] = df['开盘'].rolling(60).max().shift(60)
-    df[f'{60}日最低开盘（未来函数）'] = df['开盘'].rolling(60).max().shift(60)
+    df['60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
+    df['60日最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
+    df['最高开盘价日期'] = df['开盘'].rolling(60).apply(
+        lambda x: x.argmax(), raw=True).shift(-60)
+    df['最低开盘价日期'] = df['开盘'].rolling(60).apply(
+        lambda x: x.argmin(), raw=True).shift(-60)
 
     for n in range(1, 9):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100

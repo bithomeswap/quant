@@ -18,8 +18,8 @@ collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
-
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+
 # 成交量变成浮点数
 df['成交量'] = df['成交量'].astype(float)
 # 定义开盘幅
@@ -64,13 +64,17 @@ df[f'EMA{9}最低动能{4}'] = df[f'EMA{4}最低比值']/df[f'EMA{9}最低比值
 
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
-df[f'{60}日最高开盘（未来函数）'] = df['开盘'].rolling(60).max().shift(60)
-df[f'{60}日最低开盘（未来函数）'] = df['开盘'].rolling(60).max().shift(60)
+df['60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
+df['60日最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
+df['最高开盘价日期'] = df['开盘'].rolling(60).apply(
+    lambda x: x.argmax(), raw=True).shift(-60)
+df['最低开盘价日期'] = df['开盘'].rolling(60).apply(
+    lambda x: x.argmin(), raw=True).shift(-60)
 
 for n in range(1, 9):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
 
-# 获取当前.py文件的绝对路径
+
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
