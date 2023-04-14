@@ -1,4 +1,3 @@
-# 机器学习容易过拟合，一般适合微观层面的研究，宏观上受价值等因素影响有点大
 import json
 import requests
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
@@ -11,6 +10,7 @@ import numpy as np
 import akshare as ak
 import talib
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.multioutput import MultiOutputRegressor
 from sklearn.model_selection import train_test_split
 import dateutil
 from pymongo import MongoClient
@@ -29,48 +29,29 @@ tezheng = [
     f'EMA{9}开盘比值', f'EMA{121}开盘比值',
 ]
 x = df[tezheng]
-print(x)
 mubiao = []
-# for n in range(1, 9):
-#     mubiao += [
-#         f'{n*60}日最高开盘（未来函数）',
-#     ]
-n = 1
-y = df[f'{n*60}日最高开盘（未来函数）']
+for n in range(1, 9):
+    mubiao += [
+        f'{n*60}日最高开盘（未来函数）',
+        f'{n*60}日最低开盘（未来函数）',
+    ]
+y = df[mubiao]  # 将所有目标变量放在一个DataFrame中
 
 df = df.dropna()  # 删除缺失值
 # 将数据集划分训练集和测试集
 x_train, x_test, y_train, y_test = train_test_split(
     x, y, test_size=0.3, random_state=24)
 # 训练集和测试集切片中的随机状态参数会进行随机偏移，取消以后才能指定偏移
-model = GradientBoostingRegressor(
-    loss='squared_error', learning_rate=0.1, n_estimators=100, subsample=1.0, criterion='friedman_mse')
+model = MultiOutputRegressor(GradientBoostingRegressor(
+    loss='squared_error',  # 修改此处 'ls' 为 'squared_error'
+    learning_rate=0.1, n_estimators=100, subsample=1.0, criterion='friedman_mse',
+    max_depth=5, random_state=24))
 # loss：损失函数，支持均方误差（'ls'）、绝对误差（'lad'）等，默认为'ls'。
 # learning_rate：学习率，用于控制每个弱分类器的权重更新幅度，默认为0.1。
 # n_estimators：弱分类器迭代次数，表示总共有多少个弱分类器组成，也是GBDT的主要超参数之一，默认为100。
 # subsample：样本采样比例，用于控制每个弱分类器的训练集采样比例，取值范围在(0,1]之间，默认为1.0，不进行采样。
 # criterion：用于衡量节点分裂质量的评价标准，支持平均方差（'mse'）、平均绝对误差（'mae'）、Friedman增益（'friedman_mse'）等。
 model.fit(x_train, y_train)
-
-
-y_pred = model.predict(x_test)  # 对模型预测准确率进行统计
-# 将测试集的真实值和模型的预测值保存为CSV文件
-dfpred = pd.DataFrame({'True values': y_test, 'Predicted values': y_pred,
-                      'timestamp': pd.to_datetime(x_test['timestamp'], unit='s', utc=True)})
-
-db[f'{name}predictions'].drop()  # 清空集合中的所有文档
-db[f'{name}predictions'].insert_many(dfpred.to_dict('records'))
-# 展示时间和timestamp差的八个小时是时区问题，即我本地（本地时间是utf8，东八区北京时间）转换的时候，自动加了八小时
-# 设置要插入的数据
-data = {
-    "MAPE": mean_absolute_percentage_error(y_test, y_pred),
-    "MSE": mean_squared_error(y_test, y_pred),
-    "R2_score": r2_score(y_test, y_pred)
-}
-db[f"{name}预测误差"].drop()  # 清空集合中的所有文档
-# 插入数据到 mongodb
-db[f"{name}预测误差"].insert_one(data)
-
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
