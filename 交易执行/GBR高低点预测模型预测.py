@@ -40,7 +40,6 @@ y_pred = model.predict(x)
 # 提取预测结果
 print(y_pred)
 
-
 predictions = pd.DataFrame({
     'timestamp': data['timestamp'],
     'predicted_high': y_pred
