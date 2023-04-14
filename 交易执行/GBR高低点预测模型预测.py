@@ -41,7 +41,6 @@ while True:
     df_latest = pd.DataFrame(list(db[f'{name}待训练'].find()))
     df_latest = df_latest.dropna()  # 删除缺失值
     print('已经从数据库获取数据')
-    
     # 判断是否需要进行计算
     if len(df_latest) > len(df):  # 数据有更新
         # 计算价格的方法如下：
@@ -57,7 +56,7 @@ while True:
         # 进行预测
         x = df_latest[tezheng]
         y_pred = model.predict(x)
-        
+
         # 将预测结果保存到mongodb中
         timestamp_list = list(x['timestamp'])
         result_dict = {'timestamp': [pd.to_datetime(ts, unit='s', utc=True) for ts in timestamp_list],
@@ -68,6 +67,6 @@ while True:
         db[f'{name}predictions'].insert_many(result_df.to_dict('records'))
 
         df = df_latest
-        
+
     # 每隔60s进行一次预测
     time.sleep(60)

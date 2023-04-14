@@ -1,29 +1,29 @@
 import pandas as pd
-import math
+
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
 df = df.dropna()
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 9):
+for n in range(1, 10):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 # 所有行业的超跌阈值0.5
 df = df[df['EMA121开盘比值'] <= 0.5].copy()
 # 安装日期分组
 df = df.groupby('日期')
 # 每日选取动能最强的一百分之一的标的
-n_stock = math.ceil(len(df) / 100)  # 使用math.ceil函数向上取整
-df = df.apply(lambda x: x.nsmallest(
-    n_stock, 'EMA121开盘比值')).reset_index(drop=True)
+n_stock = len(df)//100
+df = df.apply(lambda x: x.nlargest(
+    n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
 
 #  COIN价格过滤0.9
 df = df[(df['开盘'] <= 0.9)]
 
-# # STOCk价格过滤31，COIN高开低开过滤9.9
-# df = df[
-#     (df['开盘'] <= 31) &
-#     (df['开盘收盘幅'] <= 8)
-#     & (df['开盘收盘幅'] >= 0)
-# ]
+# STOCk价格过滤31，COIN高开低开过滤9.9
+df = df[
+    (df['开盘'] <= 31) &
+    (df['开盘幅'] <= 8) & 
+    (df['开盘幅'] >= 1)
+]
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
