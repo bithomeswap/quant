@@ -23,6 +23,7 @@ print("数据读取成功")
 
 
 def get_technical_indicators(df):  # 定义计算技术指标的函数
+
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
     # 成交量变成浮点数
     df['成交量'] = df['成交量'].astype(float)
@@ -35,11 +36,36 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     df[f'EMA{121}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=121, matype=0)
+    df[f'EMA{121}收盘比值'] = df['收盘'] / \
+        talib.MA(df['收盘'].values, timeperiod=121, matype=0)
+    df[f'EMA{121}最高比值'] = df['最高'] / \
+        talib.MA(df['最高'].values, timeperiod=121, matype=0)
+    df[f'EMA{121}最低比值'] = df['最低'] / \
+        talib.MA(df['最低'].values, timeperiod=121, matype=0)
+
     df[f'EMA{9}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=9, matype=0)
     df[f'EMA{4}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=4, matype=0)
-    df[f'EMA9开盘动能4'] = df[f'EMA{4}开盘比值']/df[f'EMA{9}开盘比值']
+    df[f'EMA{9}开盘动能{4}'] = df[f'EMA{4}开盘比值']/df[f'EMA{9}开盘比值']
+
+    df[f'EMA{9}收盘比值'] = df['收盘'] / \
+        talib.MA(df['收盘'].values, timeperiod=9, matype=0)
+    df[f'EMA{4}收盘比值'] = df['收盘'] / \
+        talib.MA(df['收盘'].values, timeperiod=4, matype=0)
+    df[f'EMA{9}收盘动能{4}'] = df[f'EMA{4}收盘比值']/df[f'EMA{9}收盘比值']
+
+    df[f'EMA{9}最高比值'] = df['最高'] / \
+        talib.MA(df['最高'].values, timeperiod=9, matype=0)
+    df[f'EMA{4}最高比值'] = df['最高'] / \
+        talib.MA(df['最高'].values, timeperiod=4, matype=0)
+    df[f'EMA{9}最高动能{4}'] = df[f'EMA{4}最高比值']/df[f'EMA{9}最高比值']
+
+    df[f'EMA{9}最低比值'] = df['最低'] / \
+        talib.MA(df['最低'].values, timeperiod=9, matype=0)
+    df[f'EMA{4}最低比值'] = df['最低'] / \
+        talib.MA(df['最低'].values, timeperiod=4, matype=0)
+    df[f'EMA{9}最低动能{4}'] = df[f'EMA{4}最低比值']/df[f'EMA{9}最低比值']
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
