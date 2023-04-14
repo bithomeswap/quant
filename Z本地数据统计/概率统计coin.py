@@ -2,26 +2,22 @@ import pandas as pd
 
 name = 'COIN'
 df = pd.read_csv(f'{name}指标.csv')
+
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
+
 # 所有行业的超跌阈值0.5
 # df = df[df['EMA121开盘比值'] <= 0.5].copy()
-# 安装日期分组
-df = df.groupby('日期')
-# 每日选取动能最强的一百分之一的标的
-# n_stock = 10
-# df = df.apply(lambda x: x.nsmallest(
+# # 每日选取动能最强的十标的
+# n_stock = 100
+# df = df.groupby('日期').apply(lambda x: x.nsmallest(
 #     n_stock, 'EMA121开盘比值')).reset_index(drop=True)
-# df = df.apply(lambda x: x.nlargest(
-#     n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
-# df = df.apply(lambda x: x.nsmallest(
-#     n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
 
-#  价格过滤只要最便宜的十只股票
 n_stock = 10
-df = df.apply(lambda x: x.nsmallest(
+df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘')).reset_index(drop=True)
+
 
 # # STOCk价格过滤31，COIN高开低开过滤9.9
 # df = df[
