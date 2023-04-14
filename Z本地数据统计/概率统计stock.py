@@ -1,6 +1,6 @@
 import pandas as pd
 
-name = 'COIN'
+name = 'STOCk'
 df = pd.read_csv(f'{name}指标.csv')
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
@@ -14,17 +14,15 @@ for n in range(1, 9):
 # df = df.groupby('日期').apply(lambda x: x.nsmallest(
 #     n_stock, 'EMA121开盘比值')).reset_index(drop=True)
 
-n_stock = 10
+n_stock = 100
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘')).reset_index(drop=True)
 
-
 # # STOCk价格过滤31，COIN高开低开过滤9.9
-# df = df[
-#     (df['开盘'] <= 31) &
-#     (df['开盘幅'] <= 8)
-#     & (df['开盘幅'] >= 0)
-# ]
+df = df[
+    (df['开盘收盘幅'] <= 8) &
+    (df['开盘收盘幅'] >= 0) 
+]
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
