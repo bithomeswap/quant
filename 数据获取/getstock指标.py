@@ -40,13 +40,14 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df[f'EMA{4}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=4, matype=0)
     df[f'EMA9开盘动能4'] = df[f'EMA{4}开盘比值']/df[f'EMA{9}开盘比值']
-    
+
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+
+    df[f'{60}日最高开盘（未来函数）'] = df['开盘'].rolling(60).max().shift(60)
+    df[f'{60}日最低开盘（未来函数）'] = df['开盘'].rolling(60).max().shift(60)
+
     for n in range(1, 9):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
-    for n in range(1, 9):  # 计算未来n日总的最高和最低
-        df[f'{n*60}日最高开盘（未来函数）'] = df['开盘'].rolling(n*60).max().shift(-n*60)
-        df[f'{n*60}日最低开盘（未来函数）'] = df['开盘'].rolling(n*60).max().shift(-n*60)
 
     return df
 

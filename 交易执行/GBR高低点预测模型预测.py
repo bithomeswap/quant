@@ -10,7 +10,8 @@ name = 'BTC'
 
 # 读取最新60个价格数据
 collection = db[f'{name}待训练']
-latest_data = pd.DataFrame(list(collection.find().sort([("timestamp", -1)]).limit(60)))
+latest_data = pd.DataFrame(
+    list(collection.find().sort([("timestamp", -1)]).limit(60)))
 
 # 计算过去n日ema比值指标
 tezheng = [
@@ -25,12 +26,20 @@ with open(f'{name}model.pickle', 'rb') as f:
 
 # 进行预测
 y_pred = model.predict(x_test)
+print(y_pred)
+
+# mubiao=[]
+# for n in range(1, 9):
+#     mubiao += [
+#         f'{n*60}日最高开盘（未来函数）',
+#         f'{n*60}日最低开盘（未来函数）',
+#     ]
+
 
 # 提取预测结果
 predictions = pd.DataFrame({
     'timestamp': latest_data['timestamp'],
-    'predicted_high': y_pred[:, 0],  # 最高价预测结果
-    'predicted_low': y_pred[:, 1]  # 最低价预测结果
+
 })
 
 # 将预测结果保存到数据库

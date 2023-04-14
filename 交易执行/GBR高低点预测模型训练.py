@@ -29,12 +29,7 @@ tezheng = [
     f'EMA{9}开盘比值', f'EMA{121}开盘比值',
 ]
 x = df[tezheng]
-mubiao = []
-for n in range(1, 9):
-    mubiao += [
-        f'{n*60}日最高开盘（未来函数）',
-        f'{n*60}日最低开盘（未来函数）',
-    ]
+mubiao = [f'{60}日最高开盘（未来函数）',f'{60}日最低开盘（未来函数）',]
 y = df[mubiao]  # 将所有目标变量放在一个DataFrame中
 
 df = df.dropna()  # 删除缺失值
