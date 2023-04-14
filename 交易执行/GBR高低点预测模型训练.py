@@ -23,14 +23,14 @@ name = 'BTC'
 collection = db[f'{name}待训练']
 df = pd.DataFrame(list(collection.find()))
 df = df.dropna()  # 删除缺失值
-# df = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
+df = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
 tezheng = [
     'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
     f'EMA{9}开盘比值', f'EMA{121}开盘比值', f'EMA{9}开盘动能{4}',
 ]
 x = df[tezheng]
 mubiao = []
-y = df[['60日最高开盘（未来函数）', '60日最低开盘（未来函数）', '最高开盘价日期', '最低开盘价日期']]
+y = df[['60日最高开盘价', '60日最低开盘价', '最高开盘价日期', '最低开盘价日期']]
 
 df = df.dropna()  # 删除缺失值
 # 将数据集划分训练集和测试集
