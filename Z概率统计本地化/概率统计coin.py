@@ -17,9 +17,9 @@ for n in range(1, 9):
 n_coin = 10
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_coin , '开盘')).reset_index(drop=True)
-# n_coin = 5
-# df = df.groupby('日期').apply(lambda x: x.nlargest(
-#     n_coin, 'EMA9开盘动能4')).reset_index(drop=True)
+n_coin = 5
+df = df.groupby('日期').apply(lambda x: x.nlargest(
+    n_coin, 'EMA9开盘动能4')).reset_index(drop=True)
 # n_coin = 
 # df = df.groupby('日期').apply(lambda x: x.nsmallest(
 #     n_coin, 'EMA121开盘比值')).reset_index(drop=True)
