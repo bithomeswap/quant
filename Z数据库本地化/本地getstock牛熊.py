@@ -1,8 +1,8 @@
 import akshare as ak
 import pandas as pd
 import os
-start_date = '%Y%m%d'  # 要求格式"19700101"
-
+start_date = '20060101'  # 要求格式"19700101"
+end_date='20100101'
 # 从akshare获取A股主板股票的代码和名称
 stock_info_df = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
@@ -14,7 +14,7 @@ df = pd.DataFrame()
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
         k_data = ak.stock_zh_a_hist(
-            symbol=code, start_date=start_date, adjust="qfq")
+            symbol=code, start_date=start_date, end_date=end_date, adjust="qfq")
         k_data['代码'] = float(code)
         try:
             # 将数据存储到df中
