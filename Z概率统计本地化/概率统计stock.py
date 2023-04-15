@@ -14,8 +14,8 @@ n_stock = 100
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘')).reset_index(drop=True)
 
-n_stock = 20
-df = df.groupby('日期').apply(lambda x: x.nlargeest(
+n_stock = 5
+df = df.groupby('日期').apply(lambda x: x.nlargest(
     n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
 
 df = df[

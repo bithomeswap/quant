@@ -10,14 +10,17 @@ for n in range(1, 9):
 # 所有行业的超跌阈值0.5
 # df = df[df['EMA121开盘比值'] <= 0.5].copy()
 # # 每日选取动能最强的十标的
-n_stock = 100
+n_stock = 10
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘')).reset_index(drop=True)
 
-n_stock = 20
-df = df.groupby('日期').apply(lambda x: x.nlargeest(
+n_stock = 5
+df = df.groupby('日期').apply(lambda x: x.nlargest(
     n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
 
+# n_stock = 10
+# df = df.groupby('日期').apply(lambda x: x.nlargest(
+#     n_stock, '开盘开盘幅')).reset_index(drop=True)
 # df = df[
 #     (df['开盘收盘幅'] <= 8) &
 #     (df['开盘收盘幅'] >= 0)
@@ -36,7 +39,7 @@ cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 
-n = 6
+n = 2
 # 设置持仓周期
 m = 0.01
 # 设置手续费
