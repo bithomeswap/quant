@@ -1,20 +1,50 @@
 import pandas as pd
 
-name = 'STOCk'
+name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
-# COIN选最便宜的十只，STOCK选最便宜的一百只
+
+# 标的站在EMA121以上达到某个值的多说明牛市形成，站在EMA121以下达到某个值的多说明熊市形成，分布执行各自的策略
+
+# 所有标的超跌阈值0.5以下的判断熊市中黄金坑形成，执行单独的策略
+
+# df = df[df['EMA121开盘比值'] <= 0.5].copy()
+
+# # 每日选COIN
+# n_coin = 500
+# df = df.groupby('日期').apply(lambda x: x.nlargest(
+#     n_coin, 'EMA9开盘动能4')).reset_index(drop=True)
+# n_coin = 10
+# df = df.groupby('日期').apply(lambda x: x.nsmallest(
+#     n_coin , '开盘')).reset_index(drop=True)
+# n_coin = 5
+# df = df.groupby('日期').apply(lambda x: x.nsmallest(
+#     n_coin, 'EMA121开盘比值')).reset_index(drop=True)
+# n_stock = 5
+# df = df.groupby('日期').apply(lambda x: x.nlargest(
+#     n_stock, '开盘开盘幅')).reset_index(drop=True)
+
+
+# # 每日选STOCK
+# n_stock = 500
+# df = df.groupby('日期').apply(lambda x: x.nlargest(
+#     n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
 n_stock = 100
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘')).reset_index(drop=True)
-
-# 涨停过滤
+# n_stock = 5
+# df = df.groupby('日期').apply(lambda x: x.nsmallest(
+#     n_stock, 'EMA121开盘比值')).reset_index(drop=True)
+n_stock = 5
+df = df.groupby('日期').apply(lambda x: x.nlargest(
+    n_stock, '开盘开盘幅')).reset_index(drop=True)
 df = df[
-    (df['开盘收盘幅'] <= 8) &
-    (df['开盘收盘幅'] >= 0) 
+    (df['开盘收盘幅'] <= 8)
+    &
+    (df['开盘收盘幅'] >= 0)
 ]
 
 # 将交易标的细节输出到一个csv文件
@@ -30,7 +60,7 @@ cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 
-n = 6
+n = 1
 # 设置持仓周期
 m = 0.01
 # 设置手续费
