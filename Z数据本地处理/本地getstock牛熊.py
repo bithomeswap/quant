@@ -30,7 +30,7 @@ stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
         k_data = ak.stock_zh_a_hist(
-            symbol=code, start_date=str(start_date),end_date=str(end_date), adjust="qfq")
+            symbol=code, start_date=str(start_date), end_date=str(end_date), adjust="hfq")
         k_data['代码'] = float(code)
         # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
         try:
