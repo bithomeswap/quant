@@ -7,67 +7,40 @@ df = pd.read_csv(f'{name}指标.csv')
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
-# 标的站在EMA121以上达到某个值的多说明牛市形成，站在EMA121以下达到某个值的多说明熊市形成，分布执行各自的策略
-
-# # # COIN
-# # 默认当天最大的500条EMA121开盘比值数据中小于0.5则熊市黄金坑形成执行超跌策略
-# niuxiong = 500
-# if df.groupby('日期').apply(lambda x: x.nsmallest(niuxiong, 'EMA121开盘比值')).reset_index(drop=True)['EMA121开盘比值'].max() < 0.5:
-#     # n_stock = 500
-#     # df = df.groupby('日期').apply(lambda x: x.nlargest(
-#     #     n_stock, 'EMA9开盘动能4')).reset_index(drop=True)
-#     # n_stock = 5
-#     # df = df.groupby('日期').apply(lambda x: x.nsmallest(
-#     #     n_stock, 'EMA121开盘比值')).reset_index(drop=True)
-#     df = df.groupby('日期').apply(
-#         lambda x: x[x['EMA9开盘动能4'] < 0.5].copy()).reset_index(drop=True)
-
-# else:
-#     # 执行震荡策略
-#     n_stock = 10
-#     df = df.groupby('日期').apply(lambda x: x.nsmallest(
-#         n_stock, '开盘')).reset_index(drop=True)
-#     n_stock = 5
-#     df = df.groupby('日期').apply(lambda x: x.nlargest(
-#         n_stock, '开盘开盘幅')).reset_index(drop=True)
-#     df = df[
-#         (df['开盘收盘幅'] <= 8)
-#         &
-#         (df['开盘收盘幅'] >= 0)
-#     ]
-
-
-# # 每日选STOCK
-
-# 默认当天最大的500条EMA121开盘比值数据中小于0.5则熊市黄金坑形成执行超跌策略,其他情况执行震荡策略
-niuxiong = 500
-if df.groupby('日期').apply(lambda x: x.nsmallest(niuxiong, 'EMA121开盘比值')).reset_index(drop=True)['EMA121开盘比值'].max() < 1:
-    # 执行超跌策略
-    n_stock = 100
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, 'EMA121开盘比值')).reset_index(drop=True)
-    n_stock = 5
-    df = df.groupby('日期').apply(lambda x: x.nlargest(
-        n_stock, '开盘开盘幅')).reset_index(drop=True)
+# 根据EMA121开盘比值确定行情类型
+avg_ema121_ratio = df.groupby('日期')['EMA121开盘比值'].mean()
+# 当天
+bull_market = avg_ema121_ratio >= 1
+bull_market = avg_ema121_ratio <= 1
+if name == 'STOCK':
     df = df[
         (df['开盘收盘幅'] <= 8)
         &
         (df['开盘收盘幅'] >= 0)
     ]
-else:
-    # 执行震荡策略
-    n_stock = 100
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '开盘')).reset_index(drop=True)
-    n_stock = 5
-    df = df.groupby('日期').apply(lambda x: x.nlargest(
-        n_stock, '开盘开盘幅')).reset_index(drop=True)
-    df = df[
-        (df['开盘收盘幅'] <= 8)
-        &
-        (df['开盘收盘幅'] >= 0)
-    ]
+    # 根据行情类型执行不同的交易策略
+    if bull_market:
+        # 执行牛市策略
+        n_stock = 100
+        df = df.groupby('日期').apply(lambda x: x.nlargest(
+            n_stock, '开盘')).reset_index(drop=True)
+        n_stock = 5
+        df = df.groupby('日期').apply(lambda x: x.nlargest(
+            n_stock, '开盘开盘幅')).reset_index(drop=True)
 
+    else:
+        # 执行熊市策略
+        n_stock = 100
+        df = df.groupby('日期').apply(lambda x: x.nsmallest(
+            n_stock, '开盘')).reset_index(drop=True)
+        n_stock = 5
+        df = df.groupby('日期').apply(lambda x: x.nsmallest(
+            n_stock, '开盘开盘幅')).reset_index(drop=True)
+        df = df[
+            (df['开盘收盘幅'] <= 8)
+            &
+            (df['开盘收盘幅'] >= 0)
+        ]
 
 # 将交易标的细节输出到一个csv文件
 # trading_detail_filename = f'{name}交易标的细节.csv'
@@ -87,6 +60,7 @@ m = 0.005
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
+
 cash_balance_list = []
 # 记录每个交易日是否执行了策略，并输出到csv文件中
 for date, group in df.groupby('日期'):
@@ -112,13 +86,10 @@ for date, group in df.groupby('日期'):
     daily_cash_balance[date] = cash_balance
     cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
 
-
-df_cash_balance = pd.DataFrame({'日期': list(daily_cash_balance.keys()), '资金余额': list(
-    daily_cash_balance.values()), '每日收益率': [0]*len(daily_cash_balance)})
-df_strategy_and_return = pd.merge(
-    df_strategy, df_daily_return, on='日期')
+df_cash_balance = pd.DataFrame(
+    {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
+df_strategy_and_return = pd.merge(df_strategy, df_daily_return, on='日期')
 df_strategy_and_return = pd.merge(
     df_strategy_and_return, df_cash_balance, on='日期')
-
 # 输出每日执行策略和净资产收益率到csv文件
 df_strategy_and_return.to_csv(f'{name}每日策略和资产状况.csv', index=False)

@@ -9,9 +9,19 @@ import requests
 import pandas as pd
 import talib
 import os
+from pymongo import MongoClient
 
-name = 'stock牛熊20060101_20100101'
-data = pd.read_csv(f'{name}.csv')
+# 连接MongoDB数据库
+start_date = 20060101
+end_date = 20100101
+client = MongoClient(
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+# 输出的表为截止日期
+name = f'STOCK_{start_date}_{end_date}'
+collection = db[f'{name}']
+# 获取数据并转换为DataFrame格式
+data = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 
 
