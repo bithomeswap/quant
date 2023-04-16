@@ -4,33 +4,24 @@ import pandas as pd
 import numpy as np
 
 name = 'STOCK'
-df = pd.read_csv('本地stock指标.csv')
-mubiao = 'abs(MACD/MACDsignal-1)'
+df = pd.read_csv('金叉区间.csv', encoding='gbk')
+mubiao = 'MACD/收盘'
 print('任务已经开始')
 df = df.dropna()  # 删除含有空值的行
 
-# df = df[df['MACD交叉状态'] < 0].copy()
-df = df[df['MACD交叉状态'] > 0].copy()
-
-
-# 去掉开盘幅过高的噪音数据
-for n in range(1, 9):
-    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
-# 去掉n日后总涨跌幅大于百分之三百的噪音数据
-
 # 对指定列排序
 sorted_data = np.sort(df[f'{mubiao}'])
-# 将数据划分成n个等距离的区间
-a = 21
-indices = np.linspace(0, len(df[f'{mubiao}']),
-                      num=a+1, endpoint=True, dtype=int)
-# # 得到每一个区间的上界，并作为该部分对应的区间范围
+# 将数据划分成n个等长度的区间
+a = 40
 
-df.round(decimals=6).to_csv(f'金叉样本分布.csv', index=False)
+ranges = []
+left = -0.05
+right = 0.04
+step = (right - left) / a
 
-ranges = [(0, 0.1), (0.1, 0.2), (0.2, 0.3), (0.3, 0.4), (0.4, 0.5), (0.5, 0.6), (0.6, 0.7), (0.7, 0.8),
-          (0.8, 0.9), (0.9, 1), (1, 1.1),(1.1, 1.2), (1.2, 1.3),(1.3,1.4), (1.4, 1.5),(1.5,1.6), 
-          (1.6, 1.7),(1.7,1.8), (1.8, 1.9),(1.9,2.0), (2, 100)]
+for i in range(a):
+    ranges.append((left + i * step, left + (i + 1) * step))
+
 
 result_dicts = []
 
