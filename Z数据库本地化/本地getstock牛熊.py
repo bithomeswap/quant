@@ -20,7 +20,7 @@ for code in stock_info_df['代码']:
             # 将数据存储到df中
             df = pd.concat([df, k_data], ignore_index=True)
             df = df.dropna()  # 过滤掉停牌的股票数据
-            df.to_csv('stock牛熊.csv', index=False, mode='a',
+            df.to_csv(f'stock牛熊{end_date}_{end_date}.csv', index=False, mode='a',
                       header=not os.path.exists('stock牛熊.csv'))
             print(f"正在实时写入数据：{code}")
         except:
