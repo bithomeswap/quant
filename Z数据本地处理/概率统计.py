@@ -73,11 +73,17 @@ else:
 # trading_detail_filename = f'{name}交易标的细节.csv'
 # df.to_csv(trading_detail_filename, index=False)
 
+# 计算每日收益率=100*(100+FJ2-2)/100
+df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
 
-cash_balance = 10000  # 假设开始时有10000元资金
-n = 6  # 设置持仓周期
-m = 0.005  # 设置手续费
-daily_cash_balance = {}  # 用于记录每日的资金余额
+# 假设开始时有10000元资金,实操时每个月还得归集一下资金，以免收益不平均
+cash_balance = 10000
+# 用于记录每日的资金余额
+daily_cash_balance = {}
+n = 6
+# 设置持仓周期
+m = 0.005
+# 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
