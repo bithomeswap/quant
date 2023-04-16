@@ -20,6 +20,8 @@ df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
+# 计算昨日成交额
+df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
 # 成交量变成浮点数
 df['成交量'] = df['成交量'].astype(float)
 # 定义开盘幅
