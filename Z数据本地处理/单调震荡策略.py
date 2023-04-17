@@ -10,43 +10,19 @@ for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
 
-# for df in df.groupby('日期'):
-    
-
-    # 根据EMA121开盘比值确定行情类型
-    # avg_ema121_ratio = df.groupby('日期')['EMA121开盘比值'].mean()
-    # # 当天
-    # bull_market = avg_ema121_ratio >= 1
-    # bull_market = avg_ema121_ratio <= 1
-
-    # 根据行情类型执行不同的交易策略
-    # if bull_market:
-    #     # 执行超跌策略
-    #     n_stock = 100
-    #     df = df.groupby('日期').apply(lambda x: x.nlargest(
-    #         n_stock, '开盘')).reset_index(drop=True)
-    #     n_stock = 5
-    #     df = df.groupby('日期').apply(lambda x: x.nlargest(
-    #         n_stock, '开盘开盘幅')).reset_index(drop=True)
-    # n_stock = 5
-    # df = df.groupby('日期').apply(lambda x: x.nsmallest(
-    #     n_stock, '开盘')).reset_index(drop=True)
-
-    # else:
-    # 执行震荡策略
-        # n_stock = 100
-        # df = df.groupby('日期').apply(lambda x: x.nlargest(
-        #     n_stock, '开盘开盘幅')).reset_index(drop=True)
-        # n_stock = 5
-        # df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        #     n_stock, '开盘')).reset_index(drop=True)
-        # if 'stock' in name.lower():
-        #     df = df[
-        #         (df['开盘收盘幅'] <= 8)
-        #         &
-        #         (df['开盘收盘幅'] >= 0)
-        #     ]
-        #     print('测试标的为股票类型，默认高开百分之八无法买入')
+n_stock = 100
+df = df.groupby('日期').apply(lambda x: x.nlargest(
+    n_stock, '开盘开盘幅')).reset_index(drop=True)
+n_stock = 5
+df = df.groupby('日期').apply(lambda x: x.nsmallest(
+    n_stock, '开盘')).reset_index(drop=True)
+if 'stock' in name.lower():
+    df = df[
+        (df['开盘收盘幅'] <= 8)
+        &
+        (df['开盘收盘幅'] >= 0)
+    ]
+    print('测试标的为股票类型，默认高开百分之八无法买入')
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
