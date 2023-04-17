@@ -12,8 +12,8 @@ from pymongo import MongoClient
 import time
 
 
-start_date = 20060101
-end_date = 20100101
+start_date = 20140101
+end_date = 20170101
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
