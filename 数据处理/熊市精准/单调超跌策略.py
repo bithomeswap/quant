@@ -1,49 +1,31 @@
 import pandas as pd
 
-# name = 'STOCK_20060101_20100101'
+name = 'STOCK_20140101_20170101'
 # name = 'COIN'
-name = 'STOCk'
+# name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
+df = df[df['EMA121开盘比值'] <= 0.5].copy()
 
-# 当日EMA21开盘比值的均值小于1则执行超跌策略，否则执行震荡策略
-for df in df.groupby('日期'):
-    if df['EMA121开盘比值'].mean() <= 1:
-        # 执行超跌策略
-        n_stock = 100
-        df = df.groupby('日期').apply(lambda x: x.nsmallest(
-            n_stock, 'EMA121开盘比值')).reset_index(drop=True)
-        n_stock = 5
-        df = df.groupby('日期').apply(lambda x: x.nlargest(
-            n_stock, '开盘开盘幅')).reset_index(drop=True)
-        # n_stock = 5
-        # df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        #     n_stock, '开盘')).reset_index(drop=True)
-    else:
-        n_stock = 100
-        df = df.groupby('日期').apply(lambda x: x.nlargest(
-            n_stock, '开盘开盘幅')).reset_index(drop=True)
-        n_stock = 5
-        df = df.groupby('日期').apply(lambda x: x.nsmallest(
-            n_stock, '开盘')).reset_index(drop=True)
-        if 'stock' in name.lower():
-            df = df[
-                (df['开盘收盘幅'] <= 8)
-                &
-                (df['开盘收盘幅'] >= 0)
-            ]
-            print('测试标的为股票类型，默认高开百分之八无法买入')
+n_stock = 100
+df = df.groupby('日期').apply(lambda x: x.nsmallest(
+    n_stock, '开盘')).reset_index(drop=True)
+n_stock = 5
+df = df.groupby('日期').apply(lambda x: x.nsmallest(
+    n_stock, 'EMA121开盘比值')).reset_index(drop=True)
+df = df[
+    (df['开盘收盘幅'] <= 8)
+    &
+    (df['开盘收盘幅'] >= 0)
+]
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
 df.to_csv(trading_detail_filename, index=False)
-
-# 计算每日收益率=100*(100+FJ2-2)/100
-df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
 
 # 假设开始时有10000元资金,实操时每个月还得归集一下资金，以免收益不平均
 cash_balance = 10000
@@ -64,7 +46,7 @@ for date, group in df.groupby('日期'):
     if group.empty:
         strategy = '未选标的'
         daily_return = 0
-    elif df.groupby('日期')['EMA121开盘比值'].mean() <= 1:
+    elif group['EMA121开盘比值'].mean() < 1:
         strategy = '超跌策略'
         daily_return = (group[f'{n}日后总涨跌幅（未来函数）'] +
                         100).mean()*(1-m)/100-1  # 计算平均收益率

@@ -12,8 +12,8 @@ import os
 from pymongo import MongoClient
 
 # 连接MongoDB数据库
-start_date = 20060101
-end_date = 20100101
+start_date = 20140101
+end_date = 20170101
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
@@ -26,8 +26,10 @@ print("数据读取成功")
 
 
 def get_technical_indicators(df):  # 定义计算技术指标的函数
+    # 判断开盘、收盘、最高、最低四列中是否有负值，如果有则将整组数据删除
+    if any(df['开盘'] < 0) or any(df['收盘'] < 0) or any(df['最高'] < 0) or any(df['最低'] < 0):
+        return pd.DataFrame()
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-
     # 计算昨日成交额
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 成交量变成浮点数
