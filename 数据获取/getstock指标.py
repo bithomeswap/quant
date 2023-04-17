@@ -21,6 +21,7 @@ collection = db[f'{name}']
 data = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 
+
 def get_technical_indicators(df):  # 定义计算技术指标的函数
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
@@ -58,13 +59,18 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         talib.MA(df['成交量'].values, timeperiod=4, matype=0)
     df[f'SMA{9}成交量动能{4}'] = df[f'SMA{4}成交量比值']/df[f'SMA{9}成交量比值']
 
+    df['360日最高开盘价'] = df['开盘'].rolling(360).max()
+    df['360日最低开盘价'] = df['开盘'].rolling(360).min()
+    df['720日最高开盘价'] = df['开盘'].rolling(720).max()
+    df['720日最低开盘价'] = df['开盘'].rolling(720).min()
+
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
-    df['60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
-    df['60日最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
-    df['最高开盘价日期'] = df['开盘'].rolling(60).apply(
+    df['未来60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
+    df['未来60日最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
+    df['未来60日最高开盘价日期'] = df['开盘'].rolling(60).apply(
         lambda x: x.argmax(), raw=True).shift(-60)
-    df['最低开盘价日期'] = df['开盘'].rolling(60).apply(
+    df['未来60日最低开盘价日期'] = df['开盘'].rolling(60).apply(
         lambda x: x.argmin(), raw=True).shift(-60)
 
     for n in range(1, 9):  # 计算未来n日涨跌幅
