@@ -36,38 +36,28 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 定义收盘幅即涨跌幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
-    df[f'EMA{121}开盘比值'] = df['开盘'] / \
+    df[f'SMA{121}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=121, matype=0)
-    df[f'EMA{121}收盘比值'] = df['收盘'] / \
+    df[f'SMA{121}收盘比值'] = df['收盘'] / \
         talib.MA(df['收盘'].values, timeperiod=121, matype=0)
-    df[f'EMA{121}最高比值'] = df['最高'] / \
+    df[f'SMA{121}最高比值'] = df['最高'] / \
         talib.MA(df['最高'].values, timeperiod=121, matype=0)
-    df[f'EMA{121}最低比值'] = df['最低'] / \
+    df[f'SMA{121}最低比值'] = df['最低'] / \
         talib.MA(df['最低'].values, timeperiod=121, matype=0)
+    df[f'SMA{121}成交量比值'] = df['成交量'] / \
+        talib.MA(df['成交量'].values, timeperiod=121, matype=0)
 
-    df[f'EMA{9}开盘比值'] = df['开盘'] / \
+    df[f'SMA{9}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=9, matype=0)
-    df[f'EMA{4}开盘比值'] = df['开盘'] / \
+    df[f'SMA{4}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=4, matype=0)
-    df[f'EMA{9}开盘动能{4}'] = df[f'EMA{4}开盘比值']/df[f'EMA{9}开盘比值']
+    df[f'SMA{9}开盘动能{4}'] = df[f'SMA{4}开盘比值']/df[f'SMA{9}开盘比值']
 
-    df[f'EMA{9}收盘比值'] = df['收盘'] / \
+    df[f'SMA{9}成交量比值'] = df['成交量'] / \
         talib.MA(df['收盘'].values, timeperiod=9, matype=0)
-    df[f'EMA{4}收盘比值'] = df['收盘'] / \
-        talib.MA(df['收盘'].values, timeperiod=4, matype=0)
-    df[f'EMA{9}收盘动能{4}'] = df[f'EMA{4}收盘比值']/df[f'EMA{9}收盘比值']
-
-    df[f'EMA{9}最高比值'] = df['最高'] / \
-        talib.MA(df['最高'].values, timeperiod=9, matype=0)
-    df[f'EMA{4}最高比值'] = df['最高'] / \
-        talib.MA(df['最高'].values, timeperiod=4, matype=0)
-    df[f'EMA{9}最高动能{4}'] = df[f'EMA{4}最高比值']/df[f'EMA{9}最高比值']
-
-    df[f'EMA{9}最低比值'] = df['最低'] / \
-        talib.MA(df['最低'].values, timeperiod=9, matype=0)
-    df[f'EMA{4}最低比值'] = df['最低'] / \
-        talib.MA(df['最低'].values, timeperiod=4, matype=0)
-    df[f'EMA{9}最低动能{4}'] = df[f'EMA{4}最低比值']/df[f'EMA{9}最低比值']
+    df[f'SMA{4}成交量比值'] = df['成交量'] / \
+        talib.MA(df['成交量'].values, timeperiod=4, matype=0)
+    df[f'SMA{9}成交量动能{4}'] = df[f'SMA{4}成交量比值']/df[f'SMA{9}成交量比值']
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
