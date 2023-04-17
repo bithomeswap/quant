@@ -26,7 +26,7 @@ df = df.dropna()  # 删除缺失值
 df = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
 tezheng = [
     'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
-    f'EMA{9}开盘比值', f'EMA{121}开盘比值', f'EMA{9}开盘动能{4}',
+    f'SMA{9}开盘比值', f'SMA{121}开盘比值', f'SMA{9}开盘动能{4}',
 ]
 x = df[tezheng]
 mubiao = []

@@ -9,13 +9,13 @@ df = pd.read_csv(f'{name}指标.csv')
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
-df = df[df['EMA121开盘比值'] <= 0.5].copy()
+df = df[df['SMA121开盘比值'] <= 0.5].copy()
 n_stock = 100
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘开盘幅')).reset_index(drop=True)
 n_stock = 5
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
-    n_stock, 'EMA121开盘比值')).reset_index(drop=True)
+    n_stock, 'SMA121开盘比值')).reset_index(drop=True)
 if 'stock' in name.lower():
     df = df[
         (df['开盘收盘幅'] <= 8)
