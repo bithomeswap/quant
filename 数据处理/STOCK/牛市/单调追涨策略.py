@@ -45,30 +45,17 @@ cash_balance_list = []
 for date, group in df.groupby('日期'):
     # 如果当日没有入选标的，则单日收益率为0
     if group.empty:
-        strategy = '未选标的'
         daily_return = 0
-    elif group['EMA121开盘比值'].mean() < 1:
-        strategy = '超跌策略'
-        daily_return = (group[f'{n}日后总涨跌幅（未来函数）'] +
-                        100).mean()*(1-m)/100-1  # 计算平均收益率
     else:
-        strategy = '震荡策略'
         daily_return = (group[f'{n}日后总涨跌幅（未来函数）'] +
                         100).mean()*(1-m)/100-1  # 计算平均收益率
-    df_strategy = pd.concat(
-        [df_strategy, pd.DataFrame({'日期': [date], '执行策略': [strategy]})])
     df_daily_return = pd.concat(
         [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
-
     # 更新资金余额并记录每日资金余额
     cash_balance *= (1 + daily_return)
     daily_cash_balance[date] = cash_balance
     cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
-
-df_cash_balance = pd.DataFrame(
-    {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-df_strategy_and_return = pd.merge(df_strategy, df_daily_return, on='日期')
-df_strategy_and_return = pd.merge(
-    df_strategy_and_return, df_cash_balance, on='日期')
+df_cash_balance = pd.DataFrame({'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
+df_strategy_and_return = pd.merge(df_daily_return, df_cash_balance, on='日期')
 # 输出每日执行策略和净资产收益率到csv文件
 df_strategy_and_return.to_csv(f'{name}每日策略和资产状况.csv', index=False)
