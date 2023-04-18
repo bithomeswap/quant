@@ -18,7 +18,8 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 输出的表为截止日期
-name = f'STOCK_{start_date}_{end_date}'
+# name = f'STOCK_{start_date}_{end_date}'
+name = "STOCK"
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 data = pd.DataFrame(list(collection.find()))
@@ -76,8 +77,15 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     for n in range(1, 14):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
-        df[F'{n*40}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*40).max()
-        df[F'{n*40}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*40).min()
+        if len(df) < n * 40:
+            rolling_max = df['最高'].max()
+            rolling_min = df['最低'].min()
+        else:
+            rolling_max = df['最高'].rolling(n*40).max()
+            rolling_min = df['最低'].rolling(n*40).min()
+
+        df[F'{n*40}日最高开盘价比值'] = df['开盘'] / rolling_max
+        df[F'{n*40}日最低开盘价比值'] = df['开盘'] / rolling_min
 
     return df
 

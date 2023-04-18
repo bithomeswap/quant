@@ -31,6 +31,8 @@ collection.drop()  # 清空集合中的所有文档
 stock_info_df = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
 stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
+# 过滤掉退市股票
+stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('退')]
 # 迭代每只股票，获取每天的前复权日k数据
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
