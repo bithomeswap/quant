@@ -55,11 +55,6 @@ df[f'SMA{4}成交量比值'] = df['成交量'] / \
     talib.MA(df['成交量'].values, timeperiod=4, matype=0)
 df[f'SMA{9}成交量动能{4}'] = df[f'SMA{4}成交量比值']/df[f'SMA{9}成交量比值']
 
-df['360日最高开盘价'] = df['开盘'].rolling(360).max()
-df['360日最低开盘价'] = df['开盘'].rolling(360).min()
-df['720日最高开盘价'] = df['开盘'].rolling(720).max()
-df['720日最低开盘价'] = df['开盘'].rolling(720).min()
-
 df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
 df['未来60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
@@ -69,9 +64,11 @@ df['未来60日最高开盘价日期'] = df['开盘'].rolling(60).apply(
 df['未来60日最低开盘价日期'] = df['开盘'].rolling(60).apply(
     lambda x: x.argmin(), raw=True).shift(-60)
 
-for n in range(1, 9):  # 计算未来n日涨跌幅
+for n in range(1, 14):  # 计算未来n日涨跌幅
     df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].pct_change(n).shift(-n)*100
-
+    df[F'{n*40}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*40).max()
+    df[F'{n*40}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*40).min()
+    
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
