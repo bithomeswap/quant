@@ -75,7 +75,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     return df
 
-
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码').apply(get_technical_indicators)
 
