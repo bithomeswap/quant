@@ -17,29 +17,18 @@ dir_path = os.path.dirname(os.path.dirname(
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
+# 获取自制成分股指数
 code_count = len(df['代码'].drop_duplicates())
-print("标的数量", code_count)
-n_stock = math.floor(code_count/10)
-
-# 自制成分股指数,近期日均成交额的前百分之十为成分股指数
+n_stock = code_count // 10
 codes = df.groupby('代码')['成交额'].mean().nlargest(n_stock).index.tolist()
 df = df[df['代码'].isin(codes)]
-print(f"{name}成分股为", codes)
+print("自制成分股指数为：", codes)
 
-df_prod = pd.DataFrame()
+# 计算每个交易日的'SMA121开盘比值'均值
+df_mean = df.groupby('日期')['SMA121开盘比值'].mean().reset_index(name='均值')
 
-# 指定需要计算的最高指标
-n_list = [
-    'SMA121开盘比值',
-]
-
-for n in n_list:
-    df_temp = df.groupby('日期')[f'{n}'].apply(
-        lambda x: (x.mean())).reset_index(name=f'{n}')
-    if df_prod.empty:
-        df_prod = df_temp.copy()
-    else:
-        df_prod = pd.merge(df_prod, df_temp, on='日期')
+# 根据规则对每个交易日进行标注
+df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
 
 # 输出到csv文件
-df_prod.to_csv(f'{name}_多指标平均特征.csv', index=False)
+df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
