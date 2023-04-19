@@ -10,13 +10,13 @@ import datetime
 from pymongo import MongoClient
 import time
 
-start_date = 20140101
-end_date = 20170101
+start_date = 20200401
+end_date = 20230401
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 输出的表为截止日期
-name = f'STOCK_{start_date}_{end_date}'
+name = f'STOCK'
 collection = db[f"{name}"]
 collection.drop()  # 清空集合中的所有文档
 
@@ -24,6 +24,8 @@ collection.drop()  # 清空集合中的所有文档
 stock_info_df = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
 stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
+# 过滤掉退市股票
+stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('退')]
 # 迭代每只股票，获取每天的前复权日k数据
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
