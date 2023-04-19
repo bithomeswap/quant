@@ -10,20 +10,13 @@ import datetime
 from pymongo import MongoClient
 import time
 
-# 沪市主板股票代码：600、601、603、605开头
-# 深市主板股票代码：000、001开头
-# 这里只录入了主板的数据，其他板块直接过滤掉了
-
-# 获取当前日期
-current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-# 读取180天内的数据，这里面还得排除掉节假日
-date_ago = datetime.datetime.now() - datetime.timedelta(days=1080)
-start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
+start_date = 20140101
+end_date = 20170101
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 输出的表为截止日期
-name = 'STOCK'
+name = f'STOCK_{start_date}_{end_date}'
 collection = db[f"{name}"]
 collection.drop()  # 清空集合中的所有文档
 
@@ -31,13 +24,15 @@ collection.drop()  # 清空集合中的所有文档
 stock_info_df = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
 stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
-# 过滤掉退市股票
-stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('退')]
 # 迭代每只股票，获取每天的前复权日k数据
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
         k_data = ak.stock_zh_a_hist(
-            symbol=code, start_date=start_date, adjust="qfq")
+            # symbol=code, start_date=str(start_date), end_date=str(end_date), adjust="hfq")
+            # 历史数据后复权，确保没负数
+            symbol=code, start_date=str(start_date), end_date=str(end_date), adjust="qfq")
+        # 近期数据前复权，确保真数据
+
         k_data['代码'] = float(code)
         # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
         try:
