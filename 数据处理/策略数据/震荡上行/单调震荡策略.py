@@ -2,10 +2,10 @@ import pandas as pd
 import math
 import os
 # name = 'QSTOCK_20140101_20170101'
-name = 'COIN'
+# name = 'COIN'
 # name = 'STOCK'
 # name = 'QSTOCK_20140101_20170101止损'
-# name = 'COIN止损'
+name = 'COIN止损'
 # name = 'STOCK止损'
 
 # 获取当前.py文件的绝对路径

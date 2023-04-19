@@ -12,16 +12,16 @@ name = 'COIN止损'
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上四级目录的路径
+# 获取当前.py文件所在目录的上三级目录的路径
 dir_path = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(dir_path))))
+    os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
 df_prod = pd.DataFrame()
 
 # 指定需要计算的最高指标
-n_list = ['SMA121开盘比值', '160日最高开盘价比值',
+n_list = ['SMA9成交量比值', 'SMA121开盘比值', '160日最高开盘价比值',
           '40日最高开盘价比值', '160日最低开盘价比值', '40日最低开盘价比值']
 for n in n_list:
     df_temp = df.groupby('日期')[f'{n}'].apply(
@@ -31,12 +31,7 @@ for n in n_list:
     else:
         df_prod = pd.merge(df_prod, df_temp, on='日期')
 
-# 计算多指标的平均值
-df_prod['最高指标平均值'] = (df_prod['160日最高开盘价比值']+df_prod['40日最高开盘价比值'])/2
-df_prod['最低指标平均值'] = (df_prod['160日最低开盘价比值']+df_prod['40日最低开盘价比值'])/2
-df_prod['160指标'] = df_prod['160日最高开盘价比值']*df_prod['160日最低开盘价比值']
-df_prod['40指标'] = df_prod['40日最高开盘价比值']*df_prod['40日最低开盘价比值']
-df_prod['整体指标'] = df_prod['40日最高开盘价比值']*df_prod['160日最高开盘价比值']
+# df_prod['复合指标'] = df_prod['40日最高开盘价比值']*df_prod['160日最高开盘价比值']
 
 # 输出到csv文件
 df_prod.to_csv(f'{name}_多指标平均特征.csv', index=False)

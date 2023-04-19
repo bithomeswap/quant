@@ -27,8 +27,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     # 计算昨日成交额
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
-    # 成交量变成浮点数
-    df['成交量'] = df['成交量'].astype(float)
     # 定义开盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
     # 定义开盘幅
@@ -44,8 +42,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         talib.MA(df['最高'].values, timeperiod=121, matype=0)
     df[f'SMA{121}最低比值'] = df['最低'] / \
         talib.MA(df['最低'].values, timeperiod=121, matype=0)
-    df[f'SMA{121}成交量比值'] = df['成交量'] / \
-        talib.MA(df['成交量'].values, timeperiod=121, matype=0)
+    df[f'SMA{121}昨日成交额比值'] = df['昨日成交额'] / \
+        talib.MA(df['昨日成交额'].values, timeperiod=121, matype=0)
 
     df[f'SMA{9}开盘比值'] = df['开盘'] / \
         talib.MA(df['开盘'].values, timeperiod=9, matype=0)
@@ -53,11 +51,11 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         talib.MA(df['开盘'].values, timeperiod=4, matype=0)
     df[f'SMA{9}开盘动能{4}'] = df[f'SMA{4}开盘比值']/df[f'SMA{9}开盘比值']
 
-    df[f'SMA{9}成交量比值'] = df['成交量'] / \
+    df[f'SMA{9}昨日成交额比值'] = df['昨日成交额'] / \
         talib.MA(df['收盘'].values, timeperiod=9, matype=0)
-    df[f'SMA{4}成交量比值'] = df['成交量'] / \
-        talib.MA(df['成交量'].values, timeperiod=4, matype=0)
-    df[f'SMA{9}成交量动能{4}'] = df[f'SMA{4}成交量比值']/df[f'SMA{9}成交量比值']
+    df[f'SMA{4}昨日成交额比值'] = df['昨日成交额'] / \
+        talib.MA(df['昨日成交额'].values, timeperiod=4, matype=0)
+    df[f'SMA{9}昨日成交额动能{4}'] = df[f'SMA{4}昨日成交额比值']/df[f'SMA{9}昨日成交额比值']
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
