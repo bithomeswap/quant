@@ -1,11 +1,10 @@
-import pandas as pd
 import math
+import pandas as pd
 import os
-# name = 'QSTOCK_20140101_20170101'
-# name = 'COIN'
+
+name = 'COIN'
 # name = 'STOCK'
-# name = 'QSTOCK_20140101_20170101止损'
-name = 'COIN止损'
+# name = 'COIN止损'
 # name = 'STOCK止损'
 
 # 获取当前.py文件的绝对路径
@@ -26,8 +25,7 @@ code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
 n_stock = math.floor(code_count/10)
-df = df.groupby('日期')
-df = df.apply(lambda x: x.nlargest(
+df = df.groupby('日期').apply(lambda x: x.nlargest(
     n_stock, '开盘开盘幅')).reset_index(drop=True)
 
 n_stock = 5

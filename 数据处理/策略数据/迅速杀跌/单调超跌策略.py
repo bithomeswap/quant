@@ -1,11 +1,10 @@
-import pandas as pd
 import math
+import pandas as pd
 import os
-# name = 'QSTOCK_20140101_20170101'
-# name = 'COIN'
+
+name = 'COIN'
 # name = 'STOCK'
-# name = 'QSTOCK_20140101_20170101止损'
-name = 'COIN止损'
+# name = 'COIN止损'
 # name = 'STOCK止损'
 
 # 获取当前.py文件的绝对路径
@@ -18,18 +17,19 @@ dir_path = os.path.dirname(os.path.dirname(
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
+df = df[df['SMA121开盘比值'] <= 0.8].copy()
+
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
+df = df[df['SMA121开盘比值'] <= 0.8].copy()
+
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
-df = df[df['SMA121开盘比值'] <= 0.8].copy()
-
 n_stock = math.floor(code_count/10)
-df = df.groupby('日期')
-df = df.apply(lambda x: x.nlargest(
+df = df.groupby('日期').apply(lambda x: x.nlargest(
     n_stock, '开盘开盘幅')).reset_index(drop=True)
 
 n_stock = 5

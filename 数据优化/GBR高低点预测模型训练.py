@@ -48,14 +48,7 @@ model = MultiOutputRegressor(GradientBoostingRegressor(
 model.fit(x_train, y_train)
 
 y_pred = model.predict(x_test)  # 对模型预测准确率进行统计
-# 将测试集的真实值和模型的预测值保存为CSV文件
-dfpred = pd.DataFrame({'True values': y_test.iloc[:, 0].values, 'Predicted values': y_pred[:, 0],
-                       'True values2': y_test.iloc[:, 1].values, 'Predicted values2': y_pred[:, 1],
-                      'timestamp': pd.to_datetime(x_test['timestamp'], unit='s', utc=True)})
 
-db[f'{name}predictions'].drop()  # 清空集合中的所有文档
-db[f'{name}predictions'].insert_many(dfpred.to_dict('records'))
-# 展示时间和timestamp差的八个小时是时区问题，即我本地（本地时间是utf8，东八区北京时间）转换的时候，自动加了八小时
 # 设置要插入的数据
 data = {
     "MAPE": mean_absolute_percentage_error(y_test, y_pred),

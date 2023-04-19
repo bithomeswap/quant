@@ -3,9 +3,9 @@ import numpy as np
 import math
 import os
 
-name = 'QSTOCK_20140101_20170101'
 # name = 'COIN'
 # name = 'STOCK'
+name='STOCK_20140101_20170101'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

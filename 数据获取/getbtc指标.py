@@ -20,7 +20,6 @@ df = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 # 过滤最高价和最低价为负值的数据
 df = df.loc[(df['最高'] >= 0) & (df['最低'] >= 0)]
-df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
 # 计算昨日成交额
