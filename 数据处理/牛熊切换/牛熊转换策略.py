@@ -33,24 +33,30 @@ df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
 
 def oscillating_strategy(df):  # 实现震荡策略
-    # 先选取当天'开盘开盘幅'最大的百分之十
-    n_top = math.floor(len(df) * 0.1)
-    df = df.nlargest(n_top, '开盘开盘幅')
-    # 再选取当天'开盘'最低的5只股票，且该股票满足开盘收盘幅在百分之八以内，百分之零以上的时候列入当日交易标的
-    df = df.nsmallest(5, '开盘')
-    df = df[(df['开盘收盘幅'] <= 8) & (df['开盘收盘幅'] >= 0)]
+    if 'stock' in name.lower():
+        # 然后选取当天'开盘开盘幅'最大的百分之十
+        n_top = math.floor(len(df)/10)
+        df = df.nlargest(n_top, '开盘开盘幅')
+    # 再选取当天'160日最高开盘价比值'最低的百分之一
+    n_top = math.floor(len(df)/100)
+    df = df.nsmallest(n_top, '开盘')
+    if 'stock' in name.lower():
+        df = df[(df['开盘收盘幅'] <= 8) & (df['开盘收盘幅'] >= 0)]
     return df
 
 
 def oversold_strategy(df):  # 实现超跌策略
     # 先排除SMA121开盘比值在0.8以下的数据
     df = df[df['SMA121开盘比值'] >= 0.8]
-    # 然后选取当天'开盘开盘幅'最大的百分之十
-    n_top = math.floor(len(df) * 0.1)
-    df = df.nlargest(n_top, '开盘开盘幅')
-    # 再选取当天'160日最高开盘价比值'最低的5只股票，且该股票满足开盘收盘幅在百分之八以内，百分之零以上的时候列入当日交易标的
-    df = df.nsmallest(5, '160日最高开盘价比值')
-    df = df[(df['开盘收盘幅'] <= 8) & (df['开盘收盘幅'] >= 0)]
+    if 'stock' in name.lower():
+        # 然后选取当天'开盘开盘幅'最大的百分之十
+        n_top = math.floor(len(df)/10)
+        df = df.nlargest(n_top, '开盘开盘幅')
+    # 再选取当天'160日最高开盘价比值'最低的百分之一
+    n_top = math.floor(len(df)/100)
+    df = df.nsmallest(n_top, '160日最高开盘价比值')
+    if 'stock' in name.lower():
+        df = df[(df['开盘收盘幅'] <= 8) & (df['开盘收盘幅'] >= 0)]
     return df
 
 
@@ -73,15 +79,10 @@ for date, group in df.groupby('日期'):
 selectedzhendang.to_csv(f'{name}标的震荡策略详情.csv', index=False)
 selectedchaodie.to_csv(f'{name}标的超跌策略详情.csv', index=False)
 
-
-# 假设开始时有10000元资金,实操时每个月还得归集一下资金，以免收益不平均
-cash_balance = 10000
-# 用于记录每日的资金余额
-daily_cash_balance = {}
-n = 1
-# 设置持仓周期
-m = 0
-# 设置手续费
+cash_balance = 10000  # 假设开始时有10000元资金
+daily_cash_balance = {}  # 用于记录每日的资金余额
+n = 1  # 设置持仓周期
+m = 0  # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
@@ -107,6 +108,10 @@ df_strategy_and_return = pd.merge(df_daily_return, df_cash_balance, on='日期')
 # 输出每日执行策略和净资产收益率到csv文件
 df_strategy_and_return.to_csv(f'{name}标的震荡策略资产状况.csv', index=False)
 
+cash_balance = 10000  # 假设开始时有10000元资金
+daily_cash_balance = {}  # 用于记录每日的资金余额
+n = 1  # 设置持仓周期
+m = 0  # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
