@@ -12,8 +12,8 @@ import os
 from pymongo import MongoClient
 
 # 输出的表为截止日期
-name = "STOCK"
-# name = "COIN"
+# name = "STOCK"
+name = "COIN"
 
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')

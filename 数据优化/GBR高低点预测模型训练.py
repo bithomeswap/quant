@@ -30,7 +30,7 @@ tezheng = [
 ]
 x = df[tezheng]
 mubiao = []
-y = df[['60日最高开盘价', '60日最低开盘价', '最高开盘价日期', '最低开盘价日期']]
+y = df[['未来60日最高开盘价', '未来60日最低开盘价', '未来60日最高开盘价日期', '未来60日最低开盘价日期']]
 
 df = df.dropna()  # 删除缺失值
 # 将数据集划分训练集和测试集
@@ -46,7 +46,6 @@ model = MultiOutputRegressor(GradientBoostingRegressor(
 # subsample：样本采样比例，用于控制每个弱分类器的训练集采样比例，取值范围在(0,1]之间，默认为1.0，不进行采样。
 # criterion：用于衡量节点分裂质量的评价标准，支持平均方差（'mse'）、平均绝对误差（'mae'）、Friedman增益（'friedman_mse'）等。
 model.fit(x_train, y_train)
-
 
 y_pred = model.predict(x_test)  # 对模型预测准确率进行统计
 # 将测试集的真实值和模型的预测值保存为CSV文件
@@ -66,7 +65,6 @@ data = {
 db[f"{name}预测误差"].drop()  # 清空集合中的所有文档
 # 插入数据到 mongodb
 db[f"{name}预测误差"].insert_one(data)
-
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

@@ -3,9 +3,10 @@ import numpy as np
 import math
 import os
 
-# name = 'STOCK_20140101_20170101'
+# name = 'QSTOCK_20140101_20170101'
 # name = 'COIN'
 name = 'STOCK'
+
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -31,6 +32,7 @@ for order in df.index:
         if future_sum_return <= stop_loss:
             for j in range(i+1, n):
                 df.at[order, f'{j}日后总涨跌幅（未来函数）'] = future_sum_return
+
 print(f'各标的已设置回撤百分之{stop_loss}自动止损')
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

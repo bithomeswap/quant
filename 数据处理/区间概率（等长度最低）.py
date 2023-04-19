@@ -4,10 +4,9 @@ import pandas as pd
 import numpy as np
 import datetime
 import os
-# name = 'STOCK_20140101_20170101'
+
 # name = 'COIN'
 # name = 'STOCK'
-# name = 'STOCK_20140101_20170101止损'
 name = 'COIN止损'
 # name = 'STOCK止损'
 

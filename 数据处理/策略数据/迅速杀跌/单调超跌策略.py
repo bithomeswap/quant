@@ -1,10 +1,10 @@
 import pandas as pd
 import math
 import os
-# name = 'STOCK_20140101_20170101'
+# name = 'QSTOCK_20140101_20170101'
 # name = 'COIN'
 # name = 'STOCK'
-# name = 'STOCK_20140101_20170101止损'
+# name = 'QSTOCK_20140101_20170101止损'
 name = 'COIN止损'
 # name = 'STOCK止损'
 
