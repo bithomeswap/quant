@@ -4,10 +4,24 @@ import pandas as pd
 import numpy as np
 import datetime
 
+import os
 # name = 'STOCK_20140101_20170101'
-# name = "STOCK"
-name="COIN"
-df = pd.read_csv(f'{name}指标.csv')
+# name = 'COIN'
+# name = 'STOCK'
+# name = 'STOCK_20140101_20170101止损'
+name = 'COIN止损'
+# name = 'STOCK止损'
+
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上四级目录的路径
+dir_path = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.dirname(dir_path))))
+file_path = os.path.join(dir_path, f'{name}指标.csv')
+df = pd.read_csv(file_path)
+
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
 df = df.loc[:, ~df.columns.str.contains('未来60日')]  # 去掉未来函数
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据

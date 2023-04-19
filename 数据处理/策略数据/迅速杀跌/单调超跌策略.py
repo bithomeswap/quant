@@ -1,21 +1,41 @@
 import pandas as pd
-
-name = 'STOCK_20140101_20170101'
+import math
+import os
+# name = 'STOCK_20140101_20170101'
 # name = 'COIN'
 # name = 'STOCK'
-df = pd.read_csv(f'{name}指标.csv')
+# name = 'STOCK_20140101_20170101止损'
+name = 'COIN止损'
+# name = 'STOCK止损'
+
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上四级目录的路径
+dir_path = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.dirname(dir_path))))
+file_path = os.path.join(dir_path, f'{name}指标.csv')
+df = pd.read_csv(file_path)
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
-df = df[df['SMA121开盘比值'] <= 0.5].copy()
-n_stock = 100
-df = df.groupby('日期').apply(lambda x: x.nsmallest(
+code_count = len(df['代码'].drop_duplicates())
+print("标的数量", code_count)
+
+df = df[df['SMA121开盘比值'] <= 0.8].copy()
+
+n_stock = math.floor(code_count/10)
+df = df.groupby('日期')
+df = df.apply(lambda x: x.nlargest(
     n_stock, '开盘开盘幅')).reset_index(drop=True)
+
 n_stock = 5
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
-    n_stock, 'SMA121开盘比值')).reset_index(drop=True)
+    n_stock, '160日最高开盘价比值')).reset_index(drop=True)
+
 if 'stock' in name.lower():
     df = df[
         (df['开盘收盘幅'] <= 8)

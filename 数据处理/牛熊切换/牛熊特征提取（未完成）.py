@@ -1,13 +1,14 @@
 import pandas as pd
 
-# name = 'STOCK_20140101_20170101'
-name = 'COIN'
+name = 'STOCK_20140101_20170101'
+# name = 'COIN'
 # name = 'STOCK'
 df = pd.read_csv(f'{name}指标.csv')
 df_prod = pd.DataFrame()
 
 # 指定需要计算的最高指标
-n_list = ['160日最高开盘价比值', '40日最高开盘价比值', '160日最低开盘价比值', '40日最低开盘价比值']
+n_list = ['SMA121开盘比值', '160日最高开盘价比值',
+          '40日最高开盘价比值', '160日最低开盘价比值', '40日最低开盘价比值']
 for n in n_list:
     df_temp = df.groupby('日期')[f'{n}'].apply(
         lambda x: (x.mean())).reset_index(name=f'{n}')

@@ -21,10 +21,9 @@ file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上两级目录的路径
-parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
-# 读取模型
-model_file_path = os.path.join(parent_dir_path, f'{name}model.pickle')
-with open(model_file_path, 'rb') as f:
+dir_path = os.path.dirname(os.path.dirname(dir_path))
+file_path = os.path.join(dir_path, f'{name}model.pickle')
+with open(file_path, 'rb') as f:
     model = pickle.load(f)
 # 确认特征列
 tezheng = [
