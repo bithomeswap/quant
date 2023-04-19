@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -24,11 +24,12 @@ for n in range(1, 9):
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
-n_stock = math.floor(code_count/10)
-df = df.groupby('日期').apply(lambda x: x.nlargest(
-    n_stock, '开盘开盘幅')).reset_index(drop=True)
+if 'stock' in name.lower():
+    n_stock = math.floor(code_count/10)
+    df = df.groupby('日期').apply(lambda x: x.nlargest(
+        n_stock, '开盘开盘幅')).reset_index(drop=True)
 
-n_stock = 5
+n_stock = math.floor(code_count/100)
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '开盘')).reset_index(drop=True)
 

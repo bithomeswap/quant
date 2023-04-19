@@ -28,11 +28,12 @@ df = df[df['SMA121开盘比值'] <= 0.8].copy()
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
-n_stock = math.floor(code_count/10)
-df = df.groupby('日期').apply(lambda x: x.nlargest(
-    n_stock, '开盘开盘幅')).reset_index(drop=True)
+if 'stock' in name.lower():
+    n_stock = math.floor(code_count/10)
+    df = df.groupby('日期').apply(lambda x: x.nlargest(
+        n_stock, '开盘开盘幅')).reset_index(drop=True)
 
-n_stock = 5
+n_stock = math.floor(code_count/100)
 df = df.groupby('日期').apply(lambda x: x.nsmallest(
     n_stock, '160日最高开盘价比值')).reset_index(drop=True)
 
