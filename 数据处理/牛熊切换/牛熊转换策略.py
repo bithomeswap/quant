@@ -105,7 +105,7 @@ df_cash_balance = pd.DataFrame(
     {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
 df_strategy_and_return = pd.merge(df_daily_return, df_cash_balance, on='日期')
 # 输出每日执行策略和净资产收益率到csv文件
-df_strategy_and_return.to_csv(f'{name}震荡策略资产状况.csv', index=False)
+df_strategy_and_return.to_csv(f'{name}标的震荡策略资产状况.csv', index=False)
 
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
@@ -130,4 +130,4 @@ df_cash_balance = pd.DataFrame(
     {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
 df_strategy_and_return = pd.merge(df_daily_return, df_cash_balance, on='日期')
 # 输出每日执行策略和净资产收益率到csv文件
-df_strategy_and_return.to_csv(f'{name}超跌策略资产状况.csv', index=False)
+df_strategy_and_return.to_csv(f'{name}标的超跌策略资产状况.csv', index=False)
