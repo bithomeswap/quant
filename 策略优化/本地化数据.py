@@ -6,7 +6,6 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 
-# name = 'STOCK_20140101_20170101'
 name = 'COIN'
 # name = 'STOCK'
 

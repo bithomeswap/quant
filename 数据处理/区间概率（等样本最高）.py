@@ -21,7 +21,6 @@ dir_path = os.path.dirname(os.path.dirname(
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
-df = pd.read_csv(f'{name}指标.csv')
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
 df = df.loc[:, ~df.columns.str.contains('未来60日')]  # 去掉未来函数
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据

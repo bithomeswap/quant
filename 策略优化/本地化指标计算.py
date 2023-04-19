@@ -12,7 +12,6 @@ import os
 from pymongo import MongoClient
 
 # 输出的表为截止日期
-# name = "STOCK_20140101_20170101"
 name = "STOCK"
 # name = "COIN"
 
@@ -24,12 +23,13 @@ collection = db[f'{name}']
 data = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 
+
 def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 判断开盘、收盘、最高、最低四列中是否有负值，如果有则将整组数据删除
     if name == f'STOCK_20140101_20170101':
         if any(df['开盘'] < 0) or any(df['收盘'] < 0) or any(df['最高'] < 0) or any(df['最低'] < 0):
             return pd.DataFrame()
-        
+
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
     # 计算昨日成交额

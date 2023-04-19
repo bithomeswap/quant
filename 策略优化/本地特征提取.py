@@ -11,7 +11,6 @@ import os
 from pymongo import MongoClient
 
 # 选择要分析的产品
-# name = "STOCK_20140101_20170101"
 # name = "COIN"
 name = "STOCK"
 
