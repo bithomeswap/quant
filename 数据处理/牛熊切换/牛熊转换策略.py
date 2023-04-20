@@ -26,8 +26,14 @@ print("自制成分股指数为：", codes)
 
 # 计算每个交易日的'SMA121开盘比值'均值
 df_mean = df.groupby('日期')['SMA121开盘比值'].mean().reset_index(name='均值')
-# 根据规则对每个交易日进行标注
-df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
+df_mean['121日最高均值比值'] = df_mean['均值'].rolling(121).max().values
+df_mean['比值'] = df_mean['均值'] / df_mean['121日最高均值比值']
+
+
+# # 根据规则对每个交易日进行标注
+# df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
+df_mean['策略'] = df_mean['比值'].apply(lambda x: '震荡策略' if x >= 0.6 else '超跌策略')
+
 # 输出到csv文件
 df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
@@ -88,7 +94,7 @@ daily_cash_balance_zhendang = pd.DataFrame(
 daily_cash_balance_chaodie = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（超跌策略）
 n = 1  # 设置持仓周期
-m = 0.02  # 设置手续费
+m = 0.004  # 设置手续费
 
 df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
 # 记录每个交易日是否执行了策略，并输出到csv文件中
