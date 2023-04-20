@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -53,7 +53,7 @@ cash_balance = 10000
 daily_cash_balance = {}
 n = 1
 # 设置持仓周期
-m = 0
+m = 0.001
 # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
