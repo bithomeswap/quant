@@ -3,7 +3,7 @@
 同时你的代码当中很少有bug存在。此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
 
 注意事项：
-在聚宽平台上进行回测（代码运行在聚宽回测平台上即可）；
+只使用聚宽API文件当中提供的函数，不要使用其他库中的方法
 
 工作任务:
 1.在聚宽平台上进行回测（代码运行在聚宽回测平台上即可）；
@@ -19,20 +19,4 @@
 
 注意参考初始资金和手续费设置的内容
 一、参考资料
-
-def initialize(context):
-    # 设定沪深300作为基准
-    set_benchmark('000300.XSHG')
-    # 开启动态复权模式(真实价格)
-    set_option('use_real_price', True)
-    # 输出内容到日志 log.info()
-    log.info('初始函数开始运行且全局只运行一次')
-    # 过滤掉order系列API产生的比error级别低的log
-    # log.set_level('order', 'error')
-
-    ### 股票相关设定 ###
-    # 股票类每笔交易时的手续费是：买入时佣金万分之三，卖出时佣金万分之三加千分之一印花税, 每笔交易佣金最低扣5块钱
-    set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0003, close_commission=0.0003, min_commission=5), type='stock')
-    g.security = list(get_all_securities(types=['stock'], date=None).index)
-
 

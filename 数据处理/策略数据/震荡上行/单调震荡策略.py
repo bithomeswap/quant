@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -49,9 +49,9 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 1
+n = 9
 # 设置持仓周期
-m = 0
+m = 0.0016
 # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
