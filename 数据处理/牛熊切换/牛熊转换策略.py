@@ -101,8 +101,8 @@ daily_cash_balance_zhendang = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（震荡策略）
 daily_cash_balance_chaodie = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（超跌策略）
-n = 6  # 设置持仓周期
-m = 0.001  # 设置手续费
+n = 9  # 设置持仓周期
+m = 0.0016  # 设置手续费
 
 df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
 # 记录每个交易日是否执行了策略，并输出到csv文件中

@@ -5,15 +5,15 @@ import os
 
 # name = 'COIN'
 # name = 'STOCK'
-name='STOCK_20140101_20170101'
+name = 'STOCK_20140101_20170101'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上四级目录的路径
+# 获取当前.py文件所在目录的上三级目录的路径
 dir_path = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(dir_path))))
+    os.path.dirname(dir_path)))
 # 保存数据到指定目录
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
