@@ -26,7 +26,7 @@ print("标的数量", code_count)
 
 if 'coin' in name.lower():
     # 熊市过滤
-    df = df[df['SMA121开盘比值'] <= 0.8].copy()
+    df = df[df['SMA120开盘比值'] <= 0.5].copy()
     n_stock = math.floor(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nlargest(
         n_stock, '40日最低开盘价比值')).reset_index(drop=True)
@@ -36,7 +36,7 @@ if 'coin' in name.lower():
 
 if 'stock' in name.lower():
     # 熊市过滤
-    df = df[df['SMA121开盘比值'] <= 0.5].copy()
+    df = df[df['SMA120开盘比值'] <= 0.5].copy()
     n_stock = math.floor(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nlargest(
         n_stock, '40日最低开盘价比值')).reset_index(drop=True)
@@ -54,13 +54,13 @@ if 'stock' in name.lower():
 trading_detail_filename = f'{name}交易标的细节.csv'
 df.to_csv(trading_detail_filename, index=False)
 
-# 假设开始时有10000元资金,实操时每个月还得归集一下资金，以免收益不平均
-cash_balance = 10000
+# 假设开始时有1元资金,实操时每个月还得归集一下资金，以免收益不平均
+cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 n = 4
 # 设置持仓周期
-m = 0.0016
+m = 0.01
 # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])

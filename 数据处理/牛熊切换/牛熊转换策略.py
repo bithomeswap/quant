@@ -28,7 +28,7 @@ codes = df.groupby('代码')['成交额'].mean().nlargest(n_stock).index.tolist(
 df_mean = df[df['代码'].isin(codes)]
 print("自制成分股指数为：", codes)
 # 计算每个交易日成分股的'SMA121开盘比值'均值
-df_mean = df_mean.groupby('日期')['SMA121开盘比值'].mean().reset_index(name='均值')
+df_mean = df_mean.groupby('日期')['SMA120开盘比值'].mean().reset_index(name='均值')
 
 # # 计算每个交易日所有股票的'SMA121开盘比值'均值
 # df_mean = df.groupby('日期')['SMA121开盘比值'].mean().reset_index(name='均值')
@@ -48,10 +48,16 @@ df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 def oscillating_strategy(df):  # 实现震荡策略
     # print(len(df))
     if 'coin' in name.lower():
+        # 牛市过滤
+        for n in range(1, 10):  # 计算未来n日涨跌幅
+            df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
         # 选取当天'开盘'最低的
         n_top = math.floor(len(df)/20)
         df = df.nsmallest(n_top, '开盘')
     if 'stock' in name.lower():
+        # 牛市过滤
+        for n in range(1, 10):  # 计算未来n日涨跌幅
+            df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
         # 选取当天'开盘'最低的
         n_top = math.floor(len(df)/20)
         df = df.nsmallest(n_top, '开盘')
@@ -63,20 +69,20 @@ def oversold_strategy(df):  # 实现超跌策略
     # print(len(df))
     if 'coin' in name.lower():
         # 熊市过滤
-        df = df[df['SMA121开盘比值'] <= 0.8].copy()
+        df = df[df['SMA120开盘比值'] <= 0.8].copy()
         # 选取当天'40日最高开盘价比值'最高的
         n_top = math.floor(len(df)/2)
-        df = df.nlargest(n_top, '40日最低开盘价比值')
+        df = df.nlargest(n_top, '80日最低开盘价比值')
         # 再选取当天'160日最高开盘价比值'最低的
         n_top = math.floor(len(df)/20)
         df = df.nsmallest(n_top, '160日最高开盘价比值')
 
     if 'stock' in name.lower():
         # 熊市过滤
-        df = df[df['SMA121开盘比值'] <= 0.8].copy()
+        df = df[df['SMA120开盘比值'] <= 0.8].copy()
         # 选取当天'40日最高开盘价比值'最高的
         n_top = math.floor(len(df)/2)
-        df = df.nlargest(n_top, '40日最低开盘价比值')
+        df = df.nlargest(n_top, '80日最低开盘价比值')
         # 再选取当天'160日最高开盘价比值'最低的
         n_top = math.floor(len(df)/20)
         df = df.nsmallest(n_top, '160日最高开盘价比值')
@@ -111,14 +117,15 @@ for date, group in df.groupby('日期'):
 selectedzhendang.to_csv(f'{name}标的震荡策略详情.csv', index=False)
 selectedchaodie.to_csv(f'{name}标的超跌策略详情.csv', index=False)
 
-cash_balance_zhendang = 10000  # 假设开始时有10000元资金（震荡策略）
-cash_balance_chaodie = 10000  # 假设开始时有10000元资金（超跌策略）
+cash_balance_zhendang = 1  # 假设开始时有1元资金（震荡策略）
+cash_balance_chaodie = 1  # 假设开始时有1元资金（超跌策略）
 daily_cash_balance_zhendang = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（震荡策略）
 daily_cash_balance_chaodie = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（超跌策略）
+
+m = 0.01  # 设置手续费
 n = 4  # 设置持仓周期
-m = 0.0016  # 设置手续费
 
 df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
 # 记录每个交易日是否执行了策略，并输出到csv文件中
