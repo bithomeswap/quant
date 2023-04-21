@@ -23,7 +23,7 @@ collection_write_sell = db_write['BTCsell']
 api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
 api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 # 创建Binance客户端
-client = Client(api_key, api_secret)
+client = Client(api_key, api_secret,testnet=True)
 
 
 def buy():

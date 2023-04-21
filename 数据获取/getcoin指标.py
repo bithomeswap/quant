@@ -47,25 +47,13 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df[f'SMA{121}昨日成交额比值'] = df['昨日成交额'] / \
         talib.MA(df['昨日成交额'].values, timeperiod=121, matype=0)
 
-    df[f'SMA{9}开盘比值'] = df['开盘'] / \
-        talib.MA(df['开盘'].values, timeperiod=9, matype=0)
-    df[f'SMA{4}开盘比值'] = df['开盘'] / \
-        talib.MA(df['开盘'].values, timeperiod=4, matype=0)
-    df[f'SMA{9}开盘动能{4}'] = df[f'SMA{4}开盘比值']/df[f'SMA{9}开盘比值']
-
-    df[f'SMA{9}昨日成交额比值'] = df['昨日成交额'] / \
-        talib.MA(df['收盘'].values, timeperiod=9, matype=0)
-    df[f'SMA{4}昨日成交额比值'] = df['昨日成交额'] / \
-        talib.MA(df['昨日成交额'].values, timeperiod=4, matype=0)
-    df[f'SMA{9}昨日成交额动能{4}'] = df[f'SMA{4}昨日成交额比值']/df[f'SMA{9}昨日成交额比值']
-
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
-    df['未来60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
-    df['未来60日最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
-    df['未来60日最高开盘价日期'] = df['开盘'].rolling(60).apply(
+    df['未来60最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
+    df['未来60最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
+    df['未来60最高开盘价日期'] = df['开盘'].rolling(60).apply(
         lambda x: x.argmax(), raw=True).shift(-60)
-    df['未来60日最低开盘价日期'] = df['开盘'].rolling(60).apply(
+    df['未来60最低开盘价日期'] = df['开盘'].rolling(60).apply(
         lambda x: x.argmin(), raw=True).shift(-60)
 
     for n in range(1, 14):  # 计算未来n日涨跌幅
