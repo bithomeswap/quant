@@ -70,6 +70,10 @@ def oversold_strategy(df):  # 实现超跌策略
     if 'coin' in name.lower():
         # 熊市过滤
         df = df[df['SMA120开盘比值'] <= 0.8].copy()
+        
+        for n in range(1, 4):  # 计算未来n日涨跌幅
+            df = df[df[f'SMA{n*10}开盘比值'] >= 1.01].copy()
+            
         # 选取当天'40日最高开盘价比值'最高的
         n_top = math.floor(len(df)/2)
         df = df.nlargest(n_top, '80日最低开盘价比值')
