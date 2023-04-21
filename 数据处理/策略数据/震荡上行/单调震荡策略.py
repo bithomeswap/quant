@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -24,16 +24,15 @@ for n in range(1, 9):
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
-if 'stock' in name.lower():
-    n_stock = math.floor(code_count/10)
-    df = df.groupby('日期').apply(lambda x: x.nlargest(
-        n_stock, '开盘开盘幅')).reset_index(drop=True)
-
-n_stock = math.floor(code_count/100)
-df = df.groupby('日期').apply(lambda x: x.nsmallest(
-    n_stock, '开盘')).reset_index(drop=True)
+if 'coin' in name.lower():
+    n_stock = math.floor(code_count/100)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, '开盘')).reset_index(drop=True)
 
 if 'stock' in name.lower():
+    n_stock = math.floor(code_count/100)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, '开盘')).reset_index(drop=True)
     df = df[
         (df['开盘收盘幅'] <= 8)
         &
@@ -49,7 +48,7 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 10000
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 9
+n = 4
 # 设置持仓周期
 m = 0.0016
 # 设置手续费

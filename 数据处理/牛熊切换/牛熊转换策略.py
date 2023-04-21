@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -48,31 +48,45 @@ df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
 def oscillating_strategy(df):  # 实现震荡策略
     # print(len(df))
+    if 'coin' in name.lower():
+        # 选取当天'开盘'最低的
+        n_top = math.floor(len(df)/20)
+        df = df.nsmallest(n_top, '开盘')
     if 'stock' in name.lower():
-        # 然后选取当天'开盘开盘幅'最大的百分之十
-        n_top = math.floor(len(df)/10)
-        df = df.nlargest(n_top, '开盘开盘幅')
-    # 再选取当天'开盘'最低的百分之一
-    n_top = math.floor(len(df)/20)
-    df = df.nsmallest(n_top, '开盘')
-    if 'stock' in name.lower():
+        # 选取当天'开盘'最低的
+        n_top = math.floor(len(df)/20)
+        df = df.nsmallest(n_top, '开盘')
         df = df[(df['开盘收盘幅'] <= 8) & (df['开盘收盘幅'] >= 0)]
     return df
 
 
 def oversold_strategy(df):  # 实现超跌策略
-    # 先排除SMA121开盘比值在0.8以下的数据
-    df = df[df['SMA121开盘比值'] >= 0.8]
     # print(len(df))
+    if 'coin' in name.lower():
+        # 熊市过滤
+        df = df[df['SMA121开盘比值'] <= 0.8].copy()
+        # 选取当天'40日最高开盘价比值'最高的
+        n_top = math.floor(len(df)/2)
+        df = df.nlargest(n_top, '40日最低开盘价比值')
+        # 再选取当天'160日最高开盘价比值'最低的
+        n_top = math.floor(len(df)/20)
+        df = df.nsmallest(n_top, '160日最高开盘价比值')
+
     if 'stock' in name.lower():
-        # 然后选取当天'开盘开盘幅'最大的百分之十
-        n_top = math.floor(len(df)/10)
-        df = df.nlargest(n_top, '开盘开盘幅')
-    # 再选取当天'160日最高开盘价比值'最低的百分之一
-    n_top = math.floor(len(df)/20)
-    df = df.nsmallest(n_top, '160日最高开盘价比值')
-    if 'stock' in name.lower():
-        df = df[(df['开盘收盘幅'] <= 8) & (df['开盘收盘幅'] >= 0)]
+        # 熊市过滤
+        df = df[df['SMA121开盘比值'] <= 0.8].copy()
+        # 选取当天'40日最高开盘价比值'最高的
+        n_top = math.floor(len(df)/2)
+        df = df.nlargest(n_top, '40日最低开盘价比值')
+        # 再选取当天'160日最高开盘价比值'最低的
+        n_top = math.floor(len(df)/20)
+        df = df.nsmallest(n_top, '160日最高开盘价比值')
+        df = df[
+            (df['开盘收盘幅'] <= 8)
+            &
+            (df['开盘收盘幅'] >= 0)
+        ]
+        print('测试标的为股票类型，默认高开百分之八无法买入')
     return df
 
 
@@ -104,7 +118,7 @@ daily_cash_balance_zhendang = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（震荡策略）
 daily_cash_balance_chaodie = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（超跌策略）
-n = 9  # 设置持仓周期
+n = 4  # 设置持仓周期
 m = 0.0016  # 设置手续费
 
 df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
