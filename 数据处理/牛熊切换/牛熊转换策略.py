@@ -21,7 +21,6 @@ df = pd.read_csv(file_path)
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
-
 # 获取自制成分股指数
 code_count = len(df['代码'].drop_duplicates())
 n_stock = code_count // 10
