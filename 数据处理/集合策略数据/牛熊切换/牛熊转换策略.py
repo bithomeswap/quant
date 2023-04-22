@@ -11,9 +11,9 @@ name = 'COIN'
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上三级目录的路径
+# 获取当前.py文件所在目录的上四级目录的路径
 dir_path = os.path.dirname(os.path.dirname(
-    os.path.dirname(dir_path)))
+    os.path.dirname(os.path.dirname(dir_path))))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
@@ -69,17 +69,9 @@ def oversold_strategy(df):  # 实现超跌策略
     # print(len(df))
     if 'coin' in name.lower():
         # 熊市过滤
-        df = df[df['SMA120开盘比值'] <= 0.8].copy()
-        
-        for n in range(1, 4):  # 计算未来n日涨跌幅
-            df = df[df[f'SMA{n*10}开盘比值'] >= 1.01].copy()
-            
-        # 选取当天'40日最高开盘价比值'最高的
-        n_top = math.floor(len(df)/2)
-        df = df.nlargest(n_top, '80日最低开盘价比值')
-        # 再选取当天'160日最高开盘价比值'最低的
-        n_top = math.floor(len(df)/20)
-        df = df.nsmallest(n_top, '160日最高开盘价比值')
+        df = df[df['SMA120开盘比值'] <= 0.5].copy()
+        for n in range(1, 10):  # 计算未来n日涨跌幅
+            df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
 
     if 'stock' in name.lower():
         # 熊市过滤

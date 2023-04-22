@@ -27,15 +27,9 @@ print("标的数量", code_count)
 if 'coin' in name.lower():
     # 熊市过滤
     df = df[df['SMA120开盘比值'] <= 0.5].copy()
-    for n in range(1, 4):  # 计算未来n日涨跌幅
-        df = df[df[f'SMA{n*10}开盘比值'] >= 1.01].copy()
+    for n in range(1, 10):  # 计算未来n日涨跌幅
+        df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
 
-    n_stock = math.floor(code_count/10)
-    df = df.groupby('日期').apply(lambda x: x.nlargest(
-        n_stock, '40日最低开盘价比值')).reset_index(drop=True)
-    n_stock = math.floor(code_count/100)
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '160日最高开盘价比值')).reset_index(drop=True)
 
 if 'stock' in name.lower():
     # 熊市过滤
