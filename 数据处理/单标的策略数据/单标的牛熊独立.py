@@ -21,6 +21,9 @@ df = pd.read_csv(file_path)
 # 上升通道过滤
 for n in range(1, 10):  # 计算未来n日涨跌幅
     df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.001].copy()
+# 牛市过滤
+# for n in range(1, 10):  # 计算未来n日涨跌幅
+#         df = df[df[f'SMA{n*10}开盘比值'] >= 0.999].copy()
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
 df.to_csv(trading_detail_filename, index=False)
