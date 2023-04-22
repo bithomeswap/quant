@@ -30,16 +30,27 @@ if 'coin' in name.lower():
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
 
+# if 'stock' in name.lower():
+#     # 熊市过滤
+#     df = df[df['SMA120开盘比值'] <= 0.5].copy()
+#     n_stock = math.floor(code_count/10)
+#     df = df.groupby('日期').apply(lambda x: x.nlargest(
+#         n_stock, '40日最低开盘价比值')).reset_index(drop=True)
+#     n_stock = math.floor(code_count/100)
+#     df = df.groupby('日期').apply(lambda x: x.nsmallest(
+#         n_stock, '160日最高开盘价比值')).reset_index(drop=True)
+#     df = df[
+#         (df['开盘收盘幅'] <= 8)
+#         &
+#         (df['开盘收盘幅'] >= 0)
+#     ]
+#     print('测试标的为股票类型，默认高开百分之八无法买入')
 
 if 'stock' in name.lower():
     # 熊市过滤
     df = df[df['SMA120开盘比值'] <= 0.5].copy()
-    n_stock = math.floor(code_count/10)
-    df = df.groupby('日期').apply(lambda x: x.nlargest(
-        n_stock, '40日最低开盘价比值')).reset_index(drop=True)
-    n_stock = math.floor(code_count/100)
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '160日最高开盘价比值')).reset_index(drop=True)
+    for n in range(1, 10):  # 计算未来n日涨跌幅
+        df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
     df = df[
         (df['开盘收盘幅'] <= 8)
         &

@@ -16,16 +16,11 @@ file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
 # 下降通道过滤
-# 熊市过滤
-df = df[df['SMA120开盘比值'] <= 0.5].copy()
-for n in range(1, 10):  # 计算未来n日涨跌幅
-    df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
-
 for n in range(1, 10):  # 计算未来n日涨跌幅
     df = df[df[f'{n*10}日最高开盘价比值'] <= 1-n*0.001].copy()
-# # 上升通道过滤
+# 上升通道过滤
 # for n in range(1, 10):  # 计算未来n日涨跌幅
-#     df = df[df[f'{n*10}日最高开盘价比值'] >= 1+n*0.001].copy()
+#     df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.001].copy()
 
 
 # 将交易标的细节输出到一个csv文件
@@ -36,9 +31,9 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 4
+n = 10
 # 设置持仓周期
-m = 0.00
+m = 0.00005
 # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])

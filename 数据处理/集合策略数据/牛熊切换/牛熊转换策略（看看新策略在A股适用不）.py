@@ -73,21 +73,35 @@ def oversold_strategy(df):  # 实现超跌策略
         for n in range(1, 10):  # 计算未来n日涨跌幅
             df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
 
+    # if 'stock' in name.lower():
+    #     # 熊市过滤
+    #     df = df[df['SMA120开盘比值'] <= 0.8].copy()
+    #     # 选取当天'40日最高开盘价比值'最高的
+    #     n_top = math.floor(len(df)/2)
+    #     df = df.nlargest(n_top, '80日最低开盘价比值')
+    #     # 再选取当天'160日最高开盘价比值'最低的
+    #     n_top = math.floor(len(df)/20)
+    #     df = df.nsmallest(n_top, '160日最高开盘价比值')
+    #     df = df[
+    #         (df['开盘收盘幅'] <= 8)
+    #         &
+    #         (df['开盘收盘幅'] >= 0)
+    #     ]
+    #     print('测试标的为股票类型，默认高开百分之八无法买入')
+
+
     if 'stock' in name.lower():
         # 熊市过滤
-        df = df[df['SMA120开盘比值'] <= 0.8].copy()
-        # 选取当天'40日最高开盘价比值'最高的
-        n_top = math.floor(len(df)/2)
-        df = df.nlargest(n_top, '80日最低开盘价比值')
-        # 再选取当天'160日最高开盘价比值'最低的
-        n_top = math.floor(len(df)/20)
-        df = df.nsmallest(n_top, '160日最高开盘价比值')
+        df = df[df['SMA120开盘比值'] <= 0.5].copy()
+        for n in range(1, 10):  # 计算未来n日涨跌幅
+            df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
         df = df[
             (df['开盘收盘幅'] <= 8)
             &
             (df['开盘收盘幅'] >= 0)
         ]
         print('测试标的为股票类型，默认高开百分之八无法买入')
+
     return df
 
 
