@@ -25,7 +25,7 @@ df_mean['策略'] = df['SMA120开盘比值'].apply(
     lambda x: '震荡策略' if x >= 1 else '超跌策略')
 
 # 输出到csv文件
-df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
+# df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
 
 def oscillating_strategy(df):  # 实现震荡策略
@@ -70,7 +70,7 @@ daily_cash_balance_zhendang = pd.DataFrame(
 daily_cash_balance_chaodie = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（超跌策略）
 
-m = 0.01  # 设置手续费
+m = 0.0005  # 设置手续费
 n = 4  # 设置持仓周期
 
 df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
