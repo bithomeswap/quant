@@ -19,9 +19,9 @@ df = pd.read_csv(file_path)
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
-df_mean = df
+df_mean = df.copy()
 # # 根据规则对每个交易日进行标注
-df_mean['策略'] = df['SMA120开盘比值'].apply(
+df_mean['策略'] = df_mean['SMA120开盘比值'].apply(
     lambda x: '震荡策略' if x >= 1 else '超跌策略')
 
 # 输出到csv文件
@@ -60,8 +60,8 @@ for date, group in df.groupby('日期'):
                 selected_stocks = oversold_strategy(group)
                 selectedchaodie = pd.concat([selectedchaodie, selected_stocks])
 
-selectedzhendang.to_csv(f'{name}标的震荡策略详情.csv', index=False)
-selectedchaodie.to_csv(f'{name}标的超跌策略详情.csv', index=False)
+# selectedzhendang.to_csv(f'{name}标的震荡策略详情.csv', index=False)
+# selectedchaodie.to_csv(f'{name}标的超跌策略详情.csv', index=False)
 
 cash_balance_zhendang = 1  # 假设开始时有1元资金（震荡策略）
 cash_balance_chaodie = 1  # 假设开始时有1元资金（超跌策略）
@@ -70,8 +70,8 @@ daily_cash_balance_zhendang = pd.DataFrame(
 daily_cash_balance_chaodie = pd.DataFrame(
     columns=['日期', '资金余额'])  # 用于记录每日的资金余额（超跌策略）
 
-m = 0.0005  # 设置手续费
-n = 4  # 设置持仓周期
+m = 0.0001  # 设置手续费
+n = 16 # 设置持仓周期
 
 df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
 # 记录每个交易日是否执行了策略，并输出到csv文件中
