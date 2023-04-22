@@ -2,10 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
-# name = 'COIN止损'
-# name = 'STOCK止损'
+name = 'BTC'
+# name = '上证指数'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -17,35 +15,10 @@ dir_path = os.path.dirname(os.path.dirname(
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
-# 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 9):
-    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
-
-code_count = len(df['代码'].drop_duplicates())
-print("标的数量", code_count)
-
-if 'coin' in name.lower():
-    # 牛市过滤
-    for n in range(1, 10):  # 计算未来n日涨跌幅
-        df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
-    n_stock = math.floor(code_count/100)
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '开盘')).reset_index(drop=True)
-
-if 'stock' in name.lower():
-    # 牛市过滤
-    for n in range(1, 10):  # 计算未来n日涨跌幅
-        df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
-    n_stock = math.floor(code_count/100)
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '开盘')).reset_index(drop=True)
-    df = df[
-        (df['开盘收盘幅'] <= 8)
-        &
-        (df['开盘收盘幅'] >= 0)
-    ]
-    print('测试标的为股票类型，默认高开百分之八无法买入')
-
+# 牛市过滤
+for n in range(1, 10):  # 计算未来n日涨跌幅
+    df = df[df[f'SMA{n*10}开盘比值'] >= 1.001].copy()
+# df = df[df[f'SMA120开盘比值'] >= 1.01].copy()
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
 df.to_csv(trading_detail_filename, index=False)
@@ -56,7 +29,7 @@ cash_balance = 1
 daily_cash_balance = {}
 n = 4
 # 设置持仓周期
-m = 0.01
+m = 0.00
 # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
