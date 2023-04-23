@@ -28,7 +28,7 @@ if 'coin' in name.lower():
     # 牛市过滤
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
-    n_stock = math.floor(code_count/100)
+    n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '开盘')).reset_index(drop=True)
 
@@ -36,7 +36,7 @@ if 'stock' in name.lower():
     # 牛市过滤
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
-    n_stock = math.floor(code_count/100)
+    n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '开盘')).reset_index(drop=True)
     df = df[
@@ -54,7 +54,7 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 4
+n = 6
 # 设置持仓周期
 m = 0.01
 # 设置手续费

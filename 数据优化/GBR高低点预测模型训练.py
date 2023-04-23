@@ -20,8 +20,11 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 name = 'BTC'
-collection = db[f'{name}待训练']
+collection = db[f'{name}指标']
 df = pd.DataFrame(list(collection.find()))
+# 提取数值类型数据
+numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+df = df[numerical_cols]
 df = df.dropna()  # 删除缺失值
 df = df.sort_values(by='timestamp')    # 以日期列为索引,避免计算错误
 tezheng = [

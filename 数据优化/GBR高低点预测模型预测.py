@@ -12,10 +12,13 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 name = 'BTC'
-collection = db[f'{name}待训练']
+collection = db[f'{name}指标']
 # 读取最新60个文档
 df = pd.DataFrame(
     list(collection.find().sort([("timestamp", -1)]).limit(60)))
+# 提取数值类型数据
+numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+df = df[numerical_cols]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
