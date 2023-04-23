@@ -36,7 +36,7 @@ if collection.count_documents({}) >= limit:
     collection.delete_many({"_id": {"$in": ids_to_delete}})
 print("获取数据成功")
 # time.sleep(3600)
-limit = 10000
+limit = 20000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
