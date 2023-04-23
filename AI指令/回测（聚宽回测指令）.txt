@@ -10,31 +10,19 @@
 2.回测标的为所有沪深300股票；
 3.在数据初始化的时候计算每只股票的10、20、30、40、50、60、70、80日的开盘价简单移动平均线，如果当日开盘价除以这个移动平均线的值均大于0.99则列入当日的股票观察池；
 4.每天选取观察池中开盘价最低的5只股票；
-5.如果这5只股票当中
+5.如果这5只股票当中，有当日开盘低于昨日收盘的或者开盘即涨停的则不购买；
 6.以上指标都满足要求后，才买入股票，否则当天不买入股票；
 7.股票以当日开盘买入，持有十二天后卖出
 
+特别提醒：
+聚宽运算过慢，建议在初始化的时候把数据统计计算好，执行的时候直接调用数据就好
 
 聚宽API：
 https://www.joinquant.com/help/api/help#name:api
 
-# 熊市过滤
-    df = df[df['SMA121开盘比值'] <= 0.5].copy()
-    n_stock = math.floor(code_count/10)
-    df = df.groupby('日期').apply(lambda x: x.nlargest(
-        n_stock, '40日最低开盘价比值')).reset_index(drop=True)
-    n_stock = math.floor(code_count/100)
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '160日最高开盘价比值')).reset_index(drop=True)
-    df = df[
-        (df['开盘收盘幅'] <= 8)
-        &
-        (df['开盘收盘幅'] >= 0)
-    ]
-    print('测试标的为股票类型，默认高开百分之八无法买入')
-
-参考资料：
+参考资料:
 # 初始化回测函数，在此处添加打印语句
+
 def initialize(context):
     print('任务已经开始')
     # 设定沪深300作为基准
@@ -56,20 +44,23 @@ def handle_data(context, data):
     yestoday=context.previous_date
     # 获取股票池中的股票
     stocks = get_index_stocks('000300.XSHG', date=today)
+    # 计算每只股票的10、20、30、40、50、60、70、80日的开盘价简单移动平均线
+    ma_dict = {}
+    for stock in stocks:
+        price = get_price(stock, start_date=(today - datetime.timedelta(days=80)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"), frequency='daily', fields=['open'])
+        ma_dict[stock] = {}
+        for day in [10, 20, 30, 40, 50, 60, 70, 80]:
+            ma_dict[stock][day] = price.iloc[-day:, :].mean()[0]
+    # 筛选出当日股票观察池
+    observation_list = []
+    for stock in stocks:
+        if all([price/ma_dict[stock][day] > 0.99 for day, price in ma_dict[stock].items()]):
+            observation_list.append(stock)
+    # 选取当日开盘价最低的5只股票
+    observation_df = get_price(observation_list, start_date=today, end_date=today, frequency='daily', fields=['open']).to_frame()
+    # observation_df = observation_df.sort_values(('minor', 'open')).head(5)
+    # print(observation_df)
 
-    # 获取今天的数据
-    df = get_price(stocks, start_date=today, end_date=today, frequency='daily', fields=['open']).to_frame()
-    # 获取前一天的数据
-    df_pre = get_price(stocks, start_date=yestoday, end_date=yestoday, frequency='daily', fields=['open']).to_frame()
-    # 将两个 DataFrame 合并为一个 DataFrame，只保留两个 DataFrame 都包含的行
-    df_merge = pd.merge(df, df_pre, on='minor', suffixes=('today', 'yesterday')).dropna()
-    df_ratio = (df_merge['opentoday'] / df_merge['openyesterday']).to_frame()
-    df_ratio = df_ratio.dropna()
-    # 筛选出开盘与昨日开盘比值最高的前10%
-    top_ratio = df_ratio.stack().nlargest(int(len(df_ratio) * 0.1)).reset_index()
-    top_ratio.columns = ['code', 'level_1', 'ratio']
-    # 从中获取获取开盘价最低的前5只股票代码
-    lowest_open = top_ratio.nsmallest(5, 'ratio')['code'].tolist()
     # 如果股票满足以下条件则进入交易池
     buy_list = []
     for stock in lowest_open:

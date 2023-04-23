@@ -12,7 +12,7 @@ name = 'BTC'
 collection = db[f'{name}指标']
 # 读取最新60个文档
 df = pd.DataFrame(
-    list(collection.find().sort([("timestamp", -1)]).limit(60)))
+    list(collection.find().sort([("timestamp", -1)]).limit(20)))
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
