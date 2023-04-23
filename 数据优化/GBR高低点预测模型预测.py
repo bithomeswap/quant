@@ -1,10 +1,7 @@
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_percentage_error
+import pytz
+import datetime
 import pickle
 import pandas as pd
-import numpy as np
-import akshare as ak
-import talib
-from sklearn.ensemble import GradientBoostingRegressor
 from pymongo import MongoClient
 import requests
 import os
@@ -16,9 +13,6 @@ collection = db[f'{name}指标']
 # 读取最新60个文档
 df = pd.DataFrame(
     list(collection.find().sort([("timestamp", -1)]).limit(60)))
-# 提取数值类型数据
-numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-df = df[numerical_cols]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -30,33 +24,35 @@ with open(file_path, 'rb') as f:
     model = pickle.load(f)
 # 确认特征列
 tezheng = [
-    'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '开盘收盘幅', '开盘收盘幅',
-    f'SMA{9}开盘比值', f'SMA{121}开盘比值', f'SMA{9}开盘动能{4}',
+    'timestamp', '最高', '最低', '开盘', '收盘', '涨跌幅', '开盘收盘幅', '昨日成交额',
 ]
+for n in range(1, 17):  # 计算未来n日涨跌幅
+    tezheng += [
+        f'{n*10}日最高开盘价比值',
+        f'{n*10}日最低开盘价比值',
+        f'SMA{n*10}开盘比值',
+        f'SMA{n*10}昨日成交额比值',]
 # 对于每个时间戳在60分钟内的数据，找到其中最高价和最低价以及它们出现的时间戳。
 mubiao = ['未来60日最高开盘价', '未来60日最低开盘价', '未来60日最高开盘价日期', '未来60日最低开盘价日期']
 # 进行预测
-x = df[tezheng]
-y_pred = model.predict(x)
-# 提取预测结果
+x_pred = df[tezheng]
+y_pred = model.predict(x_pred)
 print(type(y_pred))
-# 假设 y_pred 是一个 numpy 数组，将其转换为 DataFrame
-# df_pred = pd.DataFrame(y_pred)
-# df_pred.to_csv('df_pred.csv')
-
+# 提取预测结果
 predictions = pd.DataFrame({
-    'timestamp': df['timestamp'],
-    '60日最高开盘价': y_pred[:, 0],
-    '60日最低开盘价': y_pred[:, 1],
-    '最高开盘价日期': y_pred[:, 2],
-    '最低开盘价日期': y_pred[:, 3],
+    'timestamp': df['timestamp'].apply(lambda x: datetime.datetime.fromtimestamp(int(x), tz=pytz.timezone('UTC')).astimezone(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M:%S')),
+    '未来60日最高开盘价': y_pred[:, 0],
+    '未来60日最低开盘价': y_pred[:, 1],
+    '未来60日最高开盘价日期': y_pred[:, 2],
+    '未来60日最低开盘价日期': y_pred[:, 3],
 })
-
+db[f'{name}预测'].drop()  # 清空集合中的所有文档
+db[f'{name}预测'].insert_many(predictions.to_dict('records'))
 # 发布到钉钉机器人
 webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
 
 for i in range(len(predictions)):
-    message = f"产品名称：{name}\n预测日期：{predictions['timestamp'][i]}\n'60日最高开盘价':{predictions['60日最高开盘价'][i]}\n'60日最低开盘价':{predictions['60日最低开盘价'][i]}\n'最高开盘价日期':{predictions['最高开盘价日期'][i]}\n'最低开盘价日期':{predictions['最低开盘价日期'][i]}"
+    message = f"产品名称：{name}\n预测日期(上海时间):{predictions['timestamp'][i]}\n'60步频最高开盘价':{predictions['未来60日最高开盘价'][i]}\n'60步频最低开盘价':{predictions['未来60日最低开盘价'][i]}\n'最高开盘价距离':{predictions['未来60日最高开盘价日期'][i]}\n'最低开盘价距离':{predictions['未来60日最低开盘价日期'][i]}"
     print(message)
     requests.post(webhook, json={
         'msgtype': 'text',

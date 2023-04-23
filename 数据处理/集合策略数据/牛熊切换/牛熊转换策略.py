@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK_20140101_20170101'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -23,23 +23,14 @@ for n in range(1, 9):
 
 # 获取自制成分股指数
 code_count = len(df['代码'].drop_duplicates())
-n_stock = code_count // 10
+n_stock = math.ceil(code_count / 500)
 codes = df.groupby('代码')['成交额'].mean().nlargest(n_stock).index.tolist()
 df_mean = df[df['代码'].isin(codes)]
 print("自制成分股指数为：", codes)
-# 计算每个交易日成分股的'SMA121开盘比值'均值
+# 计算每个交易日成分股的'SMA120开盘比值'均值
 df_mean = df_mean.groupby('日期')['SMA120开盘比值'].mean().reset_index(name='均值')
-
-# # 计算每个交易日所有股票的'SMA121开盘比值'均值
-# df_mean = df.groupby('日期')['SMA121开盘比值'].mean().reset_index(name='均值')
-# df_mean['121日最高均值比值'] = df_mean['均值'].rolling(121).max().values
-# df_mean['比值'] = df_mean['均值'] / df_mean['121日最高均值比值']
-# # 根据规则对每个交易日进行标注
-# df_mean['策略'] = df_mean['比值'].apply(lambda x: '震荡策略' if x >= 0.6 else '超跌策略')
-
-# # 根据规则对每个交易日进行标注
-df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
-
+# 根据规则对每个交易日进行标注
+df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x > 1 else '超跌策略')
 # 输出到csv文件
 df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
@@ -117,7 +108,7 @@ daily_cash_balance_chaodie = pd.DataFrame(
 
 m = 0.01  # 设置手续费
 if 'stock' in name.lower():
-    n = 12  # 设置持仓周期
+    n = 16  # 设置持仓周期
 if 'coin' in name.lower():
     n = 6  # 设置持仓周期
 
