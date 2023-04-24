@@ -119,8 +119,8 @@ for date, group in selectedzhendang.groupby('日期'):
     if group.empty:
         daily_return = 0
     else:
-        daily_return = (group[f'{n}日后总涨跌幅（未来函数）'] +
-                        100).mean()*(1-m)/100-1  # 计算平均收益率
+        daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
+                        100).mean()*(1-m)/100-1)/n  # 计算平均收益率
     # 更新资金余额并记录每日资金余额
     df_daily_return_zhendang = pd.concat(
         [df_daily_return_zhendang, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
@@ -135,8 +135,8 @@ for date, group in selectedchaodie.groupby('日期'):
     if group.empty:
         daily_return = 0
     else:
-        daily_return = (group[f'{n}日后总涨跌幅（未来函数）'] +
-                        100).mean()*(1-m)/100-1  # 计算平均收益率
+        daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
+                        100).mean()*(1-m)/100-1)/n  # 计算平均收益率
     # 更新资金余额并记录每日资金余额
     df_daily_return_chaodie = pd.concat(
         [df_daily_return_chaodie, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])

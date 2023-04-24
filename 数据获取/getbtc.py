@@ -67,15 +67,6 @@ for kline in klines:
                                '主动买入成交额':  float(kline[10])})
 
 time.sleep(10)
-
-limit = 500000
-if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([('日期', 1)]).limit(
-        collection.count_documents({})-limit)
-    ids_to_delete = [data['_id'] for data in oldest_data]
-    collection.delete_many({'_id': {'$in': ids_to_delete}})
-    # 往外读取数据的时候再更改索引吧
-print('获取数据成功')
 # time.sleep(3600)
 limit = 20000
 if collection.count_documents({}) >= limit:
