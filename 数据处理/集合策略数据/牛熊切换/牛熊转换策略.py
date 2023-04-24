@@ -41,17 +41,22 @@ def oscillating_strategy(df):  # 实现震荡策略
         n_top = math.ceil(code_count/100)
         df = df.nsmallest(n_top, '开盘')
         # 开盘价过滤高滑点股票
-        df = df[df[f'开盘'] >= 0.00000500].copy()
+        df = df[df[f'开盘'] >= 0.00000500]
     if 'stock' in name.lower():
         # 牛市过滤
         for n in range(1, 10):  # 计算未来n日涨跌幅
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-        # 选取当天'开盘'最低的
+        # 选取当天'昨日成交额'最低的
         n_top = math.ceil(code_count/100)
-        df = df.nsmallest(n_top, '开盘')
-        df = df[(df['开盘收盘幅'] <= 8)
-                &
-                (df['开盘收盘幅'] >= -5)]
+        df = df.nsmallest(n_top, '昨日成交额')
+        df = df[
+            (df['开盘收盘幅'] <= 8)
+            &
+            (df['开盘收盘幅'] >= 0)
+            &
+            (df['开盘'] >= 5)
+        ]
+        print(len(df))
     return df
 
 
@@ -72,9 +77,11 @@ def oversold_strategy(df):  # 实现超跌策略
         for n in range(1, 10):  # 计算未来n日涨跌幅
             df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
         df = df[
-            (df['开盘收盘幅'] <= 1)
+            (df['开盘收盘幅'] <= 8)
             &
-            (df['开盘收盘幅'] >= -5)
+            (df['开盘收盘幅'] >= 0)
+            &
+            (df['开盘'] >= 5)
         ]
     return df
 

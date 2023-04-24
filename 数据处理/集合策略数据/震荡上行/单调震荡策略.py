@@ -30,6 +30,9 @@ if 'coin' in name.lower():
     # 牛市过滤
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
+    # n_stock = math.ceil(code_count/10)
+    # df = df.groupby('日期').apply(lambda x: x.nsmallest(
+    #     n_stock, '昨日成交额')).reset_index(drop=True)
     n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '开盘')).reset_index(drop=True)
@@ -41,11 +44,13 @@ if 'stock' in name.lower():
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
     n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '开盘')).reset_index(drop=True)
+        n_stock, '昨日成交额')).reset_index(drop=True)
     df = df[
         (df['开盘收盘幅'] <= 8)
         &
         (df['开盘收盘幅'] >= 0)
+        &
+        (df['开盘'] >= 5)
     ]
     print('测试标的为股票类型，默认高开百分之八无法买入')
 
