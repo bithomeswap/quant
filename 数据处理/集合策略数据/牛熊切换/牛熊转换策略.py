@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -23,7 +23,10 @@ for n in range(1, 9):
 
 # 获取自制成分股指数
 code_count = len(df['代码'].drop_duplicates())
-n_stock = math.ceil(code_count / 500)
+if 'coin' in name.lower():
+    n_stock = 1
+if 'stock' in name.lower():
+    n_stock = 10
 codes = df.groupby('代码')['成交额'].mean().nlargest(n_stock).index.tolist()
 df_mean = df[df['代码'].isin(codes)]
 print("自制成分股指数为：", codes)
@@ -120,7 +123,7 @@ for date, group in selectedzhendang.groupby('日期'):
         daily_return = 0
     else:
         daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                        100).mean()*(1-m)/100-1)/n  # 计算平均收益率
+                        1).mean()*(1-m)/-1)/n  # 计算平均收益率
     # 更新资金余额并记录每日资金余额
     df_daily_return_zhendang = pd.concat(
         [df_daily_return_zhendang, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])

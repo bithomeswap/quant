@@ -48,7 +48,7 @@ for date, group in df.groupby('日期'):
         daily_return = 0
     else:
         daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                        100).mean()*(1-m)/100-1)/n  # 计算平均收益率
+                        1).mean()*(1-m)/-1)/n  # 计算平均收益率
     df_daily_return = pd.concat(
         [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
     # 更新资金余额并记录每日资金余额

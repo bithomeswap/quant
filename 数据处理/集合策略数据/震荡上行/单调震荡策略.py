@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -29,8 +29,8 @@ if 'coin' in name.lower():
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 0.99].copy()
     n_stock = math.ceil(code_count/100)
-    df = df.groupby('日期').apply(lambda x: x.nsmallest(
-        n_stock, '开盘')).reset_index(drop=True)
+    df = df.groupby('日期').apply(lambda x: x.nlargest(
+        n_stock, '昨日成交额')).reset_index(drop=True)
 
 if 'stock' in name.lower():
     # 牛市过滤
@@ -70,7 +70,7 @@ for date, group in df.groupby('日期'):
         daily_return = 0
     else:
         daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                        100).mean()*(1-m)/100-1)/n  # 计算平均收益率
+                        1).mean()*(1-m)/-1)/n  # 计算平均收益率
     df_daily_return = pd.concat(
         [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
     # 更新资金余额并记录每日资金余额
