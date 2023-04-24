@@ -25,6 +25,9 @@
             df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
 6.将筛选出来的标的及细节发送到钉钉
 
+参考资料：https://github.com/bithomeswap/quant
+
+
 一、数据获取参考代码
 # -*- coding: utf-8 -*-
 # 指定解释器位置

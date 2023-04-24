@@ -33,37 +33,24 @@ for code in stock_info_df['代码']:
             # symbol=code, start_date=start_date, end_date=end_date, adjust="hfq")
             # 历史数据后复权，确保没负数
             symbol=code, start_date=start_date, end_date=end_date, adjust="qfq")
-            # 近期数据前复权，确保真数据
+        # 近期数据前复权，确保真数据
         try:
             k_data['代码'] = float(code)
-            k_data['timestamp'] = k_data['日期'].apply(lambda x: float(datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
+            k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
+            k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
+                datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
             collection.insert_many(k_data.to_dict('records'))
         except:
             print(f"{name}({code}) 已停牌")
             continue
-print('任务已经完成')
-
 klines = ak.index_zh_a_hist(
     symbol="000001", period="daily", start_date=start_date, end_date=end_date)
-# collection.insert_many(klines.to_dict('records'))
-for kline in klines.to_dict("records"):
-    if kline["开盘"] == 0:
-        continue
-    kline["代码"] = float(000000.0)
-    kline["timestamp"] = float(datetime.datetime.strptime(
-        kline["日期"], "%Y-%m-%d").timestamp())
-    kline["成交量"] = float(kline["成交量"])
-    query = {"日期": kline["日期"]}
-    result = collection.find_one(query)
-if result:
-    print("数据重复")
-else:
-    collection.insert_one(kline)
-
-# query = {'代码': {'$exists': False}}
-# result = collection.delete_many(query)
-# print(f'已删除 {result.deleted_count} 条记录')
-
+klines['代码'] = float(000000)
+klines["成交量"] = klines["成交量"].apply(lambda x: float(x))
+klines['timestamp'] = klines['日期'].apply(lambda x: float(
+    datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
+collection.insert_many(klines.to_dict('records'))
+print('任务已经完成')
 # # time.sleep(3600)
 # limit = 2000000
 # if collection.count_documents({}) >= limit:
