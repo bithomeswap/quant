@@ -10,7 +10,7 @@ import datetime
 from pymongo import MongoClient
 import time
 
-start_date = str(20200401)
+start_date = str(20210401)
 end_date = str(20230401)
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
@@ -18,56 +18,29 @@ db = client['wth000']
 # 输出的表为截止日期
 name = 'STOCK'
 collection = db[f"{name}"]
-# collection.drop()  # 清空集合中的所有文档
+collection.drop()  # 清空集合中的所有文档
 
-# # 从akshare获取A股主板股票的代码和名称
-# stock_info_df = ak.stock_zh_a_spot_em()
-# # 过滤掉ST股票
-# stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
-# # 过滤掉退市股票
-# stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('退')]
-# # 迭代每只股票，获取每天的前复权日k数据
-# for code in stock_info_df['代码']:
-#     if code.startswith(('60', '000', '001')):
-#         k_data = ak.stock_zh_a_hist(
-#             # symbol=code, start_date=start_date, end_date=end_date, adjust="hfq")
-#             # 历史数据后复权，确保没负数
-#             symbol=code, start_date=start_date, end_date=end_date, adjust="qfq")
-#         # 近期数据前复权，确保真数据
-#         try:
-#             k_data['代码'] = float(code)
-#             k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-#             k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-#                 datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
-#             collection.insert_many(k_data.to_dict('records'))
-#         except:
-#             print(f"{name}({code}) 已停牌")
-#             continue
-
-klines = ak.index_zh_a_hist(
-    symbol="000001", period="daily", start_date=start_date, end_date=end_date)
-klines['代码'] = float(900001)
-klines["成交量"] = klines["成交量"].apply(lambda x: float(x))
-klines['timestamp'] = klines['日期'].apply(lambda x: float(
-    datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
-collection.insert_many(klines.to_dict('records'))
-
-klines = ak.index_zh_a_hist(
-    symbol="000002", period="daily", start_date=start_date, end_date=end_date)
-klines['代码'] = float(900002)
-klines["成交量"] = klines["成交量"].apply(lambda x: float(x))
-klines['timestamp'] = klines['日期'].apply(lambda x: float(
-    datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
-collection.insert_many(klines.to_dict('records'))
-
-klines = ak.index_zh_a_hist(
-    symbol="000008", period="daily", start_date=start_date, end_date=end_date)
-klines['代码'] = float(900008)
-klines["成交量"] = klines["成交量"].apply(lambda x: float(x))
-klines['timestamp'] = klines['日期'].apply(lambda x: float(
-    datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
-collection.insert_many(klines.to_dict('records'))
-
+# 从akshare获取A股主板股票的代码和名称
+stock_info_df = ak.stock_zh_a_spot_em()
+# 过滤掉ST股票
+stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('ST')]
+# 过滤掉退市股票
+stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('退')]
+# 迭代每只股票，获取每天的前复权日k数据
+for code in stock_info_df['代码']:
+    if code.startswith(('60', '000', '001')):
+        k_data = ak.stock_zh_a_hist(
+            # symbol=code, start_date=start_date, end_date=end_date, adjust="hfq")# 历史数据后复权，确保没负数
+            symbol=code, start_date=start_date, end_date=end_date, adjust="qfq")  # 近期数据前复权，确保真数据
+        try:
+            k_data['代码'] = float(code)
+            k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
+            k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
+                datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
+            collection.insert_many(k_data.to_dict('records'))
+        except:
+            print(f"{name}({code}) 已停牌")
+            continue
 print('任务已经完成')
 # # time.sleep(3600)
 # limit = 2000000

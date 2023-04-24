@@ -25,10 +25,14 @@ code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
 if 'coin' in name.lower():
+    # 成交额过滤劣质股票
+    df = df[df[f'昨日成交额'] >= 1000000].copy()
     # 熊市过滤
     df = df[df['SMA120开盘比值'] <= 0.5].copy()
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
+    # 开盘价过滤高滑点股票
+    df = df[df[f'开盘'] >= 0.00000500].copy()
 if 'stock' in name.lower():
     # 熊市过滤
     df = df[df['SMA120开盘比值'] <= 0.5].copy()
@@ -65,7 +69,7 @@ for date, group in df.groupby('日期'):
         daily_return = 0
     else:
         daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                        1).mean()*(1-m)/-1)/n  # 计算平均收益率
+                        1).mean()*(1-m)-1)/n  # 计算平均收益率
     df_daily_return = pd.concat(
         [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
     # 更新资金余额并记录每日资金余额
