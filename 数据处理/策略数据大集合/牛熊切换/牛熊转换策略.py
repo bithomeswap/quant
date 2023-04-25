@@ -2,10 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
-# name = 'COIN止损'
-# name = 'STOCK止损'
+# name = 'COIN'
+name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -22,6 +20,7 @@ for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
 code_count = len(df['代码'].drop_duplicates())
+
 # 计算每个交易日成分股的'SMA120开盘比值'均值
 df_mean = df.groupby('日期')['SMA120开盘比值'].mean().reset_index(name='均值')
 # 根据规则对每个交易日进行标注
@@ -29,14 +28,15 @@ df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 e
 # 输出到csv文件
 # df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
-
 def oscillating_strategy(df):  # 实现震荡策略
     if 'coin' in name.lower():
         # 成交额过滤劣质股票
         df = df[df[f'昨日成交额'] >= 1000000].copy()
         # 牛市过滤
-        for n in range(1, 6):  # 计算未来n日涨跌幅
+        for n in range(1, 3):
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
+            df = df[df[f'{n*10}日最低开盘价比值'] >= 1.01].copy()
+            df = df[df[f'{n*10}日最高开盘价比值'] >= 0.85].copy()
         # 选取当天'开盘'最低的
         n_top = math.ceil(code_count/10)
         df = df.nsmallest(n_top, '昨日振幅')
@@ -46,8 +46,10 @@ def oscillating_strategy(df):  # 实现震荡策略
         df = df[df[f'开盘'] >= 0.00000500]
     if 'stock' in name.lower():
         # 牛市过滤
-        for n in range(1, 9):  # 计算未来n日涨跌幅
+        for n in range(1, 10):
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
+            df = df[df[f'{n*10}日最低开盘价比值'] >= 1.01].copy()
+            df = df[df[f'{n*10}日最高开盘价比值'] >= 0.95].copy()
         # 选取当天'昨日成交额'最低的
         n_top = math.ceil(code_count/50)
         df = df.nsmallest(n_top, '昨日振幅')
@@ -70,14 +72,14 @@ def oversold_strategy(df):  # 实现超跌策略
         df = df[df[f'昨日成交额'] >= 1000000].copy()
         # 熊市过滤
         df = df[df['SMA120开盘比值'] <= 0.5].copy()
-        for n in range(1, 10):  # 计算未来n日涨跌幅
+        for n in range(1, 10):
             df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
         # 开盘价过滤高滑点股票
         df = df[df[f'开盘'] >= 0.00000500].copy()
     if 'stock' in name.lower():
         # 熊市过滤
         df = df[df['SMA120开盘比值'] <= 0.5].copy()
-        for n in range(1, 10):  # 计算未来n日涨跌幅
+        for n in range(1, 10):
             df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
         df = df[
             (df['开盘收盘幅'] <= 8)

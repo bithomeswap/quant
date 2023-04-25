@@ -9,9 +9,9 @@ name = 'COIN'
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上四级目录的路径
+# 获取当前.py文件所在目录的上3级目录的路径
 dir_path = os.path.dirname(os.path.dirname(
-    os.path.dirname(os.path.dirname(dir_path))))
+    os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
@@ -30,7 +30,7 @@ if 'coin' in name.lower():
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
         df = df[df[f'{n*10}日最低开盘价比值'] >= 1.01].copy()
         df = df[df[f'{n*10}日最高开盘价比值'] >= 0.85].copy()
-
+        
     n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '昨日振幅')).reset_index(drop=True)

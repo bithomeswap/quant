@@ -30,7 +30,7 @@ mubiao = '90日最高开盘价比值'
 print('任务已经开始')
 # df = df.dropna(subset=[mubiao])
 df = df.dropna()
-df.to_csv(f"实际统计数据{name}_{mubiao}.csv")
+df.to_csv(f"乘积法实际统计数据{name}_{mubiao}.csv")
 # 对指定列排序
 sorted_data = np.sort(df[f'{mubiao}'])
 
@@ -57,7 +57,7 @@ for n in range(1, 11):
         # 括号注意大小写的问题，要不就会报错没这个参数
         up_rate = len(
             future_returns[future_returns >= 0]) / len(future_returns)
-        avg_return = np.mean(future_returns)
+        avg_return = np.prod(np.array(future_returns)+1)
         result_dict = {
             f'{mubiao}': f'from{rank_range[0]}to{rank_range[1]}',
             f'{n}日统计次数（已排除涨停）': count,
@@ -77,5 +77,5 @@ for n in range(1, 11):
 # result_df = result_df.dropna()  # 删除含有空值的行
 
 result_df.round(decimals=6).to_csv(
-    f'等样本涨幅分布{name}标的{mubiao}.csv', index=False
+    f'乘积法等样本涨幅分布{name}标的{mubiao}.csv', index=False
 )
