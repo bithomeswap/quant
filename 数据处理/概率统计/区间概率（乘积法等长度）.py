@@ -66,7 +66,7 @@ for n in range(1, 11):
             # 括号注意大小写的问题，要不就会报错没这个参数
             up_rate = len(
                 future_returns[future_returns >= 0]) / len(future_returns)
-            avg_return = np.mean(future_returns)
+            avg_return = np.prod(np.array(future_returns)+1)
             result_dict = {
                 f'{mubiao}': f'from{rank_range[0]}to{rank_range[1]}',
                 f'{n}日统计次数（已排除涨停）': count,

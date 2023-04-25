@@ -15,13 +15,12 @@ dir_path = os.path.dirname(os.path.dirname(
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
-# 下降通道做多
-df = df[df['SMA120开盘比值'] <= 0.995].copy()
-for n in range(1, 10):  # 计算未来n日涨跌幅
+# 下降通道做多（名义盈利越多，说明市场上涨的越好）
+for n in range(6, 13):  # 计算未来n日涨跌幅
     df = df[df[f'{n*10}日最高开盘价比值'] <= 1-n*0.001].copy()
-# 上升通道做空（手续费设置为负的情况下，亏损越多越好）
-# df = df[df['SMA120开盘比值'] >= 1.02].copy()
-# for n in range(1, 10):  # 计算未来n日涨跌幅
+
+# 上升通道做空（名义亏损越多，说明市场下降的越好）
+# for n in range(1, 6):  # 计算未来n日涨跌幅
 #     df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.001].copy()
 
 # 将交易标的细节输出到一个csv文件
@@ -34,7 +33,7 @@ cash_balance = 1
 daily_cash_balance = {}
 n = 9
 # 设置持仓周期
-m = 0.0005
+m = 0.0001
 # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
@@ -48,7 +47,7 @@ for date, group in df.groupby('日期'):
         daily_return = 0
     else:
         daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                        1).mean()*(1-m)/-1)/n  # 计算平均收益率
+                        1).mean()*(1-m)-1)/n  # 计算平均收益率
     df_daily_return = pd.concat(
         [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
     # 更新资金余额并记录每日资金余额
