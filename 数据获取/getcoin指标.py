@@ -27,6 +27,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df = df.loc[(df['最高'] >= 0) & (df['最低'] >= 0)]
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
 
+    # 计算昨日振幅
+    df['昨日振幅'] = (df.shift(1)['最高']-df.shift(1)['最低'])/df.shift(1)['开盘']
     # 计算昨日成交额
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 定义开盘收盘幅
