@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -39,12 +39,12 @@ if 'stock' in name.lower():
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
     df = df[
-            (df['开盘收盘幅'] <= 8)
-            &
-            (df['开盘收盘幅'] >= 0)
-            &
-            (df['真实价格'] >= 5)
-            ]
+        (df['开盘收盘幅'] <= 8)
+        &
+        (df['开盘收盘幅'] >= 0)
+        &
+        (df['真实价格'] >= 4)
+    ]
     print('测试标的为股票类型，默认高开百分之八无法买入')
 
 # 将交易标的细节输出到一个csv文件

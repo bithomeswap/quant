@@ -43,7 +43,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['未来60日最低开盘价日期'] = df['开盘'].rolling(60).apply(
         lambda x: x.argmin(), raw=True).shift(-60)
 
-    for n in range(1, 11):  # 计算未来n日涨跌幅
+    for n in range(1, 13):
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
         df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
         df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()

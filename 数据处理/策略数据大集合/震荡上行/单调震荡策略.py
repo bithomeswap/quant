@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -28,7 +28,7 @@ if 'coin' in name.lower():
     # 成交额过滤劣质股票
     df = df[df[f'昨日成交额'] >= 2000000].copy()
     # 牛市过滤
-    for n in range(1, 10):  # 计算未来n日涨跌幅
+    for n in range(1, 6):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
     n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
@@ -40,7 +40,7 @@ if 'coin' in name.lower():
     df = df[df[f'开盘'] >= 0.00000500].copy()
 if 'stock' in name.lower():
     # 牛市过滤
-    for n in range(1, 10):  # 计算未来n日涨跌幅
+    for n in range(1, 9):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
     n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
@@ -53,7 +53,7 @@ if 'stock' in name.lower():
             &
             (df['开盘收盘幅'] >= 0)
             &
-            (df['真实价格'] >= 5)
+            (df['真实价格'] >= 4)
             ]
     print('测试标的为股票类型，默认高开百分之八无法买入')
 

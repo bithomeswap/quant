@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -33,9 +33,9 @@ df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 e
 def oscillating_strategy(df):  # 实现震荡策略
     if 'coin' in name.lower():
         # 成交额过滤劣质股票
-        df = df[df[f'昨日成交额'] >= 2000000].copy()
+        df = df[df[f'昨日成交额'] >= 1000000].copy()
         # 牛市过滤
-        for n in range(1, 10):  # 计算未来n日涨跌幅
+        for n in range(1, 6):  # 计算未来n日涨跌幅
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
         # 选取当天'开盘'最低的
         n_top = math.ceil(code_count/10)
@@ -46,7 +46,7 @@ def oscillating_strategy(df):  # 实现震荡策略
         df = df[df[f'开盘'] >= 0.00000500]
     if 'stock' in name.lower():
         # 牛市过滤
-        for n in range(1, 10):  # 计算未来n日涨跌幅
+        for n in range(1, 9):  # 计算未来n日涨跌幅
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
         # 选取当天'昨日成交额'最低的
         n_top = math.ceil(code_count/50)
@@ -58,9 +58,8 @@ def oscillating_strategy(df):  # 实现震荡策略
             &
             (df['开盘收盘幅'] >= 0)
             &
-            (df['真实价格'] >= 5)
+            (df['真实价格'] >= 4)
         ]
-        print(len(df))
     return df
 
 
@@ -85,7 +84,7 @@ def oversold_strategy(df):  # 实现超跌策略
             &
             (df['开盘收盘幅'] >= 0)
             &
-            (df['真实价格'] >= 5)
+            (df['真实价格'] >= 4)
         ]
     return df
 

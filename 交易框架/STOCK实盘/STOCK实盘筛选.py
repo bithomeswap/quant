@@ -32,12 +32,13 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 定义开盘收盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-    for n in range(1, 11):  # 计算未来n日涨跌幅
+    for n in range(1, 13):  # 计算未来n日涨跌幅
         df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
         df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
         df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
     return df
+
 
 # 按照“代码”列进行分组并计算技术指标
 df = data.groupby('代码').apply(get_technical_indicators)
@@ -52,7 +53,7 @@ code_count = len(df['代码'].drop_duplicates())
 print(code_count)
 
 # 筛选出符合条件的股票代码
-for n in range(1, 10):  # 计算未来n日涨跌幅
+for n in range(1, 13):  
     df = df.loc[(df['日期'] == last_day)]
     df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
 # 选取当天'开盘'最低的

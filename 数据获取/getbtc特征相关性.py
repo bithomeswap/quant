@@ -17,6 +17,11 @@ collection = db[f'{name}指标']
 print('数据库已链接')
 df = pd.DataFrame(list(collection.find()))
 print('数据获取成功')
+if 'stock' in name.lower():
+    df = df[df['真实价格'] >= 4].copy()
+    df = df[df['开盘收盘幅'] <= 8].copy()
+if 'coin' in name.lower():
+    df = df[df['昨日成交额'] <= 1000000].copy()
 # 提取数值类型数据
 numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 df_numerical = df[numerical_cols]
