@@ -35,11 +35,15 @@ stock_info_df = stock_info_df[~stock_info_df['名称'].str.contains('退')]
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
         k_data = ak.stock_zh_a_hist(
-            # symbol=code, start_date=start_date, end_date=end_date, adjust="hfq")
-            # 历史数据后复权，确保没负数
-            symbol=code, start_date=start_date, end_date=end_date, adjust="qfq")
-        # 近期数据前复权，确保真数据
+            symbol=code, start_date=start_date, end_date=end_date, adjust="hfq")  # 历史数据后复权，确保没未来函数
+        k_data_true = ak.stock_zh_a_hist(
+            symbol=code, start_date=start_date, end_date=end_date, adjust="")  # 历史数据后复权，确保没未来函数
         try:
+            # k_data['真实价格'] = k_data_true['开盘价']
+            k_data_true = k_data_true[['日期', '开盘']].rename(
+                columns={'开盘': '真实价格'})
+            # 按照时间顺序合并
+            k_data = pd.merge(k_data, k_data_true, on='日期', how='left')
             k_data['代码'] = float(code)
             k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
             k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
@@ -49,3 +53,4 @@ for code in stock_info_df['代码']:
             print(f"{name}({code}) 已停牌")
             continue
 print('任务已经完成')
+# # time.sleep(3600)
