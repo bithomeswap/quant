@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
