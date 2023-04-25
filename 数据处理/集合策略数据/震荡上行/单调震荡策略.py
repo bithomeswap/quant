@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'COIN止损'
 # name = 'STOCK止损'
 
@@ -30,9 +30,9 @@ if 'coin' in name.lower():
     # 牛市过滤
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-    # n_stock = math.ceil(code_count/10)
-    # df = df.groupby('日期').apply(lambda x: x.nsmallest(
-    #     n_stock, '昨日成交额')).reset_index(drop=True)
+    n_stock = math.ceil(code_count/10)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, '昨日振幅')).reset_index(drop=True)
     n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '开盘')).reset_index(drop=True)
@@ -42,16 +42,19 @@ if 'stock' in name.lower():
     # 牛市过滤
     for n in range(1, 10):  # 计算未来n日涨跌幅
         df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
+    n_stock = math.ceil(code_count/10)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, '昨日振幅')).reset_index(drop=True)
     n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '昨日成交额')).reset_index(drop=True)
     df = df[
-        (df['开盘收盘幅'] <= 8)
-        &
-        (df['开盘收盘幅'] >= 0)
-        &
-        (df['开盘'] >= 5)
-    ]
+            (df['开盘收盘幅'] <= 8)
+            &
+            (df['开盘收盘幅'] >= 0)
+            &
+            (df['真实价格'] >= 5)
+            ]
     print('测试标的为股票类型，默认高开百分之八无法买入')
 
 # 将交易标的细节输出到一个csv文件
@@ -62,10 +65,11 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 6
-# 设置持仓周期
-m = 0.01
-# 设置手续费
+m = 0.005  # 设置手续费
+if 'stock' in name.lower():
+    n = 9  # 设置持仓周期
+if 'coin' in name.lower():
+    n = 6  # 设置持仓周期
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])

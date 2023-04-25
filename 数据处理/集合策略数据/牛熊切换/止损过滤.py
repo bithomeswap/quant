@@ -19,7 +19,7 @@ file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
 # 假设需要在未来5天内对涨跌幅超过-5%的股票进行自动止损
-n = 14  # 设置n为5，即判断未来五天内的总涨跌幅是否低于-5%
+n = 9  # 设置n为5，即判断未来五天内的总涨跌幅是否低于-5%
 stop_loss = -5  # 设置止损线为-5%
 # 对需要止损的股票进行自动止损
 for order in df.index:

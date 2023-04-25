@@ -33,8 +33,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 定义开盘收盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-    # 定义收盘幅即涨跌幅
-    df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
@@ -45,15 +43,12 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['未来60日最低开盘价日期'] = df['开盘'].rolling(60).apply(
         lambda x: x.argmin(), raw=True).shift(-60)
 
-    for n in range(1, 17):  # 计算未来n日涨跌幅
-        df[f'{n}日后价格（未来函数）'] = df['收盘'].shift(-n)
+    for n in range(1, 11):  # 计算未来n日涨跌幅
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
         df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
         df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
         df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
-        df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
-            talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
 
     return df
 

@@ -43,8 +43,8 @@ if 'stock' in name.lower():
             &
             (df['开盘收盘幅'] >= 0)
             &
-            (df['开盘'] >= 5)
-    ]
+            (df['真实价格'] >= 5)
+            ]
     print('测试标的为股票类型，默认高开百分之八无法买入')
 
 # 将交易标的细节输出到一个csv文件
@@ -55,10 +55,11 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 6
-# 设置持仓周期
-m = 0.01
-# 设置手续费
+m = 0.005  # 设置手续费
+if 'stock' in name.lower():
+    n = 9  # 设置持仓周期
+if 'coin' in name.lower():
+    n = 6  # 设置持仓周期
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])

@@ -32,7 +32,7 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
-n = 16
+n = 9
 # 设置持仓周期
 m = 0.0005
 # 设置手续费
