@@ -18,7 +18,6 @@ client = MongoClient(
 db = client['wth000']
 name = 'COIN'
 collection = db[f'{name}']
-collection.drop()  # 清空集合中的所有文档
 
 # 创建Binance客户端
 client = Client(api_key, api_secret)
@@ -33,47 +32,63 @@ print(f"当前币安现货有{len(ticker_prices)}个交易对")
 # 遍历所有现货交易对，并获取日K线数据
 for ticker_price in usdt_ticker_prices:
     symbol = ticker_price['symbol']
+    data_list = []
+    # 找到该标的最新的时间戳
+    latest_data = collection.find_one(
+        {"代码": symbol}, {"timestamp": 1}, sort=[('timestamp', -1)])
+    latest_timestamp = latest_data["timestamp"] if latest_data else 0
     klines = client.get_historical_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_1DAY,
         limit=800
     )
-# KLINE_INTERVAL_1MINUTE = '1m'
-# KLINE_INTERVAL_3MINUTE = '3m'
-# KLINE_INTERVAL_5MINUTE = '5m'
-# KLINE_INTERVAL_15MINUTE = '15m'
-# KLINE_INTERVAL_30MINUTE = '30m'
-# KLINE_INTERVAL_1HOUR = '1h'
-# KLINE_INTERVAL_2HOUR = '2h'
-# KLINE_INTERVAL_4HOUR = '4h'
-# KLINE_INTERVAL_6HOUR = '6h'
-# KLINE_INTERVAL_8HOUR = '8h'
-# KLINE_INTERVAL_12HOUR = '12h'
-# KLINE_INTERVAL_1DAY = '1d'
+    # KLINE_INTERVAL_1MINUTE = '1m'
+    # KLINE_INTERVAL_15MINUTE='15m'
+    # KLINE_INTERVAL_1DAY = '1d'
     # 插入到集合中
-    data_list = []
     for kline in klines:
         timestamp = kline[0] / 1000
+        if timestamp < latest_timestamp:  # 如果时间戳小于等于最后时间戳，直接跳过
+            continue
         date = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(timestamp))
-        # 如果没有，则加入到数据列表中
-        data_list.append({'timestamp': timestamp,
-                          '代码': symbol,
-                          '日期': date,
-                          '开盘': float(kline[1]),
-                          '最高': float(kline[2]),
-                          '最低': float(kline[3]),
-                          '收盘': float(kline[4]),
-                          '成交量': float(kline[5]),
-                          '收盘timestamp': float(kline[6]/1000),
-                          '成交额': float(kline[7]),
-                          '成交笔数': float(kline[8]),
-                          '主动买入成交量': float(kline[9]),
-                          '主动买入成交额':  float(kline[10])
-                          })
-    collection.insert_many(data_list)
-    # 已经是列表对象了，不用再调用.to_dist方法
+        if timestamp == latest_timestamp:
+            update_data = {
+                'timestamp': timestamp,
+                '代码': symbol,
+                '日期': date,
+                '开盘': float(kline[1]),
+                '最高': float(kline[2]),
+                '最低': float(kline[3]),
+                '收盘': float(kline[4]),
+                '成交量': float(kline[5]),
+                '收盘timestamp': float(kline[6]/1000),
+                '成交额': float(kline[7]),
+                '成交笔数': float(kline[8]),
+                '主动买入成交量': float(kline[9]),
+                '主动买入成交额':  float(kline[10])
+            }
+            filter = {'代码': symbol, 'timestamp': latest_timestamp}
+            collection.update_one(
+                filter, {'$set': update_data})
+        else:
+            data_list.append({'timestamp': timestamp,
+                              '代码': symbol,
+                              '日期': date,
+                              '开盘': float(kline[1]),
+                              '最高': float(kline[2]),
+                              '最低': float(kline[3]),
+                              '收盘': float(kline[4]),
+                              '成交量': float(kline[5]),
+                              '收盘timestamp': float(kline[6]/1000),
+                              '成交额': float(kline[7]),
+                              '成交笔数': float(kline[8]),
+                              '主动买入成交量': float(kline[9]),
+                              '主动买入成交额':  float(kline[10])
+                              })
+    # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
+    if len(data_list) > 0:
+        collection.insert_many(data_list)
 print('任务已经完成')
-# time.sleep(3600)
 # limit = 400000
 # if collection.count_documents({}) >= limit:
 #     oldest_data = collection.find().sort([('日期', 1)]).limit(

@@ -15,7 +15,7 @@ from pymongo import MongoClient
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-name = "STOCK实盘"
+name = "实盘COIN"
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 data = pd.DataFrame(list(collection.find()))
@@ -35,7 +35,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     for n in range(1, 13):
         df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
         df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
-        df[f'SMA{n*10}开盘比值'] = df['开盘'] /talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
+        df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
+            talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
     return df
 
 
