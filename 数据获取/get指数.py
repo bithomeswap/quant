@@ -28,8 +28,9 @@ df = ['000001', '000002', '000003', '000004', '000005',
       ]
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df:
-    latest = list(collection.find(
-        {"代码": float(code)}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
+    # print(code)
+    latest = list(collection.find({"代码": float(code)}, {
+                  "timestamp": 1}).sort("timestamp", -1).limit(1))
     print(latest)
     if len(latest) == 0:
         upsert_docs = True
@@ -39,6 +40,7 @@ for code in df:
         latest_timestamp = latest[0]["timestamp"]
         start_date_query = datetime.datetime.fromtimestamp(
             latest_timestamp).strftime('%Y%m%d')
+
     # 通过 akshare 获取目标指数的分钟K线数据
     k_data = ak.index_zh_a_hist_min_em(symbol=code, period="1")
     k_data = k_data[k_data["开盘"] != 0]
@@ -62,20 +64,20 @@ for code in df:
                 if doc["timestamp"] > latest_timestamp:
                     # 否则，加入插入列表
                     bulk_insert.append(doc)
-                if doc["timestamp"] == latest_timestamp:
+                if doc["timestamp"] == float(latest_timestamp):
                     try:
                         collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {
                             "$set": doc}, upsert=True)
                     except Exception as e:
                         pass
-        # 执行批量插入操作
-        if bulk_insert:
-            try:
-                collection.insert_many(bulk_insert)
-            except Exception as e:
-                pass
-    except:
-        print(f"{name}({code}) 已停牌")
+            # 执行批量插入操作
+            if bulk_insert:
+                try:
+                    collection.insert_many(bulk_insert)
+                except Exception as e:
+                    pass
+    except Exception as e:
+        print(e, f'因为{code}停牌')
 print('任务已经完成')
 # time.sleep(60)
 # limit = 400000
