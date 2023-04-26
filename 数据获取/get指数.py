@@ -7,7 +7,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 
-name = "上证指数"
+name = "指数"
 collection = db[f"{name}"]
 
 klines = ak.index_zh_a_hist_min_em(symbol="000001", period="1")
@@ -27,8 +27,8 @@ for kline in klines.to_dict("records"):
     else:
         collection.insert_one(kline)
 
-# time.sleep(10)
-# limit = 20000
+# time.sleep(60)
+# limit = 400000
 # if collection.count_documents({}) >= limit:
 #     oldest_data = collection.find().sort([('日期', 1)]).limit(
 #         collection.count_documents({})-limit)
@@ -36,3 +36,4 @@ for kline in klines.to_dict("records"):
 #     collection.delete_many({'_id': {'$in': ids_to_delete}})
 #     # 往外读取数据的时候再更改索引吧
 # print('数据清理成功')
+

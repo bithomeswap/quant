@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -27,6 +27,7 @@ df_mean = df.groupby('日期')['SMA120开盘比值'].mean().reset_index(name='�
 df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
 # 输出到csv文件
 # df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
+
 
 def oscillating_strategy(df):  # 实现震荡策略
     if 'coin' in name.lower():

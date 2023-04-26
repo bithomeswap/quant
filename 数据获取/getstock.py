@@ -52,22 +52,27 @@ print('任务已经完成')
 
 for code in stock_info_df['代码']:
     if code.startswith(('60', '000', '001')):
-        latest_timestamp = collection.find({"代码": code}, {"timestamp": 1}).sort("timestamp", -1).limit(1)
+        latest_timestamp = collection.find(
+            {"代码": code}, {"timestamp": 1}).sort("timestamp", -1).limit(1)
         if latest_timestamp.count() == 0:
             upsert_docs = True
             start_date_query = start_date
         else:
             upsert_docs = False
             latest_timestamp = list(latest_timestamp)[0]["timestamp"]
-            start_date_query = datetime.datetime.fromtimestamp(latest_timestamp).strftime('%Y%m%d')
+            start_date_query = datetime.datetime.fromtimestamp(
+                latest_timestamp).strftime('%Y%m%d')
 
-        k_data = ak.stock_zh_a_hist(symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
-        k_data_true = ak.stock_zh_a_hist(symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
+        k_data = ak.stock_zh_a_hist(
+            symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
+        k_data_true = ak.stock_zh_a_hist(
+            symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
         k_data_true = k_data_true[['日期', '开盘']].rename(columns={'开盘': '真实价格'})
         k_data = pd.merge(k_data, k_data_true, on='日期', how='left')
         k_data['代码'] = float(code)
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-        k_data['timestamp'] = k_data['日期'].apply(lambda x: float(datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
+        k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
+            datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
         if upsert_docs:
@@ -79,14 +84,13 @@ for code in stock_info_df['代码']:
             for doc in docs_to_update:
                 if doc["timestamp"] > latest_timestamp:
                     try:
-                        collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {"$set": doc}, upsert=True)
+                        collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {
+                                               "$set": doc}, upsert=True)
                     except Exception as e:
                         pass
 print('任务已经完成')
-
-
-# # time.sleep(3600)
-# limit = 2000000
+# time.sleep(60)
+# limit = 400000
 # if collection.count_documents({}) >= limit:
 #     oldest_data = collection.find().sort([('日期', 1)]).limit(
 #         collection.count_documents({})-limit)

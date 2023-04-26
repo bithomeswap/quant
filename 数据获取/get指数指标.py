@@ -13,7 +13,7 @@ from pymongo import MongoClient
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']  # 将dbname替换成实际的数据库名称
-name = "上证指数"
+name = "指数"
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 df = pd.DataFrame(list(collection.find()))
