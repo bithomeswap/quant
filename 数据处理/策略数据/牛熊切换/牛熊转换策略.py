@@ -22,7 +22,7 @@ for n in range(1, 9):
 code_count = len(df['代码'].drop_duplicates())
 
 # 计算每个交易日成分股的'SMA120开盘比值'均值
-df_mean = df.groupby('日期')['SMA120开盘比值'].mean().reset_index(name='均值')
+df_mean = df.groupby('日期')['SMA70开盘比值'].mean().reset_index(name='均值')
 # 根据规则对每个交易日进行标注
 df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
 # 输出到csv文件
@@ -34,9 +34,10 @@ def oscillating_strategy(df):  # 实现震荡策略
         # 成交额过滤劣质股票
         df = df[df[f'昨日成交额'] >= 1000000].copy()
         # 牛市过滤
-        for n in range(1, 3):
+        for n in range(1, 2):
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-            df = df[df[f'{n*10}日最低开盘价比值'] >= 1.01].copy()
+        for n in range(1, 2):
+            df = df[df[f'{n*10}日最低开盘价比值'] >= 1.1].copy()
             df = df[df[f'{n*10}日最高开盘价比值'] >= 0.85].copy()
         # 选取当天'开盘'最低的
         n_top = math.ceil(code_count/10)
@@ -50,7 +51,7 @@ def oscillating_strategy(df):  # 实现震荡策略
         for n in range(1, 10):
             df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
             df = df[df[f'{n*10}日最低开盘价比值'] >= 1.01].copy()
-            df = df[df[f'{n*10}日最高开盘价比值'] >= 0.95].copy()
+            # df = df[df[f'{n*10}日最高开盘价比值'] >= 0.95].copy()
         # 选取当天'昨日成交额'最低的
         n_top = math.ceil(code_count/50)
         df = df.nsmallest(n_top, '昨日振幅')
@@ -71,10 +72,9 @@ def oversold_strategy(df):  # 实现超跌策略
     if 'coin' in name.lower():
         # 成交额过滤劣质股票
         df = df[df[f'昨日成交额'] >= 1000000].copy()
-        # 熊市过滤
-        df = df[df['SMA120开盘比值'] <= 0.5].copy()
-        for n in range(1, 10):
-            df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
+        # # 熊市过滤
+        df = df[df['SMA70开盘比值'] <= 0.5].copy()
+        df = df[df['SMA10开盘比值'] >= 1].copy()
         # 开盘价过滤高滑点股票
         df = df[df[f'开盘'] >= 0.00000500].copy()
     if 'stock' in name.lower():
@@ -111,8 +111,8 @@ for date, group in df.groupby('日期'):
                 selected_stocks = oversold_strategy(group)
                 selectedchaodie = pd.concat([selectedchaodie, selected_stocks])
 
-selectedzhendang.to_csv(f'{name}标的震荡策略详情.csv', index=False)
-selectedchaodie.to_csv(f'{name}标的超跌策略详情.csv', index=False)
+# selectedzhendang.to_csv(f'{name}标的震荡策略详情.csv', index=False)
+# selectedchaodie.to_csv(f'{name}标的超跌策略详情.csv', index=False)
 
 cash_balance_zhendang = 1  # 假设开始时有1元资金（震荡策略）
 cash_balance_chaodie = 1  # 假设开始时有1元资金（超跌策略）

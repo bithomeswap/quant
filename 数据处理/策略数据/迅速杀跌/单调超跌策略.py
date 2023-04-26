@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'BTC'# 分钟k的收益反向越低于1越好，这个是纯粹的做空策略
-# name = 'COIN'
+# name = 'BTC'# 分钟k的收益反向越低于1越好，这个是纯粹的做空策略
+name = 'COIN'
 # name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
@@ -29,14 +29,13 @@ if 'btc' in name.lower():
     # 上升通道做空（名义亏损越多，说明市场下降的越好）
     for n in range(1, 6):  # 计算未来n日涨跌幅
         df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.001].copy()
-
 if 'coin' in name.lower():
     # 成交额过滤劣质股票
     df = df[df[f'昨日成交额'] >= 1000000].copy()
     # 熊市过滤
-    df = df[df['SMA120开盘比值'] <= 0.5].copy()
-    for n in range(1, 10):  # 计算未来n日涨跌幅
-        df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
+    df = df[df['SMA70开盘比值'] <= 0.5].copy()
+    df = df[df['SMA10开盘比值'] >= 1].copy()
+    print(len(df))
     # 开盘价过滤高滑点股票
     df = df[df[f'开盘'] >= 0.00000500].copy()
 if 'stock' in name.lower():
