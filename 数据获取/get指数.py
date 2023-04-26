@@ -31,7 +31,7 @@ for code in df:
     # print(code)
     latest = list(collection.find({"代码": float(code)}, {
                   "timestamp": 1}).sort("timestamp", -1).limit(1))
-    print(latest)
+    # print(latest)
     if len(latest) == 0:
         upsert_docs = True
         start_date_query = start_date
@@ -53,7 +53,7 @@ for code in df:
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
         if upsert_docs:
-            print(f"{name}({code}) 新增数据")
+            # print(f"{name}({code}) 新增数据")
             try:
                 collection.insert_many(docs_to_update)
             except Exception as e:

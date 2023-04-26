@@ -57,7 +57,7 @@ for code in df['代码']:
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
         if upsert_docs:
-            print(f"{name}({code}) 新增数据")
+            # print(f"{name}({code}) 新增数据")
             try:
                 collection.insert_many(docs_to_update)
             except Exception as e:
