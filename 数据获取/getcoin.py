@@ -42,6 +42,9 @@ for ticker_price in usdt_ticker_prices:
         interval=Client.KLINE_INTERVAL_1DAY,
         limit=800
     )
+
+    # 实际上实盘的时候，这里应该改一下，缩短周期
+
     # KLINE_INTERVAL_1MINUTE = '1m'
     # KLINE_INTERVAL_15MINUTE='15m'
     # KLINE_INTERVAL_1DAY = '1d'

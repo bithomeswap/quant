@@ -1,13 +1,5 @@
-# -*- coding: utf-8 -*-
-#!/root/miniconda3/bin/python
-# nohup /root/miniconda3/bin/python /root/binance_trade_tool_vpn/quant/数据获取/getbtc指标.py &
-# 安装币安的python库
-# pip install python-binance
-
 from binance.client import Client
 from pymongo import MongoClient
-import time
-import requests
 
 # 币安的api配置
 api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"

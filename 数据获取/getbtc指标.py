@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-# 指定解释器位置
-#!/root/miniconda3/bin/python
-# nohup /root/miniconda3/bin/python /root/binance_trade_tool_vpn/quant/数据获取/getbtc指标.py
-# 安装币安的python库
-# pip install python-binance
 import json
 import requests
 import pandas as pd
@@ -86,7 +80,7 @@ headers = {'Content-Type': 'application/json;charset=utf-8'}
 data = {
     "msgtype": "text",
     "text": {
-        "content": "coin指标计算成功"
+        "content": "btc指标计算成功"
     }
 }
 

@@ -5,29 +5,32 @@ from pymongo import MongoClient
 
 
 client = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
-db = client["wth000"]
-
-name = "指数"
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+# 输出的表为截止日期
+name = '实盘STOCK'
 collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
 # 读取180天内的数据，这里面还得排除掉节假日,初始数据建议220,实际更新的时候更新15天就行
 # date_ago = current_date - datetime.timedelta(days=220)
-date_ago = current_date - datetime.timedelta(days=50)
+date_ago = current_date - datetime.timedelta(days=15)
+current_date = current_date - datetime.timedelta(days=10)
+
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 end_date = current_date.strftime('%Y%m%d')
 
-# 获取A股指数代码列表
-df = ['000001', '000002', '000003', '000004', '000005',
-      '000006', '000007', '000008', '000009', '000010',
-      '000011', '000012',
-      '399001', '399002', '399003', '399004', '399005',
-      '399006', '399007', '399008', '399009', '399010',
-      '399011', '399012',
-      ]
+# 从akshare获取A股主板股票的代码和名称
+df = ak.stock_zh_a_spot_em()
+# 过滤掉ST股票
+df = df[~df['名称'].str.contains('ST')]
+# 过滤掉退市股票
+df = df[~df['名称'].str.contains('退')]
+# 迭代每只股票，获取每天的前复权日k数据
+df = df[df['代码'].str.startswith(
+    ('60', '000', '001'))][['代码', '名称']]
 # 遍历目标指数代码，获取其分钟K线数据
-for code in df:
+for code in df['代码']:
     latest = list(collection.find(
         {"代码": float(code)}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
     print(latest)
@@ -39,15 +42,18 @@ for code in df:
         latest_timestamp = latest[0]["timestamp"]
         start_date_query = datetime.datetime.fromtimestamp(
             latest_timestamp).strftime('%Y%m%d')
-    # 通过 akshare 获取目标指数的分钟K线数据
-    k_data = ak.index_zh_a_hist_min_em(symbol=code, period="1")
-    k_data = k_data[k_data["开盘"] != 0]
+
+    k_data = ak.stock_zh_a_hist(
+        symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
+    k_data_true = ak.stock_zh_a_hist(
+        symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
     try:
+        k_data_true = k_data_true[['日期', '开盘']].rename(columns={'开盘': '真实价格'})
+        k_data = pd.merge(k_data, k_data_true, on='日期', how='left')
         k_data['代码'] = float(code)
-        k_data["日期"] = k_data["时间"]
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
         k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()))
+            datetime.datetime.strptime(x, '%Y-%m-%d').timestamp()))
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
         if upsert_docs:
@@ -77,12 +83,3 @@ for code in df:
     except:
         print(f"{name}({code}) 已停牌")
 print('任务已经完成')
-# time.sleep(60)
-# limit = 400000
-# if collection.count_documents({}) >= limit:
-#     oldest_data = collection.find().sort([('日期', 1)]).limit(
-#         collection.count_documents({})-limit)
-#     ids_to_delete = [data['_id'] for data in oldest_data]
-#     collection.delete_many({'_id': {'$in': ids_to_delete}})
-#     # 往外读取数据的时候再更改索引吧
-# print('数据清理成功')
