@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'BTC'# 分钟k的收益反向越低于1越好，这个是纯粹的做空策略
-name = 'COIN'
+name = 'BTC'
+# name = 'COIN'
 # name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
@@ -23,26 +23,45 @@ for n in range(1, 9):
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 if 'btc' in name.lower():
-    # 下降通道做多（名义盈利越多，说明市场上涨的越好）
-    # for n in range(6, 13):  # 计算未来n日涨跌幅
-    #     df = df[df[f'{n*10}日最高开盘价比值'] <= 1-n*0.001].copy()
-    # 上升通道做空（名义亏损越多，说明市场下降的越好）
-    for n in range(1, 6):  # 计算未来n日涨跌幅
-        df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.001].copy()
+    # 成交额过滤劣质股票
+    df = df[df[f'昨日成交额'] >= 20000].copy()
+    # 熊市过滤（目前的市场还很难区分）
+    # df = df[df[f'SMA{70}开盘比值'] <= 1].copy()  # 超跌
+    df = df[df[f'SMA{70}开盘比值'] >= 1.01].copy()  # 超涨
+
+    # 寻找阻力位和支撑位（币圈可能没有支撑位，因为很多标的是纯粹投机的空气，并没有真实的价值支撑）
+    # for n in range(6, 11):
+    #     # df = df[df[f'{n*10}日最高开盘价比值'] <= 1-n*0.001].copy()
+    #     df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.0005].copy()
+
+    # 确认短期趋势下跌
+    for n in range(6, 11):
+        df = df[df[f'SMA{n}开盘比值'] <= 1].copy()
+
+    n_stock = math.ceil(code_count/10)
+    df = df.groupby('日期').apply(lambda x: x.nlargest(
+        n_stock, '昨日振幅')).reset_index(drop=True)
+    n_stock = math.ceil(code_count/100)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, '开盘')).reset_index(drop=True)
+    # 开盘价过滤高滑点股票
+    df = df[df[f'开盘'] >= 0.01].copy()
+    print(len(df))
+
 if 'coin' in name.lower():
     # 成交额过滤劣质股票
     df = df[df[f'昨日成交额'] >= 1000000].copy()
     # 熊市过滤
-    df = df[df['SMA70开盘比值'] <= 0.5].copy()
+    df = df[df[f'SMA{70}开盘比值'] <= 0.5].copy()
     df = df[df['SMA10开盘比值'] >= 1].copy()
     print(len(df))
     # 开盘价过滤高滑点股票
     df = df[df[f'开盘'] >= 0.00000500].copy()
 if 'stock' in name.lower():
     # 熊市过滤
-    df = df[df['SMA120开盘比值'] <= 0.5].copy()
-    for n in range(1, 10):  # 计算未来n日涨跌幅
-        df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
+    df = df[df[f'SMA{70}开盘比值'] <= 0.5].copy()
+    # for n in range(1, 10):  # 计算未来n日涨跌幅
+    #     df = df[df[f'{n*10}日最低开盘价比值'] >= 1+n*0.01].copy()
     df = df[
         (df['开盘收盘幅'] <= 8)
         &
@@ -60,15 +79,16 @@ df.to_csv(trading_detail_filename, index=False)
 cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
+
 if 'stock' in name.lower():
     n = 9  # 设置持仓周期
-    m = 0.003  # 设置手续费
+    m = 0.005  # 设置手续费
 if 'coin' in name.lower():
     n = 6  # 设置持仓周期
     m = 0.005  # 设置手续费
 if 'btc' in name.lower():
-    n = 6  # 设置持仓周期
-    m = -0.0001  # 设置手续费
+    n = 20  # 设置持仓周期
+    m = -0.0005  # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
 df_daily_return = pd.DataFrame(columns=['日期', '收益率'])

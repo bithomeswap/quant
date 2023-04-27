@@ -31,15 +31,15 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
     for n in range(2, 11):
-        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['最高'].rolling(n*10).max().shift(1)
-        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['最低'].rolling(n*10).min().shift(1)
+        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
+        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
         df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
         df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
             talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
 
-        df[f'{n}日最高开盘价比值'] = df['开盘']/df['最高'].rolling(n).max().shift(1)
-        df[f'{n}日最低开盘价比值'] = df['开盘']/df['最低'].rolling(n).min().shift(1)
+        df[f'{n}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n).max()
+        df[f'{n}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n).min()
         df[f'SMA{n}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n, matype=0)
         df[f'SMA{n}昨日成交额比值'] = df['昨日成交额'] / \
@@ -47,6 +47,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     for n in range(1, 11):
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
+        df[f'{n*10}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n*10)/df['收盘']-1
 
     return df
 
@@ -100,7 +101,7 @@ print(r.content.decode('utf-8'))
 # print(code_count)
 
 # # 筛选出符合条件的股票代码
-# for n in range(1, 13):  
+# for n in range(1, 13):
 #     df = df.loc[(df['日期'] == last_day)]
 #     df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
 # # 选取当天'开盘'最低的

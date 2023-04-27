@@ -90,12 +90,12 @@ for ticker_price in usdt_ticker_prices:
     if len(data_list) > 0:
         collection.insert_many(data_list)
 print('任务已经完成')
-time.sleep(60)
-limit = 1000000
-if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([('日期', 1)]).limit(
-        collection.count_documents({})-limit)
-    ids_to_delete = [data['_id'] for data in oldest_data]
-    collection.delete_many({'_id': {'$in': ids_to_delete}})
-    # 往外读取数据的时候再更改索引吧
-print('数据清理成功')
+# time.sleep(60)
+# limit = 1200000
+# if collection.count_documents({}) >= limit:
+#     oldest_data = collection.find().sort([('日期', 1)]).limit(
+#         collection.count_documents({})-limit)
+#     ids_to_delete = [data['_id'] for data in oldest_data]
+#     collection.delete_many({'_id': {'$in': ids_to_delete}})
+#     # 往外读取数据的时候再更改索引吧
+# print('数据清理成功')

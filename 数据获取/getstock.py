@@ -13,7 +13,7 @@ collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
 # 读取180天内的数据，这里面还得排除掉节假日,初始数据建议220,实际更新的时候更新15天就行
-date_ago = current_date - datetime.timedelta(days=220)
+date_ago = current_date - datetime.timedelta(days=600)
 # date_ago = current_date - datetime.timedelta(days=15)
 # current_date = current_date - datetime.timedelta(days=10)
 
@@ -31,8 +31,9 @@ df = df[df['代码'].str.startswith(('60', '000', '001'))][['代码', '名称']]
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     # print(code)
-    latest = list(collection.find({"代码": float(code)}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
-    print(latest)
+    latest = list(collection.find({"代码": float(code)}, {
+                  "timestamp": 1}).sort("timestamp", -1).limit(1))
+    # print(latest)
     if len(latest) == 0:
         upsert_docs = True
         start_date_query = start_date
@@ -84,7 +85,7 @@ for code in df['代码']:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
 time.sleep(60)
-limit = 1000000
+limit = 1200000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
