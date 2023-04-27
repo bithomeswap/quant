@@ -30,19 +30,22 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
 
-    df['未来60日最高开盘价'] = df['开盘'].rolling(60).max().shift(-60)
-    df['未来60日最低开盘价'] = df['开盘'].rolling(60).min().shift(-60)
-    df['未来60日最高开盘价日期'] = df['开盘'].rolling(60).apply(
-        lambda x: x.argmax(), raw=True).shift(-60)
-    df['未来60日最低开盘价日期'] = df['开盘'].rolling(60).apply(
-        lambda x: x.argmin(), raw=True).shift(-60)
-
-    for n in range(1, 13):
-        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
-        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
+    for n in range(2, 11):
+        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['最高'].rolling(n*10).max().shift(1)
+        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['最低'].rolling(n*10).min().shift(1)
         df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
-    for n in range(1, 13):
+        df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
+            talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
+
+        df[f'{n}日最高开盘价比值'] = df['开盘']/df['最高'].rolling(n).max().shift(1)
+        df[f'{n}日最低开盘价比值'] = df['开盘']/df['最低'].rolling(n).min().shift(1)
+        df[f'SMA{n}开盘比值'] = df['开盘'] / \
+            talib.MA(df['开盘'].values, timeperiod=n, matype=0)
+        df[f'SMA{n}昨日成交额比值'] = df['昨日成交额'] / \
+            talib.MA(df['昨日成交额'].values, timeperiod=n, matype=0)
+
+    for n in range(1, 11):
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
 
     return df
@@ -86,3 +89,34 @@ data = {
 
 r = requests.post(url, headers=headers, data=json.dumps(data))
 print(r.content.decode('utf-8'))
+
+
+# import math
+# # 获取最后一天的数据
+# last_day = grouped.iloc[-1]['日期']
+# # print(last_day)
+
+# # 计算总共统计的股票数量
+# code_count = len(grouped['代码'].drop_duplicates())
+# print(code_count)
+# # 筛选出符合条件的股票代码
+# for n in range(1, 13):
+#     df = df.loc[(df['日期'] == last_day)]
+#     df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
+# # 选取当天'开盘'最低的
+# n_top = math.ceil(code_count/50)
+# df = df.nsmallest(n_top, '昨日振幅')
+# n_top = math.ceil(code_count/500)
+# df = df.nsmallest(n_top, '开盘')
+# print(df['代码'])
+# # url = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
+# # headers = {'Content-Type': 'application/json;charset=utf-8'}
+# # data = {
+# #     "msgtype": "text",
+# #     "text": {
+# #         "今日符合需求的股票":df['代码'],
+# #         "指标详情": df
+# #     }
+# # }
+# # r = requests.post(url, headers=headers, data=json.dumps(data))
+# # print(r.content.decode('utf-8'))
