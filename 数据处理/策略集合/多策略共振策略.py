@@ -23,16 +23,17 @@ code_count = len(df['代码'].drop_duplicates())
 # 计算每个交易日成分股的'SMA120开盘比值'均值
 df_mean = df.groupby('日期')[f'SMA{30}开盘比值'].mean().reset_index(name='均值')
 if 'coin' in name.lower():
-    # 根据规则对每个交易日进行标注
+    # 根据规则对每个交易日进行标注,一般这个值大于等于1就行，
+    # 只是震荡行情本身也是有区别的，这个阈值比较难确定
     df_mean['策略'] = df_mean['均值'].apply(
-        lambda x: '震荡策略' if x >= 1 else '超跌策略')
+        lambda x: '震荡策略' if x >= 1.002 else '超跌策略')
 if 'stock' in name.lower():
-    # 根据规则对每个交易日进行标注
+    # 根据规则对每个交易日进行标注,一般这个值大于等于1就行，
+    # 只是震荡行情本身也是有区别的，这个阈值比较难确定
     df_mean['策略'] = df_mean['均值'].apply(
-        lambda x: '震荡策略' if x >= 0.9 else '超跌策略')
+        lambda x: '震荡策略' if x >= 0.92 else '超跌策略')
 # 输出到csv文件
 df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
-
 
 def oscillating_strategy(df):  # 实现震荡策略
     if 'coin' in name.lower():

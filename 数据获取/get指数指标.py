@@ -1,4 +1,6 @@
-import json
+import pytz
+import datetime
+import math
 import requests
 import pandas as pd
 import talib
@@ -20,48 +22,36 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 过滤最高价和最低价为负值的数据
     df = df.loc[(df['最高'] >= 0) & (df['最低'] >= 0)]
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-
     # 计算昨日振幅
     df['昨日振幅'] = (df.shift(1)['最高']-df.shift(1)['最低'])/df.shift(1)['开盘']
     # 计算昨日成交额
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 定义开盘收盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-
     df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-
     for n in range(2, 11):
-        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
-        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
         df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
         df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
             talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
-
-        df[f'{n}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n).max()
-        df[f'{n}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n).min()
         df[f'SMA{n}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n, matype=0)
         df[f'SMA{n}昨日成交额比值'] = df['昨日成交额'] / \
             talib.MA(df['昨日成交额'].values, timeperiod=n, matype=0)
-
     for n in range(1, 11):
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
         df[f'{n*10}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n*10)/df['收盘']-1
-
     return df
 
 
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码').apply(get_technical_indicators)
-
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上两级目录的路径
 parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
-
 # 保存数据到指定目录
 file_path = os.path.join(parent_dir_path, f'{name}指标.csv')
 grouped.to_csv(file_path, index=False)
@@ -78,46 +68,39 @@ for i in range(num_batches):
     data_slice = grouped[start_idx:end_idx]
     new_collection.insert_many(data_slice.to_dict('records'))
 
-url = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
-headers = {'Content-Type': 'application/json;charset=utf-8'}
+# 今日筛选股票推送(多头)
+df = grouped.sort_values(by='日期')
+# 获取最后一天的数据
+last_day = df.iloc[-1]['日期']
+# 计算总共统计的股票数量
+code_count = len(df['代码'].drop_duplicates())
+print(code_count)
+# 成交额过滤劣质股票
+df = df[df[f'昨日成交额'] >= 20000000].copy()
+# 60日相对超跌
+n_stock = math.ceil(code_count/5)
+df = df.nsmallest(n_stock, f'SMA{60}开盘比值')
+# 振幅较大，趋势明显
+n_stock = math.ceil(code_count/10)
+df = df.nsmallest(n_stock, '昨日振幅')
+# 确认短期趋势
+for n in range(6, 11):
+    df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
+# 开盘价过滤高滑点股票
+df = df[df[f'开盘'] >= 0.01].copy()
+print(len(df))
 
-data = {
-    "msgtype": "text",
-    "text": {
-        "content": "指数指标计算成功"
-    }
-}
-
-r = requests.post(url, headers=headers, data=json.dumps(data))
-print(r.content.decode('utf-8'))
-
-
-# import math
-# # 获取最后一天的数据
-# last_day = grouped.iloc[-1]['日期']
-# # print(last_day)
-
-# # 计算总共统计的股票数量
-# code_count = len(grouped['代码'].drop_duplicates())
-# print(code_count)
-# # 筛选出符合条件的股票代码
-# for n in range(1, 13):
-#     df = df.loc[(df['日期'] == last_day)]
-#     df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-# # 选取当天'开盘'最低的
-# n_top = math.ceil(code_count/50)
-# df = df.nsmallest(n_top, '昨日振幅')
-# n_top = math.ceil(code_count/500)
-# df = df.nsmallest(n_top, '开盘')
-# print(df['代码'])
-# # url = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
-# # headers = {'Content-Type': 'application/json;charset=utf-8'}
-# # data = {
-# #     "msgtype": "text",
-# #     "text": {
-# #         "今日符合需求的股票":df['代码'],
-# #         "指标详情": df
-# #     }
-# # }
-# # r = requests.post(url, headers=headers, data=json.dumps(data))
-# # print(r.content.decode('utf-8'))
+df['产品名称'] = name
+df['计算时间'] = df['timestamp'].apply(lambda x: datetime.datetime.fromtimestamp(int(x), tz=pytz.timezone(
+    'UTC')).astimezone(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M:%S')),
+print(df)
+# 发布到钉钉机器人
+webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
+for i in range(len(df)):
+    message = f"市场名称：{name},计算日期(上海时间):{df['计算时间'][i]},选择标的:{df['代码'][i]}"
+    requests.post(webhook,
+                  json={
+                      'msgtype': 'text',
+                      'text': {
+                          'content': message
+                      }})

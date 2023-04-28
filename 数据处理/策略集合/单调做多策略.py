@@ -3,8 +3,9 @@ import pandas as pd
 import os
 
 # name = 'BTC'
+name = '指数'
 # name = 'COIN'
-name = 'STOCK'
+# name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -30,6 +31,23 @@ if 'btc' in name.lower():
         n_stock, f'SMA{60}开盘比值')).reset_index(drop=True)
     # 振幅较大，趋势明显
     n_stock = math.ceil(code_count/100)
+    df = df.groupby('日期').apply(lambda x: x.nlargest(
+        n_stock, '昨日振幅')).reset_index(drop=True)
+    # 确认短期趋势
+    for n in range(6, 11):
+        df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
+    # 开盘价过滤高滑点股票
+    df = df[df[f'开盘'] >= 0.01].copy()
+    print(len(df))
+if '指数' in name.lower():
+    # 成交额过滤劣质股票
+    df = df[df[f'昨日成交额'] >= 20000000].copy()
+    # 60日相对超跌
+    n_stock = math.ceil(code_count/5)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, f'SMA{60}开盘比值')).reset_index(drop=True)
+    # 振幅较大，趋势明显
+    n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nlargest(
         n_stock, '昨日振幅')).reset_index(drop=True)
     # 确认短期趋势
@@ -94,6 +112,9 @@ if 'coin' in name.lower():
     n = 6  # 设置持仓周期
     m = 0.005  # 设置手续费
 if 'btc' in name.lower():
+    n = 20  # 设置持仓周期
+    m = 0.0005  # 设置手续费
+if '指数' in name.lower():
     n = 20  # 设置持仓周期
     m = 0.0005  # 设置手续费
 
