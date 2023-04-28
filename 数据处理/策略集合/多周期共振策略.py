@@ -9,7 +9,7 @@ name = 'COIN'
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上四级目录的路径
+# 获取当前.py文件所在目录的上三级目录的路径
 dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
@@ -20,90 +20,73 @@ for n in range(1, 9):
 
 code_count = len(df['代码'].drop_duplicates())
 
-zhouqi = 60
-
 # 计算每个交易日成分股的'SMA120开盘比值'均值
-df_mean = df.groupby('日期')[f'SMA{zhouqi}开盘比值'].mean().reset_index(name='均值')
-# 根据规则对每个交易日进行标注
-df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
+df_mean = df.groupby('日期')[f'SMA{30}开盘比值'].mean().reset_index(name='均值')
+if 'coin' in name.lower():
+    # 根据规则对每个交易日进行标注
+    df_mean['策略'] = df_mean['均值'].apply(
+        lambda x: '震荡策略' if x >= 1 else '超跌策略')
+if 'stock' in name.lower():
+    # 根据规则对每个交易日进行标注
+    df_mean['策略'] = df_mean['均值'].apply(
+        lambda x: '震荡策略' if x >= 0.9 else '超跌策略')
 # 输出到csv文件
-# df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
+df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
 
 def oscillating_strategy(df):  # 实现震荡策略
     if 'coin' in name.lower():
-        # 成交额过滤劣质股票
+        # 昨日成交额过滤劣质股票
         df = df[df[f'昨日成交额'] >= 1000000].copy()
         # 牛市过滤
-        for n in range(1, 2):
-            df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-        for n in range(1, 2):
-            df = df[df[f'{n*10}日最低开盘价比值'] >= 1.1].copy()
-            df = df[df[f'{n*10}日最高开盘价比值'] >= 0.85].copy()
-        # 选取当天'开盘'最低的
+        df = df[df[f'SMA{20}开盘比值'] >= 1].copy()
+        n_stock = math.ceil(code_count/5)
+        df = df.nsmallest(n_stock, f'SMA{100}开盘比值')
         n_stock = math.ceil(code_count/10)
         df = df.nsmallest(n_stock, '昨日振幅')
         n_stock = math.ceil(code_count/100)
         df = df.nsmallest(n_stock, '开盘')
         # 开盘价过滤高滑点股票
-        df = df[df[f'开盘'] >= 0.00000500]
+        df = df[df[f'开盘'] >= 0.00000500].copy()
     if 'stock' in name.lower():
+        # 价格过滤劣质股票
+        df = df[(df['真实价格'] >= 4)].copy()
         # 牛市过滤
-        for n in range(1, 2):
-            df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-        for n in range(1, 2):
-            df = df[df[f'{n*10}日最低开盘价比值'] >= 1.01].copy()
-            df = df[df[f'{n*10}日最高开盘价比值'] >= 0.95].copy()
-        # 选取当天'昨日成交额'最低的
+        df = df[df[f'SMA{20}开盘比值'] >= 1].copy()
+        n_stock = math.ceil(code_count/5)
+        df = df.nsmallest(n_stock, f'SMA{100}开盘比值')
         n_stock = math.ceil(code_count/10)
         df = df.nsmallest(n_stock, '昨日振幅')
         n_stock = math.ceil(code_count/100)
         df = df.nsmallest(n_stock, '昨日成交额')
         df = df[
-            (df['开盘收盘幅'] <= 0)
+            (df['开盘收盘幅'] <= 0.2)
             &
-            (df['开盘收盘幅'] >= -0.5)
-            &
-            (df['真实价格'] >= 4)
-        ]
+            (df['开盘收盘幅'] >= 0)
+        ].copy()
     return df
+
 
 def oversold_strategy(df):  # 实现超跌策略
     if 'coin' in name.lower():
-        # # 成交额过滤劣质股票
-        # df = df[df[f'昨日成交额'] >= 1000000].copy()
-        # # 熊市过滤
-        df = df[df[f'SMA{zhouqi}开盘比值'] <= 0.5].copy()
+        # 成交额过滤劣质股票
+        df = df[df[f'昨日成交额'] >= 1000000].copy()
+        # # # 熊市过滤
+        df = df[df[f'SMA{60}开盘比值'] <= 0.5].copy()
         df = df[df[f'SMA{10}开盘比值'] >= 1].copy()
         # 开盘价过滤高滑点股票
         df = df[df[f'开盘'] >= 0.00000500].copy()
-
-
-        # # 成交额过滤劣质股票
-        # df = df[df[f'昨日成交额'] >= 500000].copy()
-        # # 60日相对超涨
-        # n_stock = math.ceil(code_count/50)
-        # df = df.nsmallest(n_stock,  f'SMA{60}开盘比值')
-        # # # 振幅较大，趋势明显
-        # # n_stock = math.ceil(code_count/100)
-        # # df = df.nlargest(n_stock, '昨日振幅')
-        # # 确认短期趋势下跌
-        # for n in range(6, 11):
-        #     df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
-        # # 开盘价过滤高滑点股票
-        # df = df[df[f'开盘'] >= 0.00000500].copy()
-
     if 'stock' in name.lower():
+        # 价格过滤劣质股票
+        df = df[(df['真实价格'] >= 4)].copy()
         # 熊市过滤
-        df = df[df[f'SMA{zhouqi}开盘比值'] <= 0.5].copy()
+        df = df[df[f'SMA{60}开盘比值'] <= 0.5].copy()
         df = df[df[f'SMA{10}开盘比值'] >= 1].copy()
         df = df[
-            (df['开盘收盘幅'] <= 8)
+            (df['开盘收盘幅'] <= 0.2)
             &
             (df['开盘收盘幅'] >= 0)
-            &
-            (df['真实价格'] >= 4)
-        ]
+        ].copy()
     return df
 
 
@@ -142,12 +125,12 @@ df_daily_return_zhendang = pd.DataFrame(columns=['日期', '收益率'])
 for date, group in selectedzhendang.groupby('日期'):
     if 'btc' in name.lower():
         n = 20  # 设置持仓周期
-        m = 0.005  # 设置手续费
+        m = 0.0005  # 设置手续费
     if 'coin' in name.lower():
         n = 6  # 设置持仓周期
-        m = 0.01  # 设置手续费
+        m = 0.005  # 设置手续费
     if 'stock' in name.lower():
-        n = 9  # 设置持仓周期
+        n = 6  # 设置持仓周期
         m = 0.005  # 设置手续费
     # 如果当日没有入选标的，则单日收益率为0
     if group.empty:

@@ -3,14 +3,14 @@ import pandas as pd
 import os
 
 # name = 'BTC'
-name = 'COIN'
-# name = 'STOCK'
+# name = 'COIN'
+name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上四级目录的路径
+# 获取当前.py文件所在目录的上三级目录的路径
 dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
@@ -39,14 +39,13 @@ if 'btc' in name.lower():
     df = df[df[f'开盘'] >= 0.01].copy()
     print(len(df))
 if 'coin' in name.lower():
-    # 成交额过滤劣质股票
+    # 昨日成交额过滤劣质股票
     df = df[df[f'昨日成交额'] >= 1000000].copy()
     # 牛市过滤
     df = df[df[f'SMA{20}开盘比值'] >= 1].copy()
-    n_stock = math.ceil(code_count/1.8)
+    n_stock = math.ceil(code_count/5)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, f'SMA{100}开盘比值')).reset_index(drop=True)
-
     n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '昨日振幅')).reset_index(drop=True)
@@ -56,30 +55,28 @@ if 'coin' in name.lower():
     # 开盘价过滤高滑点股票
     df = df[df[f'开盘'] >= 0.00000500].copy()
     print(len(df))
-
-
 if 'stock' in name.lower():
+    # 价格过滤劣质股票
+    df = df[(df['真实价格'] >= 4)].copy()
     # 牛市过滤
-    for n in range(1, 2):
-        df = df[df[f'SMA{n*10}开盘比值'] >= 1].copy()
-    for n in range(1, 2):
-        df = df[df[f'{n*10}日最低开盘价比值'] >= 1.1].copy()
-        df = df[df[f'{n*10}日最高开盘价比值'] >= 0.85].copy()
-    print(len(df))
+    df = df[df[f'SMA{20}开盘比值'] >= 1].copy()
+    n_stock = math.ceil(code_count/5)
+    df = df.groupby('日期').apply(lambda x: x.nsmallest(
+        n_stock, f'SMA{100}开盘比值')).reset_index(drop=True)
     n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '昨日振幅')).reset_index(drop=True)
     n_stock = math.ceil(code_count/100)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, '昨日成交额')).reset_index(drop=True)
+    # 开盘收盘幅过滤无法买入股票
     df = df[
-        (df['开盘收盘幅'] <= 0)
+        (df['开盘收盘幅'] <= 0.2)
         &
-        (df['开盘收盘幅'] >= -0.5)
-        &
-        (df['真实价格'] >= 4)
+        (df['开盘收盘幅'] >= 0)
     ].copy()
-    print('测试标的为股票类型，默认高开百分之八无法买入')
+    print(len(df))
+
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
@@ -91,7 +88,7 @@ cash_balance = 1
 daily_cash_balance = {}
 
 if 'stock' in name.lower():
-    n = 9  # 设置持仓周期
+    n = 6  # 设置持仓周期
     m = 0.005  # 设置手续费
 if 'coin' in name.lower():
     n = 6  # 设置持仓周期
