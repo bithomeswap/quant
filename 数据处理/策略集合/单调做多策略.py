@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'BTC'
-name = '指数'
+name = 'BTC'
+# name = '指数'
 # name = 'COIN'
 # name = 'STOCK'
 

@@ -2,7 +2,9 @@ import math
 import pandas as pd
 import os
 
-name = 'COIN'
+name = "BTC"
+# name = "指数"
+# name = 'COIN'
 # name = 'STOCK'
 
 # 获取当前.py文件的绝对路径
@@ -20,14 +22,30 @@ for n in range(1, 9):
 
 code_count = len(df['代码'].drop_duplicates())
 
-# 计算每个交易日成分股的'SMA120开盘比值'均值
-df_mean = df.groupby('日期')[f'SMA{30}开盘比值'].mean().reset_index(name='均值')
+if 'btc' in name.lower():
+    # 计算每个交易日成分股的'SMA120开盘比值'均值
+    df_mean = df.groupby('日期')[f'SMA{60}开盘比值'].mean().reset_index(name='均值')
+    # 根据规则对每个交易日进行标注,一般这个值大于等于1就行，
+    # 只是震荡行情本身也是有区别的，这个阈值比较难确定
+    df_mean['策略'] = df_mean['均值'].apply(
+        lambda x: '震荡策略' if x >= 1 else '超跌策略')
+if '指数' in name.lower():
+    # 计算每个交易日成分股的'SMA120开盘比值'均值
+    df_mean = df.groupby('日期')[f'SMA{20}开盘比值'].mean().reset_index(name='均值')
+    # 根据规则对每个交易日进行标注,一般这个值大于等于1就行，
+    # 只是震荡行情本身也是有区别的，这个阈值比较难确定
+    df_mean['策略'] = df_mean['均值'].apply(
+        lambda x: '震荡策略' if x >= 1 else '超跌策略')
 if 'coin' in name.lower():
+    # 计算每个交易日成分股的'SMA120开盘比值'均值
+    df_mean = df.groupby('日期')[f'SMA{30}开盘比值'].mean().reset_index(name='均值')
     # 根据规则对每个交易日进行标注,一般这个值大于等于1就行，
     # 只是震荡行情本身也是有区别的，这个阈值比较难确定
     df_mean['策略'] = df_mean['均值'].apply(
         lambda x: '震荡策略' if x >= 1.002 else '超跌策略')
 if 'stock' in name.lower():
+    # 计算每个交易日成分股的'SMA120开盘比值'均值
+    df_mean = df.groupby('日期')[f'SMA{30}开盘比值'].mean().reset_index(name='均值')
     # 根据规则对每个交易日进行标注,一般这个值大于等于1就行，
     # 只是震荡行情本身也是有区别的，这个阈值比较难确定
     df_mean['策略'] = df_mean['均值'].apply(
@@ -35,7 +53,37 @@ if 'stock' in name.lower():
 # 输出到csv文件
 df_mean.to_csv(f'{name}牛熊特征.csv', index=False)
 
+
 def oscillating_strategy(df):  # 实现震荡策略
+    if 'btc' in name.lower():
+        # 成交额过滤劣质股票
+        df = df[df[f'昨日成交额'] >= 200000].copy()
+        # 60日相对超跌
+        n_stock = math.ceil(code_count/50)
+        df = df.nsmallest(n_stock, f'SMA{60}开盘比值')
+        n_stock = math.ceil(code_count/50)
+        df = df.nsmallest(n_stock, '昨日振幅')
+        # 确认短期趋势
+        for n in range(6, 11):
+            df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
+        # 开盘价过滤高滑点股票
+        df = df[df[f'开盘'] >= 0.01].copy()
+        # print(len(df))
+    if '指数' in name.lower():
+        # 成交额过滤劣质股票
+        df = df[df[f'昨日成交额'] >= 20000000].copy()
+        # 60日相对超跌
+        n_stock = math.ceil(code_count/5)
+        df = df.nsmallest(n_stock, f'SMA{60}开盘比值')
+        n_stock = math.ceil(code_count/10)
+        df = df.nsmallest(n_stock, '昨日振幅')
+        # 确认短期趋势
+        for n in range(6, 11):
+            df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
+        # 开盘价过滤高滑点股票
+        df = df[df[f'开盘'] >= 0.01].copy()
+        print(len(df))
+
     if 'coin' in name.lower():
         # 昨日成交额过滤劣质股票
         df = df[df[f'昨日成交额'] >= 1000000].copy()
@@ -69,6 +117,32 @@ def oscillating_strategy(df):  # 实现震荡策略
 
 
 def oversold_strategy(df):  # 实现超跌策略
+    if 'btc' in name.lower():
+        # 成交额过滤劣质股票
+        df = df[df[f'昨日成交额'] >= 20000].copy()
+        # 60日相对超涨
+        n_stock = math.ceil(code_count/50)
+        df = df.nlargest(n_stock, f'SMA{60}开盘比值')
+        n_stock = math.ceil(code_count/50)
+        df = df.nlargest(n_stock, '昨日振幅')
+        # 确认短期趋势下跌
+        for n in range(6, 11):
+            df = df[df[f'SMA{n}开盘比值'] <= 1].copy()
+        # 开盘价过滤高滑点股票
+        df = df[df[f'开盘'] >= 0.01].copy()
+    if '指数' in name.lower():
+        # 成交额过滤劣质股票
+        df = df[df[f'昨日成交额'] >= 20000000].copy()
+        # 60日相对超涨
+        n_stock = math.ceil(code_count/50)
+        df = df.nlargest(n_stock, f'SMA{60}开盘比值')
+        n_stock = math.ceil(code_count/50)
+        df = df.nlargest(n_stock, '昨日振幅')
+        # 确认短期趋势下跌
+        for n in range(6, 11):
+            df = df[df[f'SMA{n}开盘比值'] <= 1].copy()
+        # 开盘价过滤高滑点股票
+        df = df[df[f'开盘'] >= 0.01].copy()
     if 'coin' in name.lower():
         # 成交额过滤劣质股票
         df = df[df[f'昨日成交额'] >= 1000000].copy()
@@ -127,6 +201,9 @@ for date, group in selectedzhendang.groupby('日期'):
     if 'btc' in name.lower():
         n = 20  # 设置持仓周期
         m = 0.0005  # 设置手续费
+    if '指数' in name.lower():
+        n = 20  # 设置持仓周期
+        m = 0.0005  # 设置手续费
     if 'coin' in name.lower():
         n = 6  # 设置持仓周期
         m = 0.005  # 设置手续费
@@ -151,7 +228,10 @@ df_daily_return_chaodie = pd.DataFrame(columns=['日期', '收益率'])
 for date, group in selectedchaodie.groupby('日期'):
     if 'btc' in name.lower():
         n = 20  # 设置持仓周期
-        m = -0.003  # 设置手续费
+        m = -0.005  # 设置手续费
+    if '指数' in name.lower():
+        n = 20  # 设置持仓周期
+        m = -0.0005  # 设置手续费
     if 'coin' in name.lower():
         n = 6  # 设置持仓周期
         m = 0.01  # 设置手续费

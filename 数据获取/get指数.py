@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 from pymongo import MongoClient
 import time
+import pytz
 
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
@@ -44,12 +45,15 @@ for code in df:
     # 通过 akshare 获取目标指数的分钟K线数据
     k_data = ak.index_zh_a_hist_min_em(symbol=code, period="1")
     k_data = k_data[k_data["开盘"] != 0]
+
     try:
         k_data['代码'] = float(code)
         k_data["日期"] = k_data["时间"]
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
+        
         k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()))
+            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
         if upsert_docs:

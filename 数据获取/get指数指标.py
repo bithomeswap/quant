@@ -46,6 +46,36 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
 
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码').apply(get_technical_indicators)
+
+# 今日筛选股票推送(多头)
+df = grouped.sort_values(by='日期')
+# 获取最后一天的数据
+last_day = df.iloc[-1]['日期']
+# 计算总共统计的股票数量
+code_count = len(df['代码'].drop_duplicates())
+df = df[df[f'日期'] == last_day].copy()
+# 成交额过滤劣质股票
+df = df[df[f'昨日成交额'] >= 20000000].copy()
+# 60日相对超跌
+n_stock = math.ceil(code_count/5)
+df = df.nsmallest(n_stock, f'SMA{60}开盘比值')
+# 振幅较大，趋势明显
+n_stock = math.ceil(code_count/10)
+df = df.nsmallest(n_stock, '昨日振幅')
+# 确认短期趋势
+for n in range(6, 11):
+    df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
+# 开盘价过滤高滑点股票
+df = df[df[f'开盘'] >= 0.01].copy()
+print(len(df))
+# 发布到钉钉机器人
+df['市场'] = name
+message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdown()
+print(type(message))
+webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
+requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
+              'title': 'DataFrame', 'text': message}})
+
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -67,40 +97,3 @@ for i in range(num_batches):
     end_idx = (i + 1) * batch_size
     data_slice = grouped[start_idx:end_idx]
     new_collection.insert_many(data_slice.to_dict('records'))
-
-# 今日筛选股票推送(多头)
-df = grouped.sort_values(by='日期')
-# 获取最后一天的数据
-last_day = df.iloc[-1]['日期']
-# 计算总共统计的股票数量
-code_count = len(df['代码'].drop_duplicates())
-print(code_count)
-# 成交额过滤劣质股票
-df = df[df[f'昨日成交额'] >= 20000000].copy()
-# 60日相对超跌
-n_stock = math.ceil(code_count/5)
-df = df.nsmallest(n_stock, f'SMA{60}开盘比值')
-# 振幅较大，趋势明显
-n_stock = math.ceil(code_count/10)
-df = df.nsmallest(n_stock, '昨日振幅')
-# 确认短期趋势
-for n in range(6, 11):
-    df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
-# 开盘价过滤高滑点股票
-df = df[df[f'开盘'] >= 0.01].copy()
-print(len(df))
-
-df['产品名称'] = name
-df['计算时间'] = df['timestamp'].apply(lambda x: datetime.datetime.fromtimestamp(int(x), tz=pytz.timezone(
-    'UTC')).astimezone(pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M:%S')),
-print(df)
-# 发布到钉钉机器人
-webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
-for i in range(len(df)):
-    message = f"市场名称：{name},计算日期(上海时间):{df['计算时间'][i]},选择标的:{df['代码'][i]}"
-    requests.post(webhook,
-                  json={
-                      'msgtype': 'text',
-                      'text': {
-                          'content': message
-                      }})
