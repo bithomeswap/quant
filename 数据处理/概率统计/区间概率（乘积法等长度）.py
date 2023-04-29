@@ -8,7 +8,7 @@ import os
 # name = 'COIN'
 name = 'STOCK'
 # name = 'BTC'
-# name = '上证指数'
+# name = '指数'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

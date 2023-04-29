@@ -13,8 +13,8 @@ client = MongoClient(
 db = client['wth000']
 
 # name = 'COIN'
-# name = 'STOCK'
-name = 'BTC'
+name = 'STOCK'
+# name = 'BTC'
 # name = '指数'
 
 collection = db[f'{name}指标']
