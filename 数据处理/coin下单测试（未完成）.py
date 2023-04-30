@@ -36,27 +36,35 @@ collection_write_sell = db[f'{name}sell']
 
 
 def buy():
-    # 首先需要获取所有计划交易的标的，包含symbol、时间、价格、日交易量等等信息
+    # 获取账户余额
+    balances = client.get_account()['balances']
+    for balance in balances:
+        if balance['asset'] == 'USDT':
+            usdt_balance = float(balance['free'])
+            print('USDT余额：', usdt_balance)
+    # 获取计划交易的标的
     symbols = ['BTCUSDT', 'ETHUSDT']
     print(symbols)
     # 添加异常计数器
     error_count = 0
     for symbol in symbols:
         try:
+            symbol_info = client.get_symbol_info(symbol)
+            precision = int(symbol_info['baseAssetPrecision'])
+
             # 实时获取当前卖一和卖二价格
             depth = client.get_order_book(symbol=symbol, limit=5)
             ask_price_1 = float(depth['asks'][0][0])
             ask_price_2 = float(depth['asks'][1][0])
             print(depth)
-
             # 计算预定价格
             target_price = ask_price_2 * 1.001
-
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if ask_price_1 <= target_price and ask_price_2/ask_price_1 <= 1.01:
                 # 下单
                 symbol = str(symbol)
-                quantity = 0.000001
+                quantity = round(100/target_price, precision)
+
                 order = client.order_market_buy(
                     symbol=symbol,
                     quantity=quantity
