@@ -35,6 +35,25 @@ collection_write_order = db[f'{name}order']
 collection_write_sell = db[f'{name}sell']
 
 
+# def sell_all():市价卖出所有代币
+#     # 获取账户余额
+#     balances = client.get_account()['balances']
+#     for balance in balances:
+#         asset = balance['asset']
+#         free_balance = float(balance['free'])
+#         locked_balance = float(balance['locked'])
+#         total_balance = free_balance + locked_balance
+#         if asset != 'USDT' and total_balance > 0:
+#             symbol = asset + 'USDT'
+#             # 执行市价卖单
+#             client.order_market_sell(
+#                 symbol=symbol,
+#                 quantity=total_balance
+#             )
+#             print(f"卖出{asset}成功！")
+# sell_all()
+
+
 def buy():
     # 获取账户余额
     balances = client.get_account()['balances']
@@ -50,8 +69,12 @@ def buy():
     for symbol in symbols:
         try:
             symbol_info = client.get_symbol_info(symbol)
-            precision = int(symbol_info['baseAssetPrecision'])
-
+            precision = int(symbol_info['quotePrecision'])
+            print(symbol, '下单精度', precision)
+            # 最小订单精度
+            min_order_value = symbol_info['filters'][1]['minQty']
+            min_order_precision = abs(int(math.log10(float(min_order_value))))
+            print(f"最小订单精度: {min_order_precision}")
             # 实时获取当前卖一和卖二价格
             depth = client.get_order_book(symbol=symbol, limit=5)
             ask_price_1 = float(depth['asks'][0][0])
@@ -63,8 +86,7 @@ def buy():
             if ask_price_1 <= target_price and ask_price_2/ask_price_1 <= 1.01:
                 # 下单
                 symbol = str(symbol)
-                quantity = round(100/target_price, precision)
-
+                quantity = round(11/target_price, min_order_precision)
                 order = client.order_market_buy(
                     symbol=symbol,
                     quantity=quantity
@@ -143,17 +165,15 @@ def check_pending_order():
 def sell():
     # 首先检查未成交的订单
     check_pending_order()
-
     # 查询已下单且未卖出的订单
     orders = collection_write_order.find({
         'status': 'pending',
         'sell_time': None
     })
-
     for order in orders:
         # 计算卖出时间
         sell_time = order['time'] + 86400
-
+        # sell_time = order['time']
         # 如果卖出时间已经到了，就执行卖出操作
         if int(time.time()) >= sell_time:
             # 卖出订单
@@ -199,14 +219,15 @@ def sell():
                 print("无法卖出订单:", order)
 
 
-# # 每5分钟执行一次买入操作
-# schedule.every(60).minutes.do(buy)
+# 每5分钟执行一次买入操作
+schedule.every(60).minutes.do(buy)
 
-# # 每分钟执行一次卖出操作
-# schedule.every(60).minutes.do(sell)
+# 每分钟执行一次卖出操作
+schedule.every(60).minutes.do(sell)
 
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
-buy()
-sell()
+while True:
+    schedule.run_pending()
+    time.sleep(1)
+
+# buy()
+# sell()
