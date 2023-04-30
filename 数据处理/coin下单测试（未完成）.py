@@ -16,8 +16,9 @@ from pymongo import MongoClient
 # 创建Binance客户端
 # client = Client(api_key, api_secret)
 # 币安的api配置(测试网)
-api_key = "VaDDXCX3aXp8tkpsUwUlnqAySkIlVPZPRTDp3yRbyIRDayvl1RZUHWW1z5RusW6k"
-api_secret = "qikrabwOmwfZEH74iLV5IJyTl6yXxdAUiqPFO2v3rKbNxEK3PccEEDWcqfem6Dvf"
+api_key = "xxnNHT4HKiOVVhR7E3KvL77aVaZgiH5xId8IQGhoZX6DNUUMBluAfl8XiE8WRdEh"
+api_secret = "ydYnPLRl2R2EUc2fH7GViSLU1ZMs4aciQb2yI6d3BqbLohghE2L8C4Usc54qKMHk"
+
 # 创建Binance客户端
 client = Client(api_key, api_secret, testnet=True)
 
@@ -55,7 +56,7 @@ def buy():
             if ask_price_1 <= target_price and ask_price_2/ask_price_1 <= 1.01:
                 # 下单
                 symbol = str(symbol)
-                quantity = 1
+                quantity = 0.000001
                 order = client.order_market_buy(
                     symbol=symbol,
                     quantity=quantity
