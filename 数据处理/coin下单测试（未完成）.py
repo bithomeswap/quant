@@ -30,13 +30,14 @@ name = "BTC"
 # # 获取数据并转换为DataFrame格式
 # data = pd.DataFrame(list(collection.find()))
 # print("数据读取成功")
-collection_write_order = db[f'{name}order']
-collection_write_sell = db[f'{name}sell']
+# collection_write_order = db[f'{name}order']
+# collection_write_sell = db[f'{name}sell']
 
 
 def buy():
     # 首先需要获取所有计划交易的标的，包含symbol、时间、价格、日交易量等等信息
     symbols = ['BTCUSDT', 'ETHUSDT']
+    print(symbols)
     # 添加异常计数器
     error_count = 0
     for symbol in symbols:
@@ -61,16 +62,16 @@ def buy():
                 )
                 print("下单信息：", order)
 
-                collection_write_order.insert_one({
-                    'orderId': order['orderId'],
-                    'time': int(time.time()),
-                    'symbol': symbol,
-                    'quantity': quantity,
-                    'buy_price': float(order['fills'][0]['price']),
-                    'sell_time': None,
-                    'sell_price': None,
-                    'status': 'pending'
-                })
+                # collection_write_order.insert_one({
+                #     'orderId': order['orderId'],
+                #     'time': int(time.time()),
+                #     'symbol': symbol,
+                #     'quantity': quantity,
+                #     'buy_price': float(order['fills'][0]['price']),
+                #     'sell_time': None,
+                #     'sell_price': None,
+                #     'status': 'pending'
+                # })
         except Exception as e:
             # 错误次数加1，并输出错误信息
             error_count += 1
@@ -81,120 +82,121 @@ def buy():
     print(f"共出现{error_count}次异常")
 
 
-def check_pending_order():
-    # 查询所有待卖的订单
-    orders = collection_write_order.find({
-        'status': 'pending',
-        'sell_time': {'$lt': int(time.time())}
-    })
+# def check_pending_order():
+#     # 查询所有待卖的订单
+#     orders = collection_write_order.find({
+#         'status': 'pending',
+#         'sell_time': {'$lt': int(time.time())}
+#     })
 
-    for order in orders:
-        print("检查未成交订单:", order)
-        # 下单继续卖出
-        sell_order = client.order_market_sell(
-            symbol=order['symbol'],
-            quantity=order['quantity']
-        )
+#     for order in orders:
+#         print("检查未成交订单:", order)
+#         # 下单继续卖出
+#         sell_order = client.order_market_sell(
+#             symbol=order['symbol'],
+#             quantity=order['quantity']
+#         )
 
-        if sell_order.get('fills'):
-            # 更新订单为完成，并插入数据
-            collection_write_order.update_one(
-                {'orderId': order['orderId']},
-                {'$set': {
-                    'sell_time': int(time.time()),
-                    'sell_price': float(sell_order['fills'][0]['price']),
-                    'status': 'done'
-                }}
-            )
+#         if sell_order.get('fills'):
+#             # 更新订单为完成，并插入数据
+#             collection_write_order.update_one(
+#                 {'orderId': order['orderId']},
+#                 {'$set': {
+#                     'sell_time': int(time.time()),
+#                     'sell_price': float(sell_order['fills'][0]['price']),
+#                     'status': 'done'
+#                 }}
+#             )
 
-            collection_write_sell.insert_one({
-                'orderId': sell_order['orderId'],
-                'time': int(time.time()),
-                'symbol': order['symbol'],
-                'quantity': order['quantity'],
-                'buy_price': order['buy_price'],
-                'sell_price': float(sell_order['fills'][0]['price'])
-            })
-            print("已卖出信息：", {
-                'orderId': sell_order['orderId'],
-                'time': int(time.time()),
-                'symbol': order['symbol'],
-                'quantity': order['quantity'],
-                'buy_price': order['buy_price'],
-                'sell_price': float(sell_order['fills'][0]['price'])
-            })
+#             collection_write_sell.insert_one({
+#                 'orderId': sell_order['orderId'],
+#                 'time': int(time.time()),
+#                 'symbol': order['symbol'],
+#                 'quantity': order['quantity'],
+#                 'buy_price': order['buy_price'],
+#                 'sell_price': float(sell_order['fills'][0]['price'])
+#             })
+#             print("已卖出信息：", {
+#                 'orderId': sell_order['orderId'],
+#                 'time': int(time.time()),
+#                 'symbol': order['symbol'],
+#                 'quantity': order['quantity'],
+#                 'buy_price': order['buy_price'],
+#                 'sell_price': float(sell_order['fills'][0]['price'])
+#             })
 
-            # 删除已下单信息
-            collection_write_order.delete_one({'orderId': order['orderId']})
-        else:
-            print("无法卖出订单:", order)
-
-
-def sell():
-    # 首先检查未成交的订单
-    check_pending_order()
-
-    # 查询已下单且未卖出的订单
-    orders = collection_write_order.find({
-        'status': 'pending',
-        'sell_time': None
-    })
-
-    for order in orders:
-        # 计算卖出时间
-        sell_time = order['time'] + 86400
-
-        # 如果卖出时间已经到了，就执行卖出操作
-        if int(time.time()) >= sell_time:
-            # 卖出订单
-            sell_order = client.order_market_sell(
-                symbol=order['symbol'],
-                quantity=order['quantity']
-            )
-            print("卖出信息：", sell_order)
-
-            if sell_order.get('fills'):
-                # 更新订单信息
-                collection_write_order.update_one(
-                    {'orderId': order['orderId']},
-                    {'$set': {
-                        'sell_time': int(time.time()),
-                        'sell_price': float(sell_order['fills'][0]['price']),
-                        'status': 'done'
-                    }}
-                )
-
-                # 插入卖出订单信息
-                collection_write_sell.insert_one({
-                    'orderId': sell_order['orderId'],
-                    'time': int(time.time()),
-                    'symbol': order['symbol'],
-                    'quantity': order['quantity'],
-                    'buy_price': order['buy_price'],
-                    'sell_price': float(sell_order['fills'][0]['price'])
-                })
-                print("已卖出信息：", {
-                    'orderId': sell_order['orderId'],
-                    'time': int(time.time()),
-                    'symbol': order['symbol'],
-                    'quantity': order['quantity'],
-                    'buy_price': order['buy_price'],
-                    'sell_price': float(sell_order['fills'][0]['price'])
-                })
-
-                # 删除已下单信息
-                collection_write_order.delete_one(
-                    {'orderId': order['orderId']})
-            else:
-                print("无法卖出订单:", order)
+#             # 删除已下单信息
+#             collection_write_order.delete_one({'orderId': order['orderId']})
+#         else:
+#             print("无法卖出订单:", order)
 
 
-# 每5分钟执行一次买入操作
-schedule.every(60).minutes.do(buy)
+# def sell():
+#     # 首先检查未成交的订单
+#     check_pending_order()
 
-# 每分钟执行一次卖出操作
-schedule.every(60).minutes.do(sell)
+#     # 查询已下单且未卖出的订单
+#     orders = collection_write_order.find({
+#         'status': 'pending',
+#         'sell_time': None
+#     })
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+#     for order in orders:
+#         # 计算卖出时间
+#         sell_time = order['time'] + 86400
+
+#         # 如果卖出时间已经到了，就执行卖出操作
+#         if int(time.time()) >= sell_time:
+#             # 卖出订单
+#             sell_order = client.order_market_sell(
+#                 symbol=order['symbol'],
+#                 quantity=order['quantity']
+#             )
+#             print("卖出信息：", sell_order)
+
+#             if sell_order.get('fills'):
+#                 # 更新订单信息
+#                 collection_write_order.update_one(
+#                     {'orderId': order['orderId']},
+#                     {'$set': {
+#                         'sell_time': int(time.time()),
+#                         'sell_price': float(sell_order['fills'][0]['price']),
+#                         'status': 'done'
+#                     }}
+#                 )
+
+#                 # 插入卖出订单信息
+#                 collection_write_sell.insert_one({
+#                     'orderId': sell_order['orderId'],
+#                     'time': int(time.time()),
+#                     'symbol': order['symbol'],
+#                     'quantity': order['quantity'],
+#                     'buy_price': order['buy_price'],
+#                     'sell_price': float(sell_order['fills'][0]['price'])
+#                 })
+#                 print("已卖出信息：", {
+#                     'orderId': sell_order['orderId'],
+#                     'time': int(time.time()),
+#                     'symbol': order['symbol'],
+#                     'quantity': order['quantity'],
+#                     'buy_price': order['buy_price'],
+#                     'sell_price': float(sell_order['fills'][0]['price'])
+#                 })
+
+#                 # 删除已下单信息
+#                 collection_write_order.delete_one(
+#                     {'orderId': order['orderId']})
+#             else:
+#                 print("无法卖出订单:", order)
+
+
+# # 每5分钟执行一次买入操作
+# schedule.every(60).minutes.do(buy)
+
+# # 每分钟执行一次卖出操作
+# schedule.every(60).minutes.do(sell)
+
+# while True:
+    # schedule.run_pending()
+    # time.sleep(1)
+buy()
