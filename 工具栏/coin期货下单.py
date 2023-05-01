@@ -82,36 +82,34 @@ def buy():
                     symbol_info = symbol_info
                     break
             # 针对期货市场的精度设置
-            # precision = int(symbol_info['quantityPrecision'])
-            # print(symbol, '数量精度', precision)
-            # price_precision = int(symbol_info['pricePrecision'])
-            # print(symbol, '价格精度', price_precision)
-
-            # {'stepSize': '0.001', 'filterType': 'LOT_SIZE', 'maxQty': '1000', 'minQty': '0.001'}：数量限制条件，包括最小数量、最大数量、数量步长等信息。
-            # 最小订单精度
-            min_order_value = symbol_info['filters'][1]['minQty']
-            min_order_precision = abs(int(math.log10(float(min_order_value))))
-            print(f'{symbol}永续合约最小下单精度：{min_order_precision}')
+            precision = int(symbol_info['quantityPrecision'])
+            print(symbol, '数量精度', precision)
+            price_precision = int(symbol_info['pricePrecision'])
+            print(symbol, '价格精度', price_precision)
             # 实时获取当前卖一和卖二价格
             depth = client.futures_order_book(symbol=symbol, limit=5)
             ask_price_1 = float(depth['asks'][0][0])
-            ask_price_2 = float(depth['asks'][1][0])
             bid_price_1 = float(depth['bids'][0][0])
-            bid_price_2 = float(depth['bids'][1][0])
             print(depth)
             # 计算买卖均价
             target_price = (ask_price_1+bid_price_1)/2
+            buy_limit_price = round(
+                ask_price_1 - pow(0.1, price_precision), price_precision)
+            sell_limit_price = round(
+                bid_price_1 + pow(0.1, price_precision), price_precision)
+            print('最优卖价', sell_limit_price, '最优买价', buy_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
-            if bid_price_1/bid_price_2 >= 0.99 and ask_price_2/ask_price_1 <= 1.01:
+            if 1-bid_price_1/target_price >= 0.001 or ask_price_1/target_price-1 <= 0.001:
                 # 下单
                 symbol = str(symbol)
-                quantity = round(15/target_price, min_order_precision)
-
+                quantity = round(15/buy_limit_price, precision)
                 order = client.futures_create_order(
                     symbol=symbol,
                     side=Client.SIDE_BUY,
-                    type=Client.ORDER_TYPE_MARKET,
-                    quantity=quantity
+                    type=Client.ORDER_TYPE_LIMIT,
+                    quantity=quantity,
+                    price=buy_limit_price,
+                    timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                 )
                 print("下单信息：", order)
 
@@ -132,6 +130,47 @@ def buy():
             continue
     # 输出异常次数
     print(f"共出现{error_count}次异常")
+    # 暂停1秒，等待下次交易
+    time.sleep(1)
+    # 撤销未成交订单
+    for order in collection_write_order.find({'status': 'pending'}):
+        symbol = order['symbol']
+        order_id = order['orderId']
+        try:
+            # 撤销订单
+            result = client.futures_cancel_order(
+                symbol=symbol, orderId=order_id)
+            print(result)
+            # 更新数据库中的订单状态
+            collection_write_order.update_one(
+                {'orderId': order_id},
+                {'$set': {'status': 'canceled'}}
+            )
+        except Exception as e:
+            print(f'撤销订单{order_id}失败：{e}')
+
+    # 获取当前持仓状态，并更新数据库中的订单信息
+    positions = client.futures_position_information()
+    for order in collection_write_order.find({'status': 'pending'}):
+        symbol = order['symbol']
+        for position in positions:
+            if position['symbol'] == symbol:
+                if float(position['positionAmt']) == 0:
+                    # 如果当前持仓为0，则说明该订单已成交并卖出完成
+                    order_id = order['orderId']
+                    sell_price = round(float(position['entryPrice']), 2)
+                    sell_time = int(time.time())
+                    # 更新数据库中的订单状态和售出价格
+                    collection_write_order.update_one(
+                        {'orderId': order_id},
+                        {'$set': {'status': 'sold', 'sell_price': sell_price,
+                                    'sell_time': sell_time}}
+                    )
+                    print(f"订单{order_id}已出售，售出价为{sell_price}")
+                    break
+                else:
+                    # 如果当前持仓不为0，则说明该订单还未成交或者部分成交
+                    break
 
 
 def check_pending_order():

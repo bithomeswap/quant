@@ -13,21 +13,6 @@ from pymongo import MongoClient
 # 针对波场的-4131是市场交易量过小时下单可能导致市场偏离的市场保护机制
 # 卖出和买入的价格是0，说明订单尚未成交
 
-# 针对期货市场的精度设置
-# precision = int(symbol_info['quantityPrecision'])
-# print(symbol, '数量精度', precision)
-# price_precision = int(symbol_info['pricePrecision'])
-# print(symbol, '价格精度', price_precision)
-
-# 针对现货市场的精度设置
-# price_precision = int(symbol_info['quotePrecision'])
-# print(symbol, '价格精度', price_precision)
-# precision = int(symbol_info['quoteAssetPrecision'])
-# print(symbol, '报价资产数量精度', precision)
-# precisionbase = int(symbol_info['baseAssetPrecision'])
-# print(symbol, '基础资产数量精度', precision)
-# 基础资产的价格和交易量限制
-
 # 函数说明
 # get_exchange_info()：获取当前交易对信息，包括交易对精度、限价单最大值、挂单最小值等。
 # get_order_book(symbol, limit=100)：获取指定交易对的深度信息，包括卖五、买五等信息。
@@ -115,9 +100,9 @@ def buy():
             # 针对现货市场
             price_precision = int(symbol_info['quotePrecision'])
             print(symbol, '价格精度', price_precision)
-            precision = int(symbol_info['quoteAssetPrecision'])
-            print(symbol, '报价资产数量精度', precision)
-            precisionbase = int(symbol_info['baseAssetPrecision'])
+            precisiontarget = int(symbol_info['quoteAssetPrecision'])
+            print(symbol, '报价资产数量精度', precisiontarget)
+            precision = int(symbol_info['baseAssetPrecision'])
             print(symbol, '基础资产数量精度', precision)
             # 基础资产的价格和交易量限制
 
@@ -128,21 +113,29 @@ def buy():
             # 实时获取当前卖一和卖二价格
             depth = client.get_order_book(symbol=symbol, limit=5)
             ask_price_1 = float(depth['asks'][0][0])
-            ask_price_2 = float(depth['asks'][1][0])
             bid_price_1 = float(depth['bids'][0][0])
-            bid_price_2 = float(depth['bids'][1][0])
             print(depth)
             # 计算买卖均价
             target_price = (ask_price_1+bid_price_1)/2
+            buy_limit_price = round(
+                ask_price_1 - pow(0.1, price_precision), price_precision)
+            sell_limit_price = round(
+                bid_price_1 + pow(0.1, price_precision), price_precision)
+            print('最优卖价', sell_limit_price, '最优买价', buy_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
-            if bid_price_1/bid_price_2 >= 0.99 and ask_price_2/ask_price_1 <= 1.01:
+            if 1-bid_price_1/target_price >= 0.001 or ask_price_1/target_price-1 <= 0.001:
                 # 下单
                 symbol = str(symbol)
-                quantity = round(11/target_price, min_order_precision)
-                order = client.order_market_buy(
+                quantity = round(15/buy_limit_price, precision)
+                # order = client.order_market_buy(symbol=symbol,quantity=quantity)# 市价成交
+                order = client.create_order(
                     symbol=symbol,
-                    quantity=quantity
-                )
+                    side=Client.SIDE_BUY,
+                    type=Client.ORDER_TYPE_LIMIT,
+                    quantity=quantity,
+                    price=buy_limit_price,
+                    timeInForce="GTC"# “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                    )
                 print("下单信息：", order)
 
                 collection_write_order.insert_one({
@@ -162,6 +155,52 @@ def buy():
             continue
     # 输出异常次数
     print(f"共出现{error_count}次异常")
+    # 暂停1秒，等待下次交易
+    time.sleep(1)
+
+
+    # # 撤销未成交订单
+    # for order in collection_write_order.find({'status': 'pending'}):
+    #     symbol = order['symbol']
+    #     order_id = order['orderId']
+    #     try:
+    #         # 撤销订单
+    #         result = client.futures_cancel_order(
+    #             symbol=symbol, orderId=order_id)
+    #         print(f"订单{order_id}已撤销。")
+    #         # 更新数据库中的订单状态
+    #         collection_write_order.update_one(
+    #             {'orderId': order_id},
+    #             {'$set': {'status': 'canceled'}}
+    #         )
+    #     except Exception as e:
+    #         print(f'撤销订单{order_id}失败：{e}')
+
+    # # 获取当前持仓状态，并更新数据库中的订单信息
+    # positions = client.futures_position_information()
+    # for order in collection_write_order.find({'status': 'pending'}):
+    #     symbol = order['symbol']
+    #     for position in positions:
+    #         if position['symbol'] == symbol:
+    #             if float(position['positionAmt']) == 0:
+    #                 # 如果当前持仓为0，则说明该订单已成交并卖出完成
+    #                 order_id = order['orderId']
+    #                 sell_price = round(float(position['entryPrice']), 2)
+    #                 sell_time = int(time.time())
+    #                 # 更新数据库中的订单状态和售出价格
+    #                 collection_write_order.update_one(
+    #                     {'orderId': order_id},
+    #                     {'$set': {'status': 'sold', 'sell_price': sell_price,
+    #                               'sell_time': sell_time}}
+    #                 )
+    #                 print(f"订单{order_id}已出售，售出价为{sell_price}")
+    #                 break
+    #             else:
+    #                 # 如果当前持仓不为0，则说明该订单还未成交或者部分成交
+    #                 break
+
+    # # 暂停10秒，等待下次交易
+    # time.sleep(10)
 
 
 def check_pending_order():
@@ -209,7 +248,8 @@ def check_pending_order():
                 })
 
                 # 删除已下单信息
-                collection_write_order.delete_one({'orderId': order['orderId']})
+                collection_write_order.delete_one(
+                    {'orderId': order['orderId']})
             else:
                 print("无法卖出订单:", order)
     # 函数代码
