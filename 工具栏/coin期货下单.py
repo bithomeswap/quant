@@ -50,26 +50,26 @@ symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 symbol_dict = client.futures_exchange_info()
 
 
-def sell_all():  # 市价平仓所有持仓
-    for symbol in symbols:    # 获取当前持仓信息
-        position = client.futures_position_information(symbol=symbol)
-        # 遍历所有持仓并按相反方向下单平仓
-        for p in position:
-            if float(p['positionAmt']) > 0:
-                side = 'SELL'
-            elif float(p['positionAmt']) < 0:
-                side = 'BUY'
-            else:
-                continue
-            qty = abs(float(p['positionAmt']))
-            client.futures_create_order(
-                symbol=symbol,
-                side=side,
-                type='MARKET',
-                quantity=qty
-            )
-            print(f"平仓{symbol}成功！")
-sell_all()
+# def sell_all():  # 市价平仓所有持仓
+#     for symbol in symbols:    # 获取当前持仓信息
+#         position = client.futures_position_information(symbol=symbol)
+#         # 遍历所有持仓并按相反方向下单平仓
+#         for p in position:
+#             if float(p['positionAmt']) > 0:
+#                 side = 'SELL'
+#             elif float(p['positionAmt']) < 0:
+#                 side = 'BUY'
+#             else:
+#                 continue
+#             qty = abs(float(p['positionAmt']))
+#             client.futures_create_order(
+#                 symbol=symbol,
+#                 side=side,
+#                 type='MARKET',
+#                 quantity=qty
+#             )
+#             print(f"平仓{symbol}成功！")
+# sell_all()
 
 
 balances = client.futures_account_balance()  # 获取永续合约账户资产余额
@@ -164,28 +164,51 @@ def buy():
     time.sleep(1)
 
 
-def check_pending_order():
+def sell():
+    # 首先更新订单状态
     try:
         for symbol in symbols:
-            # 获取未完成订单
-            open_orders = client.futures_get_open_orders(symbol=symbol)
-            print('未完成', open_orders)
+            # 获取当前未完成的订单
+            open_orders = client.get_open_orders(symbol=symbol)
+            # 遍历未完成的订单
+            for order in open_orders:
+                order_id = order['orderId']
+                buy_price = float(order['price'])
+                buy_quantity = float(order['executedQty'])
+                # 已成交订单,不看总下达订单
+                collection_write_order.update_one(
+                    {'orderId': order_id},
+                    {'$set': {
+                        'status': 'uncompleted',
+                        'buy_price': buy_price,
+                        'buy_quantity': buy_quantity
+                    }}
+                )
+                print('当前挂单更新', order)
             # 获取当前已完成的订单（1小时内）
             start_time = int((datetime.datetime.now() -
-                             datetime.timedelta(hours=1)).timestamp() * 1000)
-            all_orders = client.futures_get_all_orders(
+                              datetime.timedelta(hours=1)).timestamp() * 1000)
+            all_orders = client.get_all_orders(
                 symbol=symbol, startTime=start_time)
-            print('历史成交', all_orders)
-
+            # 遍历已完成的订单
+            for order in all_orders:
+                order_id = order['orderId']
+                buy_price = float(order['price'])
+                buy_quantity = float(order['executedQty'])
+                # 已成交订单,不看总下达订单
+                collection_write_order.update_one(
+                    {'orderId': order_id},
+                    {'$set': {
+                        'status': 'completed',
+                        'buy_price': buy_price,
+                        'buy_quantity': buy_quantity
+                    }}
+                )
+                print('历史成交订单更新', order)
     # 函数代码
     except Exception as e:
         print(f"发生异常：{e}")
-
-
-def sell():
     try:
-        # 首先检查未成交的订单
-        check_pending_order()
         print('执行卖出计划')
         # 查询已下单且未卖出的订单
         orders = collection_write_order.find({
