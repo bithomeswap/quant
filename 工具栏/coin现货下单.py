@@ -38,8 +38,8 @@ from pymongo import MongoClient
 # client = Client(api_key, api_secret)
 
 # 币安的api配置(现货测试网)
-api_key = "xxnNHT4HKiOVVhR7E3KvL77aVaZgiH5xId8IQGhoZX6DNUUMBluAfl8XiE8WRdEh"
-api_secret = "ydYnPLRl2R2EUc2fH7GViSLU1ZMs4aciQb2yI6d3BqbLohghE2L8C4Usc54qKMHk"
+api_key = "ERqD8OaGhyPEhZciJs8XZgy7d83x1cyF7U3s2TYw0wZR2SCZMNmf8MzZ8TYzuIzT"
+api_secret = "CF2XpFnKKrasCiyZ38D3duMLqFseanJ6iRbmXmrDvqNFlIWJXZbhrlvha5kGxFjr"
 # 创建Binance客户端
 client = Client(api_key, api_secret, testnet=True)
 
@@ -60,8 +60,7 @@ name = "BTC"
 # data = pd.DataFrame(list(collection.find()))
 
 # print("数据读取成功")
-collection_write_order = db[f'{name}order']
-collection_write_sell = db[f'{name}sell']
+collection_write = db[f'{name}order']
 
 # 获取计划交易的标的
 symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
@@ -125,7 +124,7 @@ def buy():
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-bid_price_1/target_price >= 0.001 or ask_price_1/target_price-1 <= 0.001:
                 # 下单
-                symbol = str(symbol)
+                symbol = symbol
                 quantity = round(
                     round(12/buy_limit_price/stepSize) * stepSize, precision)
                 # order = client.order_market_buy(symbol=symbol,quantity=quantity)# 市价成交
@@ -133,26 +132,26 @@ def buy():
                     symbol=symbol,
                     side=Client.SIDE_BUY,
                     type=Client.ORDER_TYPE_LIMIT,
-                    quantity=quantity,
-                    price=buy_limit_price,
+                    quantity=float(quantity),
+                    price=float(buy_limit_price),
                     timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                 )
                 print("下单信息：", order)
-                collection_write_order.insert_one({
-                    'orderId': order['orderId'],
+                collection_write.insert_one({
+                    'orderId': int(order['orderId']),
                     'symbol': symbol,
                     'time': int(time.time()),
-                    'quantity': order['origQty'],
+                    'quantity': float(order['origQty']),
                     'buy_quantity': None,
-                    'buy_price': order['price'],
+                    'buy_price': float(order['price']),
                     'sell_time': None,
                     'sell_quantity': None,
                     'sell_price': None,
                     'status': 'pending',
-                    'precision': precision,
-                    'price_precision': price_precision,
-                    'tickSize': tickSize,
-                    'stepSize': stepSize,
+                    'precision': int(precision),
+                    'price_precision': int(price_precision),
+                    'tickSize': float(tickSize),
+                    'stepSize': float(stepSize),
                 })
         except Exception as e:
             # 错误次数加1，并输出错误信息
@@ -164,7 +163,7 @@ def buy():
     # 暂停1秒，等待成交
     time.sleep(1)
     # 撤销未成交订单
-    for order in collection_write_order.find({'status': 'pending'}):
+    for order in collection_write.find({'status': 'pending'}):
         symbol = order['symbol']
         order_id = order['orderId']
         try:
@@ -191,16 +190,16 @@ def sell():
                 order_id = order['orderId']
                 buy_price = float(order['price'])
                 buy_quantity = float(order['executedQty'])
-                # 已成交订单,不看总下达订单
-                collection_write_order.update_one(
+                # 已成交订单
+                collection_write.update_one(
                     {'orderId': order_id},
                     {'$set': {
-                        'status': 'uncompleted',
-                        'buy_price': buy_price,
-                        'buy_quantity': buy_quantity
+                        'status': order['status'],
+                        'buy_price': float(buy_price),
+                        'buy_quantity': float(buy_quantity)
                     }}
                 )
-                print('当前挂单更新', order)
+                print('历史成交订单更新', order)
             # 获取当前已完成的订单（1小时内）
             start_time = int((datetime.datetime.now() -
                               datetime.timedelta(hours=1)).timestamp() * 1000)
@@ -211,13 +210,13 @@ def sell():
                 order_id = order['orderId']
                 buy_price = float(order['price'])
                 buy_quantity = float(order['executedQty'])
-                # 已成交订单,不看总下达订单
-                collection_write_order.update_one(
+                # 已成交订单
+                collection_write.update_one(
                     {'orderId': order_id},
                     {'$set': {
-                        'status': 'completed',
-                        'buy_price': buy_price,
-                        'buy_quantity': buy_quantity
+                        'status': order['status'],
+                        'buy_price': float(buy_price),
+                        'buy_quantity': float(buy_quantity)
                     }}
                 )
                 print('历史成交订单更新', order)
@@ -226,7 +225,7 @@ def sell():
     print('订单卖出')
     try:
         # 查询已下单且未卖出的订单
-        orders = list(collection_write_order.find())
+        orders = list(collection_write.find())
         for order in orders:
             symbol = order['symbol']
             symbol_info = client.get_symbol_info(symbol)
@@ -258,9 +257,7 @@ def sell():
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-bid_price_1/target_price >= 0.001 or ask_price_1/target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
-                if order['buy_quantity'] != 0:
-                    # if order['status'] != 'end':
-
+                if (order['status'] != 'end') & (order['buy_quantity'] != 0) & (order['buy_quantity'] != order['sell_quantity']):
                     # 计算卖出时间
                     # sell_time = order['time'] + 86400
                     sell_time = order['time']
@@ -271,40 +268,50 @@ def sell():
                             symbol=symbol,
                             side=Client.SIDE_SELL,
                             type=Client.ORDER_TYPE_LIMIT,
-                            quantity=order['buy_quantity'],
-                            price=ask_price_1,
-                            timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                            quantity=float(order['buy_quantity']),
+                            price=bid_price_1,
+                            timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                         )
                         print("卖出信息：", sell_order)
                     # 如果卖出成功，就更新数据集合的状态为已平仓
                     if sell_order['status'] == 'FILLED':
                         print(order, '卖出成功')
-                        collection_write_order.update_one(
+                        collection_write.update_one(
                             {'orderId': order_id},
                             {'$set': {
                                 'status': 'end',
-                                'buy_price': buy_price,
-                                'buy_quantity': buy_quantity
+                                'sell_quantity': float(order['buy_quantity']),
+                                'sell_price': bid_price_1,
                             }}
                         )
                     else:
                         print(order, '卖出失败')
-
     except Exception as e:
         print(f"发生异常：{e}")
-# 这里是遍历collection_write_order数据集合中每一个id,# 计算卖出时间为sell_time = order['time'] + 86400
-# 如果其在collection_write_sell数据集合中的卖出数量与买入数量不相等,则下单全部成交或者不成交那种,然后根据返回的数据更新collection_write_sell数据集合
-# 如果其在collection_write_sell数据集合中的卖出数量与买入数量相等,则标记此订单已经平仓.
+
+
+def clearn():
+    limit = 10000
+    if collection_write.count_documents({}) >= limit:
+        oldest_data = collection_write.find().sort([('日期', 1)]).limit(
+            collection_write.count_documents({})-limit)
+        ids_to_delete = [data['_id'] for data in oldest_data]
+        collection_write.delete_many({'_id': {'$in': ids_to_delete}})
+    print('数据清理成功')
 
 
 buy()
 sell()
+clearn()
 
 # 每5分钟执行一次买入操作
 schedule.every(60).minutes.do(buy)
 
 # 每分钟执行一次卖出操作
 schedule.every(60).minutes.do(sell)
+
+# 每小时执行一次清理操作
+schedule.every(3600).minutes.do(sell)
 
 while True:
     schedule.run_pending()
