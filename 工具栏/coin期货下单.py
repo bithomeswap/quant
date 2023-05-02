@@ -49,8 +49,30 @@ symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 
 symbol_dict = client.futures_exchange_info()
 
+
+def sell_all():  # 市价平仓所有持仓
+    for symbol in symbols:    # 获取当前持仓信息
+        position = client.futures_position_information(symbol=symbol)
+        # 遍历所有持仓并按相反方向下单平仓
+        for p in position:
+            if float(p['positionAmt']) > 0:
+                side = 'SELL'
+            elif float(p['positionAmt']) < 0:
+                side = 'BUY'
+            else:
+                continue
+            qty = abs(float(p['positionAmt']))
+            client.futures_create_order(
+                symbol=symbol,
+                side=side,
+                type='MARKET',
+                quantity=qty
+            )
+            print(f"平仓{symbol}成功！")
+sell_all()
+
+
 balances = client.futures_account_balance()  # 获取永续合约账户资产余额
-# 获取账户余额
 for balance in balances:
     if balance['asset'] == 'USDT':
         usdt_balance = balance['balance']
@@ -154,54 +176,7 @@ def check_pending_order():
             all_orders = client.futures_get_all_orders(
                 symbol=symbol, startTime=start_time)
             print('历史成交', all_orders)
-            # #  查询所有待卖的订单
-            # orders = list(collection_write_order.find({
-            #     'status': 'pending',
-            # }))
-            # print("检查待卖订单:", orders)
-            # for order in orders:
-            #     print("检查未成交订单:", order)
-            #     # 下单继续卖出
-            #     sell_order = client.futures_create_order(
-            #         symbol=order['symbol'],
-            #         side=Client.SIDE_SELL,
-            #         type=Client.ORDER_TYPE_MARKET,
-            #         quantity=order['quantity']
-            #     )
 
-            #     if sell_order.get('avgPrice'):
-            #         # 更新订单为完成，并插入数据
-            #         collection_write_order.update_one(
-            #             {'orderId': order['orderId']},
-            #             {'$set': {
-            #                 'sell_time': int(time.time()),
-            #                 'sell_price': float(sell_order['avgPrice']),
-            #                 'status': 'done'
-            #             }}
-            #         )
-
-            #         collection_write_sell.insert_one({
-            #             'orderId': sell_order['orderId'],
-            #             'time': int(time.time()),
-            #             'symbol': order['symbol'],
-            #             'quantity': order['quantity'],
-            #             'buy_price': order['buy_price'],
-            #             'sell_price': float(sell_order['avgPrice'])
-            #         })
-            #         print("已卖出信息：", {
-            #             'orderId': sell_order['orderId'],
-            #             'time': int(time.time()),
-            #             'symbol': order['symbol'],
-            #             'quantity': order['quantity'],
-            #             'buy_price': order['buy_price'],
-            #             'sell_price': float(sell_order['avgPrice'])
-            #         })
-
-            #         # 删除已下单信息
-            #         collection_write_order.delete_one(
-            #             {'orderId': order['orderId']})
-            #     else:
-            #         print("无法卖出订单:", order)
     # 函数代码
     except Exception as e:
         print(f"发生异常：{e}")
@@ -232,40 +207,40 @@ def sell():
                 )
                 print("卖出信息：", sell_order)
 
-                if sell_order.get('avgPrice'):
-                    # 更新订单信息
-                    collection_write_order.update_one(
-                        {'orderId': order['orderId']},
-                        {'$set': {
-                            'sell_time': int(time.time()),
-                            'sell_price': float(sell_order['avgPrice']),
-                            'status': 'done'
-                        }}
-                    )
+                # if sell_order.get('avgPrice'):
+                #     # 更新订单信息
+                #     collection_write_order.update_one(
+                #         {'orderId': order['orderId']},
+                #         {'$set': {
+                #             'sell_time': int(time.time()),
+                #             'sell_price': float(sell_order['avgPrice']),
+                #             'status': 'done'
+                #         }}
+                #     )
 
-                    # 插入卖出订单信息
-                    collection_write_sell.insert_one({
-                        'orderId': sell_order['orderId'],
-                        'time': int(time.time()),
-                        'symbol': order['symbol'],
-                        'quantity': order['quantity'],
-                        'buy_price': order['buy_price'],
-                        'sell_price': float(sell_order['avgPrice'])
-                    })
-                    print("已卖出信息：", {
-                        'orderId': sell_order['orderId'],
-                        'time': int(time.time()),
-                        'symbol': order['symbol'],
-                        'quantity': order['quantity'],
-                        'buy_price': order['buy_price'],
-                        'sell_price': float(sell_order['avgPrice'])
-                    })
+                #     # 插入卖出订单信息
+                #     collection_write_sell.insert_one({
+                #         'orderId': sell_order['orderId'],
+                #         'time': int(time.time()),
+                #         'symbol': order['symbol'],
+                #         'quantity': order['quantity'],
+                #         'buy_price': order['buy_price'],
+                #         'sell_price': float(sell_order['avgPrice'])
+                #     })
+                #     print("已卖出信息：", {
+                #         'orderId': sell_order['orderId'],
+                #         'time': int(time.time()),
+                #         'symbol': order['symbol'],
+                #         'quantity': order['quantity'],
+                #         'buy_price': order['buy_price'],
+                #         'sell_price': float(sell_order['avgPrice'])
+                #     })
 
-                    # 删除已下单信息
-                    collection_write_order.delete_one(
-                        {'orderId': order['orderId']})
-                else:
-                    print("无法卖出订单:", order)
+                #     # 删除已下单信息
+                #     collection_write_order.delete_one(
+                #         {'orderId': order['orderId']})
+                # else:
+                #     print("无法卖出订单:", order)
     # 函数代码
     except Exception as e:
         print(f"发生异常：{e}")

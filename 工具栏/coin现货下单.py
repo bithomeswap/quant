@@ -85,14 +85,14 @@ symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 # sell_all()
 
 
-def buy():
-    # 获取账户余额
-    balances = client.get_account()['balances']
+balances = client.get_account()['balances']  # 获取现货账户资产余额
+for balance in balances:
+    if balance['asset'] == 'USDT':
+        usdt_balance = float(balance['free'])
+        print('USDT余额：', usdt_balance)
 
-    for balance in balances:
-        if balance['asset'] == 'USDT':
-            usdt_balance = float(balance['free'])
-            print('USDT余额：', usdt_balance)
+
+def buy():
     # 添加异常计数器
     error_count = 0
     for symbol in symbols:
@@ -142,9 +142,11 @@ def buy():
                     'orderId': order['orderId'],
                     'time': int(time.time()),
                     'symbol': symbol,
-                    'quantity': order['origQty'],
+                    'buy_time': None,
+                    'buy_quantity': order['origQty'],
                     'buy_price': order['price'],
                     'sell_time': None,
+                    'sell_quantity': None,
                     'sell_price': None,
                     'status': 'pending'
                 })
@@ -171,19 +173,32 @@ def buy():
     # 暂停1秒，等待撤单
     time.sleep(1)
 
+
 def check_pending_order():
     try:
         for symbol in symbols:
             # 获取当前未完成的订单
             open_orders = client.get_open_orders(symbol=symbol)
-            print('未完成',open_orders)
+            print('未完成', open_orders)
             # 获取当前已完成的订单（1小时内）
             start_time = int((datetime.datetime.now() -
                               datetime.timedelta(hours=1)).timestamp() * 1000)
             all_orders = client.get_all_orders(
                 symbol=symbol, startTime=start_time)
-            print('历史成交',all_orders)
-            # # 更新数据库中的订单状态
+            # 遍历已完成的订单
+            for order in all_orders:
+                order_id = order['orderId']
+                buy_price = float(order['price'])
+                buy_quantity = float(order['origQty'])
+                collection_write_order.update_one(
+                    {'orderId': order_id},
+                    {'$set': {
+                        'status': 'completed',
+                        'buy_price': buy_price,
+                        'buy_quantity': buy_quantity
+                    }}
+                )
+                print('历史成交订单更新', order)
             # collection_write_order.update_one(
             #     {'orderId': order_id},
             #     {'$set': {'status': 'canceled'}}
@@ -199,14 +214,11 @@ def sell():
         check_pending_order()
         print('执行卖出计划')
         # 查询已下单且未卖出的订单
-        orders = collection_write_order.find({
-            'status': 'pending',
-            'sell_time': None
-        })
+        orders = list(collection_write_order.find())
         for order in orders:
             # 计算卖出时间
-            sell_time = order['time'] + 86400
-            # sell_time = order['time']
+            # sell_time = order['time'] + 86400
+            sell_time = order['time']
             # 如果卖出时间已经到了，就执行卖出操作
             if int(time.time()) >= sell_time:
                 # 卖出订单
@@ -216,43 +228,12 @@ def sell():
                 )
                 print("卖出信息：", sell_order)
 
-                if sell_order.get('fills'):
-                    # 更新订单信息
-                    collection_write_order.update_one(
-                        {'orderId': order['orderId']},
-                        {'$set': {
-                            'sell_time': int(time.time()),
-                            'sell_price': float(sell_order['fills'][0]['price']),
-                            'status': 'done'
-                        }}
-                    )
-
-                    # 插入卖出订单信息
-                    collection_write_sell.insert_one({
-                        'orderId': sell_order['orderId'],
-                        'time': int(time.time()),
-                        'symbol': order['symbol'],
-                        'quantity': order['quantity'],
-                        'buy_price': order['buy_price'],
-                        'sell_price': float(sell_order['fills'][0]['price'])
-                    })
-                    print("已卖出信息：", {
-                        'orderId': sell_order['orderId'],
-                        'time': int(time.time()),
-                        'symbol': order['symbol'],
-                        'quantity': order['quantity'],
-                        'buy_price': order['buy_price'],
-                        'sell_price': float(sell_order['fills'][0]['price'])
-                    })
-
-                    # 删除已下单信息
-                    collection_write_order.delete_one(
-                        {'orderId': order['orderId']})
-                else:
-                    print("无法卖出订单:", order)
     # 函数代码
     except Exception as e:
         print(f"发生异常：{e}")
+# 这里是遍历collection_write_order数据集合中每一个id,# 计算卖出时间为sell_time = order['time'] + 86400
+# 如果其在collection_write_sell数据集合中的卖出数量与买入数量不相等,则下单全部成交或者不成交那种,然后根据返回的数据更新collection_write_sell数据集合
+# 如果其在collection_write_sell数据集合中的卖出数量与买入数量相等,则标记此订单已经平仓.
 
 
 buy()
