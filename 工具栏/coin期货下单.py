@@ -126,7 +126,7 @@ def buy():
                     quantity=float(quantity),
                     price=float(buy_limit_price),
                     timeInForce="GTC",  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-                    leverage=2,  # 这里设置杠杆倍数为 1 倍
+                    leverage=1,  # 这里设置杠杆倍数为 1 倍
                     isIsolated=False  # 这里设置使用全仓模式
                 )
                 print("下单信息：", order)
@@ -271,7 +271,7 @@ def sell():
                         quantity=float(order['buy_quantity']),
                         price=bid_price_1,
                         timeInForce="GTC",  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-                        leverage=2,  # 这里设置杠杆倍数为 1 倍
+                        leverage=1,  # 这里设置杠杆倍数为 1 倍
                         isIsolated=False  # 这里设置使用全仓模式
                     )
                     print("卖出信息：", sell_order)
