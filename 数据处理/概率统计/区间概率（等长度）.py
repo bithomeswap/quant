@@ -47,7 +47,7 @@ step = (right - left) / a
 for i in range(a):
     ranges.append((left + i * step, left + (i + 1) * step))
 result_dicts = []
-for n in range(1, 11):
+for n in range(1, 10):
     for rank_range in ranges:
         sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) & (
             df[f'{mubiao}'] <= rank_range[1])]
@@ -79,7 +79,7 @@ for n in range(1, 11):
 
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
-for n in range(1, 11):
+for n in range(1, 10):
     cols_to_shift = [f'{n}日统计次数（已排除涨停）',
                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))

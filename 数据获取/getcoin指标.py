@@ -11,7 +11,11 @@ from pymongo import MongoClient
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-name = "COIN"
+# 设置参数
+name = 'COIN'
+# name = 'STOCK'
+# name = 'BTC'
+# name = '指数'
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
 data = pd.DataFrame(list(collection.find()))
@@ -19,9 +23,9 @@ print("数据读取成功")
 
 
 def get_technical_indicators(df):  # 定义计算技术指标的函数
-    # 过滤最高价和最低价为负值的数据
-    df = df.loc[(df['最高'] >= 0) & (df['最低'] >= 0)]
-    df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+    # 删除最高价和最低价为负值的数据
+    df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
+    df.sort_values(by='日期', inplace=True)    # 以日期列为索引,避免计算错误
 
     # 计算昨日振幅
     df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
@@ -33,56 +37,63 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 定义开盘收盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-    df = df.dropna()  # 删除缺失值，避免无效数据的干扰；
-
+    # df = df.dropna()  # 删除缺失值，避免无效数据的干扰；
     for n in range(2, 11):
-        # 计算n周期的RSI值
-        df[f'{n}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=n)
-        df[f'{n*10}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=n*10)
-
-        # n等于30时也许比较好
-        df[f'SMA{n}开盘比值'] = df['开盘'] / \
-            talib.MA(df['开盘'].values, timeperiod=n, matype=0)
-        df[f'SMA{n}昨日成交额比值'] = df['昨日成交额'] / \
-            talib.MA(df['昨日成交额'].values, timeperiod=n, matype=0)
-        df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
-            talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
-        df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
-            talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
-
-        df[f'{n}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n).max()
-        df[f'{n}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n).min()
-        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
-        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
-
-        df[f'前{n}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n}昨日成交额比值']
-        df[f'前{n*10}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n*10}昨日成交额比值']
-
+        # 计算RSI值
+        df = pd.concat(
+            [df, talib.RSI(df['开盘'], timeperiod=n).rename(f'{n}周期开盘rsi')], axis=1)
+        df = pd.concat([df, talib.RSI(df['开盘'], timeperiod=n *
+                       10).rename(f'{n*10}周期开盘rsi')], axis=1)
+        # 计算各种SMA比值
+        df = pd.concat([df, (df['开盘'] / talib.MA(df['开盘'].values,
+                       timeperiod=n, matype=0)).rename(f'SMA{n}开盘比值')], axis=1)
+        df = pd.concat([df, (df['开盘'] / talib.MA(df['开盘'].values,
+                       timeperiod=n*10, matype=0)).rename(f'SMA{n*10}开盘比值')], axis=1)
+        df = pd.concat([df, (df['昨日成交额'] / talib.MA(df['昨日成交额'].values,
+                       timeperiod=n, matype=0)).rename(f'SMA{n}昨日成交额比值')], axis=1)
+        df = pd.concat([df, (df['昨日成交额'] / talib.MA(df['昨日成交额'].values,
+                       timeperiod=n*10, matype=0)).rename(f'SMA{n*10}昨日成交额比值')], axis=1)
+        # 计算各种最高最低价的距离
+        df = pd.concat(
+            [df, (df['开盘']/df['开盘'].rolling(n).max()).rename(f'{n}日最高开盘价比值')], axis=1)
+        df = pd.concat(
+            [df, (df['开盘']/df['开盘'].rolling(n*10).max()).rename(f'{n*10}日最高开盘价比值')], axis=1)
+        df = pd.concat(
+            [df, (df['开盘']/df['开盘'].rolling(n).min()).rename(f'{n}日最低开盘价比值')], axis=1)
+        df = pd.concat(
+            [df, (df['开盘']/df['开盘'].rolling(n*10).min()).rename(f'{n*10}日最低开盘价比值')], axis=1)
+        # 计算各种成交额的增减少对涨跌幅的贡献
+        df = pd.concat(
+            [df, (df['昨日涨跌幅'] / df[f'SMA{n}昨日成交额比值']).rename(f'前{n}日周期的昨日资金贡献')], axis=1)
+        df = pd.concat(
+            [df, (df['昨日涨跌幅'] / df[f'SMA{n*10}昨日成交额比值']).rename(f'前{n*10}日周期的昨日资金贡献')], axis=1)
     for n in range(2, 11):
         for m in range(2, 11):
-            df[f'开盘的{n*10}均值比-{m}均值比'] = df[f'SMA{n*10}开盘比值']-df[f'SMA{m}开盘比值']
-            df[f'成交额的{n*10}均值比-{m}均值比'] = df[f'SMA{n*10}昨日成交额比值'] - \
-                df[f'SMA{m}昨日成交额比值']
-
-    for n in range(1, 11):
-        df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
-        df[f'{n*10}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n*10)/df['收盘']-1
+            df = pd.concat(
+                [df, (df[f'SMA{n*10}开盘比值']-df[f'SMA{m*10}开盘比值']).rename(f'{n*10}均值比-{m*10}均值比')], axis=1)
+            df = pd.concat(
+                [df, (df[f'SMA{n*10}昨日成交额比值'] - df[f'SMA{m*10}昨日成交额比值']).rename(f'成交额的{n*10}均值比-{m*10}均值比')], axis=1)
+    for n in range(1, 10):
+        df = pd.concat(
+            [df, (df['收盘'].shift(-n)/df['收盘']-1).rename(f'{n}日后总涨跌幅（未来函数）')], axis=1)
+        df = pd.concat(
+            [df, (df['收盘'].shift(-n*10)/df['收盘']-1).rename(f'{n*10}日后总涨跌幅（未来函数）')], axis=1)
     return df
 
 
 # 按照“代码”列进行分组并计算技术指标
-grouped = data.groupby('代码').apply(get_technical_indicators)
+grouped = data.groupby('代码', group_keys=False).apply(get_technical_indicators)
 
 
-# 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
-def paiming(df):  # 定义计算技术指标的函数
+def paiming(df):  # 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
     # 计算每个指标的排名
     for column in df.columns:
-        df[f'{column}_rank'] = df[column].rank(
-            method='max', ascending=False)
-        df[f'{column}_rank'] = df[f'{column}_rank'] / len(df)
-        # print(column)
+        if '未来函数' not in str(column):
+            df = pd.concat([df, (df[str(column)].rank(
+                method='max', ascending=False) / len(df)).rename(f'{str(column)}_rank')], axis=1)
     return df
+
+
 # 分组并计算指标排名
 grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 
@@ -96,15 +107,7 @@ grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 # df = df[df[f'日期'] == last_day].copy()
 # # 成交额过滤劣质股票
 # df = df[df[f'昨日成交额'] >= 20000000].copy()
-# # 60日相对超跌
-# n_stock = math.ceil(code_count/5)
-# df = df.nsmallest(n_stock, f'SMA{60}开盘比值')
-# # 振幅较大，趋势明显
-# n_stock = math.ceil(code_count/10)
-# df = df.nsmallest(n_stock, '昨日振幅')
-# # 确认短期趋势
-# for n in range(6, 11):
-#     df = df[df[f'SMA{n}开盘比值'] >= 1].copy()
+
 # # 开盘价过滤高滑点股票
 # df = df[df[f'开盘'] >= 0.01].copy()
 # print(len(df))
@@ -122,13 +125,13 @@ file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上两级目录的路径
-parent_dir_path = os.path.dirname(os.path.dirname(dir_path))
+dir_path = os.path.dirname(os.path.dirname(dir_path))
 # 保存数据到指定目录
-file_path = os.path.join(parent_dir_path, f'{name}指标排名.csv')
+file_path = os.path.join(dir_path, f'{name}指标.csv')
 grouped.to_csv(file_path, index=False)
 print('准备插入数据')
 # 连接MongoDB数据库并创建新集合
-new_collection = db[f'{name}指标排名']
+new_collection = db[f'{name}指标']
 new_collection.drop()  # 清空集合中的所有文档
 # 将数据分批插入
 batch_size = 5000  # 批量插入的大小

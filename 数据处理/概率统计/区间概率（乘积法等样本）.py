@@ -49,7 +49,7 @@ for i in range(len(indices) - 1):
     upper_bound = sorted_data[end_idx-1]  # 注意索引从0开始，因此要减1
     ranges.append((sorted_data[start_idx], upper_bound))
 result_dicts = []
-for n in range(1, 11):
+for n in range(1, 10):
     for rank_range in ranges:
         sub_df = df.copy()[(df[f'{mubiao}'] >= rank_range[0]) &
                            (df[f'{mubiao}'] <= rank_range[1])]
@@ -71,7 +71,7 @@ for n in range(1, 11):
         result_dicts.append(result_dict)
 # 将结果持久化
 result_df = pd.DataFrame(result_dicts)
-for n in range(1, 11):
+for n in range(1, 10):
     cols_to_shift = [f'{n}日统计次数（已排除涨停）',
                      f'未来{n}日上涨概率', f'未来{n}日上涨次数', f'未来{n}日平均涨跌幅']
     result_df[cols_to_shift] = result_df[cols_to_shift].shift(-a*(n-1))

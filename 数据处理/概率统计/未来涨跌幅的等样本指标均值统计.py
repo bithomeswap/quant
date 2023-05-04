@@ -4,10 +4,10 @@ import datetime
 import os
 
 # 设置参数
-name = 'COIN'
+# name = 'COIN'
 # name = 'STOCK'
 # name = 'BTC'
-# name = '指数'
+name = '指数'
 if '指数' in name.lower():
     n = 20
 if 'btc' in name.lower():
@@ -25,7 +25,7 @@ file_path = os.path.abspath(__file__)
 dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上三级目录的路径
 dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
-file_path = os.path.join(dir_path, f'{name}指标排名.csv')
+file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
 # 日期格式转换
