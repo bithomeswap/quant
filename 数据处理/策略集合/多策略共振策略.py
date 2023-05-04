@@ -16,14 +16,10 @@ dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
-# 定义百分比筛选函数
-
-
-def filter(df, col_names, p):
-    df_tmp = pd.concat([df[df[col_name] >= df[col_name].quantile(1-p)]
-                       for col_name in col_names], ignore_index=True)
-    return df_tmp
-
+def filter(df, col_names, p):  # 参数col_names表示列名，参数p表示取每一列中数值最高的前p百分比的数据
+    df = pd.concat([df[df[col_name] >= df[col_name].quantile(1-p)]
+                   for col_name in col_names], ignore_index=True)
+    return df
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
@@ -82,8 +78,6 @@ if 'btc' in name.lower():
 #         df = df[df[f'开盘'] >= 0.01].copy()
 #         # print(len(df))
 #     if '指数' in name.lower():
-#         # 成交额过滤劣质股票
-#         df = df[df[f'昨日成交额'] >= 20000000].copy()
 #         # 60日相对超跌
 #         n_stock = math.ceil(code_count/5)
 #         df = df.nsmallest(n_stock, f'SMA{60}开盘比值')

@@ -37,7 +37,7 @@ if 'stock' in name.lower():
     df = df[df['开盘收盘幅'] <= 8]
 if 'coin' in name.lower():
     df = df[df['昨日成交额'] >= 1000000]
-df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]
+
 
 # 将数据划分成a个等长度的区间
 a = 24
@@ -62,7 +62,8 @@ for rank_range in ranges:
         # 计算均值
         sub_df_mean = sub_df.mean(numeric_only=True)
         # 构造包含指标名和涨跌幅的DataFrame，并添加到列结果DataFrame中
-        result_sub_df = pd.DataFrame({col_name: [sub_df_mean[mubiao]]}, index=[rank_range])
+        result_sub_df = pd.DataFrame(
+            {col_name: [sub_df_mean[mubiao]]}, index=[rank_range])
         col_result_df = pd.concat([col_result_df, result_sub_df], axis=1)
     result_df = pd.concat([result_df, col_result_df])
     # print(result_df)

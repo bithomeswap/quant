@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-name = 'BTC'
-# name = '指数'
+# name = 'BTC'
+name = '指数'
 # name = 'COIN'
 # name = 'STOCK'
 
@@ -14,13 +14,20 @@ dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上三级目录的路径
 dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
-df = pd.read_csv(file_path)
+df = pd.read_csv('D:\COIN指标.csv')
 
-# 定义百分比筛选函数
-def filter(df, col_names, p):
-    df_tmp = pd.concat([df[df[col_name] >= df[col_name].quantile(1-p)]
-                       for col_name in col_names], ignore_index=True)
-    return df_tmp
+
+def midfilter(df, col_name, start, end):  # 参数col_names表示列名，参数start表示去掉前百分之多少，参数end表示去掉后百分之多少
+    df = df[df[col_name] >= df[col_name].quantile(start) & (
+        df[col_name] < df[col_name].quantile(end))]
+    return df
+
+
+def topfilter(df, col_name, start, end):  # 参数col_names表示列名，参数start表示保留前百分之多少，参数end表示保留后百分之多少
+    df = df[df[col_name] >= df[col_name].quantile(start) | (
+        df[col_name] < df[col_name].quantile(end))]
+    return df
+
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
@@ -48,15 +55,11 @@ if 'btc' in name.lower():
 if '指数' in name.lower():
     # 成交额过滤劣质股票
     df = df[df[f'昨日成交额'] >= 20000000].copy()
-
-
     # 60日相对超跌
-    filtername = f'SMA{60}开盘比值'
     n_stock = math.ceil(code_count/5)
     df = df.groupby('日期').apply(lambda x: x.nsmallest(
         n_stock, f'SMA{60}开盘比值')).reset_index(drop=True)
     # 振幅较大，趋势明显
-    filtername = '昨日振幅'
     n_stock = math.ceil(code_count/10)
     df = df.groupby('日期').apply(lambda x: x.nlargest(
         n_stock, '昨日振幅')).reset_index(drop=True)
@@ -66,8 +69,6 @@ if '指数' in name.lower():
     # 开盘价过滤高滑点股票
     df = df[df[f'开盘'] >= 0.01].copy()
     print(len(df))
-
-
 if 'coin' in name.lower():
     # 昨日成交额过滤劣质股票
     df = df[df[f'昨日成交额'] >= 1000000].copy()
