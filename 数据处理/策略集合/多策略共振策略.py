@@ -16,12 +16,21 @@ dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
+# 定义百分比筛选函数
+
+
+def filter(df, col_names, p):
+    df_tmp = pd.concat([df[df[col_name] >= df[col_name].quantile(1-p)]
+                       for col_name in col_names], ignore_index=True)
+    return df_tmp
+
+
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
 code_count = len(df['代码'].drop_duplicates())
-
+print("标的数量", code_count)
 if 'btc' in name.lower():
     # 计算每个交易日成分股的'SMA120开盘比值'均值
     df_mean = df.groupby('日期')[f'SMA{60}开盘比值', f'SMA{100}开盘比值'].mean()

@@ -54,6 +54,14 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数、
                 talib.MA(df['昨日成交额'].values, timeperiod=n, matype=0)
             df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
                 talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
+            df[f'SMA{n}昨日振幅比值'] = df['昨日振幅'] / \
+                talib.MA(df['昨日振幅'].values, timeperiod=n, matype=0)
+            df[f'SMA{n*10}昨日振幅比值'] = df['昨日振幅'] / \
+                talib.MA(df['昨日振幅'].values, timeperiod=n*10, matype=0)
+            df[f'SMA{n}昨日资金贡献比值'] = df['昨日资金贡献'] / \
+                talib.MA(df['昨日资金贡献'].values, timeperiod=n, matype=0)
+            df[f'SMA{n*10}昨日资金贡献比值'] = df['昨日资金贡献'] / \
+                talib.MA(df['昨日资金贡献'].values, timeperiod=n*10, matype=0)
             # 计算各种最高最低价的距离
             df[f'{n}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n).max()
             df[f'{n*10}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n*10).max()
