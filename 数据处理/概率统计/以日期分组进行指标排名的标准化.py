@@ -12,9 +12,9 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 
-# name = 'COIN'
+name = 'COIN'
 # name = 'STOCK'
-name = 'BTC'
+# name = 'BTC'
 # name = '指数'
 
 collection = db[f'{name}指标']

@@ -4,10 +4,10 @@ import datetime
 import os
 
 # 设置参数
-# name = 'COIN'
+name = 'COIN'
 # name = 'STOCK'
 # name = 'BTC'
-name = '指数'
+# name = '指数'
 if '指数' in name.lower():
     n = 20
 if 'btc' in name.lower():

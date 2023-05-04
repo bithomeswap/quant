@@ -26,35 +26,12 @@ print("数据读取成功")
 # 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
 def paiming(df):  # 定义计算技术指标的函数
     # 计算每个指标的排名
-    for n in range(2, 11):
-        col_name = f'SMA{n*10}开盘比值'
-        df[f'{col_name}_rank'] = df[col_name].rank(
-            method='max', ascending=False)
-        df[f'{col_name}_rank'] = df[f'{col_name}_rank'] / len(df)
-        col_name = f'SMA{n*10}昨日成交额比值'
-        df[f'{col_name}_rank'] = df[col_name].rank(
-            method='max', ascending=False)
-        df[f'{col_name}_rank'] = df[f'{col_name}_rank'] / len(df)
-        col_name = f'SMA{n}开盘比值'
-        df[f'{col_name}_rank'] = df[col_name].rank(
-            method='max', ascending=False)
-        df[f'{col_name}_rank'] = df[f'{col_name}_rank'] / len(df)
-        col_name = f'SMA{n}昨日成交额比值'
-        df[f'{col_name}_rank'] = df[col_name].rank(
-            method='max', ascending=False)
-        df[f'{col_name}_rank'] = df[f'{col_name}_rank'] / len(df)
-    # 计算昨日振幅的排名(升序)
-    df['昨日振幅_rank'] = df['昨日振幅'].rank(method='max')
-    df['昨日振幅_rank'] = df['昨日振幅_rank'] / len(df)
-    # 计算昨日成交额的排名(升序)
-    df['昨日成交额_rank'] = df['昨日成交额'].rank(method='max')
-    df['昨日成交额_rank'] = df['昨日成交额_rank'] / len(df)
-    # 计算昨日涨跌幅的排名(升序)
-    df['开盘收盘幅_rank'] = df['开盘收盘幅'].rank(method='max')
-    df['开盘收盘幅_rank'] = df['开盘收盘幅_rank'] / len(df)
-    # 计算开盘价的排名(升序)
-    df['开盘_rank'] = df['开盘'].rank(method='max')
-    df['开盘_rank'] = df['开盘_rank'] / len(df)
+    for column in df.columns:
+        if '未来函数' not in column:
+            df[f'{column}_rank'] = df[column].rank(
+                method='max', ascending=False)
+            df[f'{column}_rank'] = df[f'{column}_rank'] / len(df)
+            # print(column)
     return df
 
 

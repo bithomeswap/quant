@@ -22,22 +22,48 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
     # 过滤最高价和最低价为负值的数据
     df = df.loc[(df['最高'] >= 0) & (df['最低'] >= 0)]
     df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+
+    # 计算昨日振幅
+    df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
     # 计算昨日振幅
     df['昨日振幅'] = (df.shift(1)['最高']-df.shift(1)['最低'])/df.shift(1)['开盘']
+    # 计算昨日涨跌幅
+    df['昨日涨跌幅'] = df.shift(1)['涨跌幅'].astype(float)
     # 计算昨日成交额
     df['昨日成交额'] = df.shift(1)['成交额'].astype(float)
     # 定义开盘收盘幅
     df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-    df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+    df = df.dropna()  # 删除缺失值，避免无效数据的干扰；
+
     for n in range(2, 11):
-        df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
-            talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
-        df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
-            talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
+        # 计算n周期的RSI值
+        df[f'{n}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=n)
+        df[f'{n*10}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=n*10)
+
+        # n等于30时也许比较好
         df[f'SMA{n}开盘比值'] = df['开盘'] / \
             talib.MA(df['开盘'].values, timeperiod=n, matype=0)
         df[f'SMA{n}昨日成交额比值'] = df['昨日成交额'] / \
             talib.MA(df['昨日成交额'].values, timeperiod=n, matype=0)
+        df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
+            talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
+        df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
+            talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
+
+        df[f'{n}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n).max()
+        df[f'{n}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n).min()
+        df[f'{n*10}日最高开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).max()
+        df[f'{n*10}日最低开盘价比值'] = df['开盘']/df['开盘'].rolling(n*10).min()
+
+        df[f'前{n}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n}昨日成交额比值']
+        df[f'前{n*10}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n*10}昨日成交额比值']
+
+    for n in range(2, 11):
+        for m in range(2, 11):
+            df[f'开盘的{n*10}均值比-{m}均值比'] = df[f'SMA{n*10}开盘比值']-df[f'SMA{m}开盘比值']
+            df[f'成交额的{n*10}均值比-{m}均值比'] = df[f'SMA{n*10}昨日成交额比值'] - \
+                df[f'SMA{m}昨日成交额比值']
+
     for n in range(1, 11):
         df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n)/df['收盘']-1
         df[f'{n*10}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n*10)/df['收盘']-1
