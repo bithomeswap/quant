@@ -40,7 +40,7 @@ if 'coin' in name.lower():
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]
 
 # 将数据划分成a个等长度的区间
-a = 10
+a = 20
 ranges = []
 left = 0
 right = 1
@@ -66,7 +66,7 @@ for rank_range in ranges:
             {col_name: [sub_df_mean[mubiao]]}, index=[rank_range])
         col_result_df = pd.concat([col_result_df, result_sub_df], axis=1)
     result_df = pd.concat([result_df, col_result_df])
-    print(result_df)
+    # print(result_df)
 # 保存结果
 result_df.to_csv(f'{name}_{n}日后指标排名区间涨跌幅.csv')
 print('任务已经完成！')
