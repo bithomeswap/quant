@@ -8,6 +8,20 @@ import os
 # name = 'STOCK'
 # name = 'BTC'
 name = '指数'
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上两级目录的路径
+dir_path = os.path.dirname(os.path.dirname(dir_path))
+file_path = os.path.join(dir_path, f'{name}指标.csv')
+df = pd.read_csv(file_path)
+# 日期格式转换
+df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')
+# 去掉n日后总涨跌幅大于百分之三百的噪音数据
+for n in range(1, 9):
+    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
+
 if '指数' in name.lower():
     n = 6
 if 'btc' in name.lower():
@@ -16,24 +30,7 @@ if 'stock' in name.lower():
     n = 6
 if 'coin' in name.lower():
     n = 6
-
 mubiao = f'{n}日后总涨跌幅（未来函数）'
-
-# 获取当前.py文件的绝对路径
-file_path = os.path.abspath(__file__)
-# 获取当前.py文件所在目录的路径
-dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上三级目录的路径
-dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
-file_path = os.path.join(dir_path, f'{name}指标.csv')
-df = pd.read_csv(file_path)
-
-# 日期格式转换
-df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')
-
-# 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 9):
-    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
 # 过滤符合条件的数据
 if 'stock' in name.lower():
