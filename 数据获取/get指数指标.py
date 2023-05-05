@@ -53,13 +53,15 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数、
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         for n in range(1, 10):
             # 短周期指标
-            df[f'SMA{n*2}开盘比值'] = df['开盘'] /talib.MA(df['开盘'].values, timeperiod=n*2, matype=0)
-            df[f'SMA{n*2}昨日成交额比值'] = df['昨日成交额'] / talib.MA(df['昨日成交额'].values, timeperiod=n*2, matype=0)
+            df[f'SMA{n*2}开盘比值'] = df['开盘'] / \
+                talib.MA(df['开盘'].values, timeperiod=n*2, matype=0)
+            df[f'SMA{n*2}昨日成交额比值'] = df['昨日成交额'] / \
+                talib.MA(df['昨日成交额'].values, timeperiod=n*2, matype=0)
             df[f'SMA{n*2}昨日振幅'] = talib.MA(
                 df['昨日振幅'].values, timeperiod=n*2, matype=0)
             df[f'SMA{n*2}昨日涨跌幅'] = talib.MA(
                 df['昨日涨跌幅'].values, timeperiod=n*2, matype=0)
-        for n in range(1, 10):
+        for n in range(1, 7):
             df[f'{n*5}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n*5).max()
             df[f'{n*5}日最低开盘比值'] = df['开盘'] / df['开盘'].rolling(n*5).min()
             # 长周期指标
@@ -69,28 +71,19 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数、
                 talib.MA(df['昨日成交额'].values, timeperiod=n*5, matype=0)
             df[f'SMA{n*5}昨日振幅比值'] = df['昨日振幅'] / \
                 talib.MA(df['昨日振幅'].values, timeperiod=n*5, matype=0)
-            
-
-
-            # df[f'SMA{n*5}昨日资金贡献比值'] = df['昨日资金贡献'] / \
-            #     talib.MA(df['昨日资金贡献'].values, timeperiod=n*5, matype=0)
+            df[f'SMA{n*5}昨日资金贡献比值'] = df['昨日资金贡献'] / \
+                talib.MA(df['昨日资金贡献'].values, timeperiod=n*5, matype=0)
             df[f'{n*5}日最高昨日成交额比值'] = df['昨日成交额'] / \
                 df['昨日成交额'].rolling(n*5).max()
-            # df[f'{n*5}日最低昨日成交额比值'] = df['昨日成交额'] / \
-            #     df['昨日成交额'].rolling(n*5).min()
-            
-
-
+            df[f'{n*5}日最低昨日成交额比值'] = df['昨日成交额'] / \
+                df['昨日成交额'].rolling(n*5).min()
             df[f'前{n*5}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n*5}昨日成交额比值']
             for m in range(1, 10):
-                df[f'开盘的{n*5}均值比-{m*2}均值比'] = df[f'SMA{n*5}开盘比值'] - \
-                    df[f'SMA{m*2}开盘比值']
+                df[f'昨日成交额的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}昨日成交额比值'] + \
+                    df[f'SMA{m*2}昨日成交额比值']
                 df[f'开盘的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}开盘比值'] + \
                     df[f'SMA{m*2}开盘比值']
-                df[f'成交额的{n*5}均值比-{m*2}均值比'] = df[f'SMA{n*5}昨日成交额比值'] - \
-                    df[f'SMA{m*2}昨日成交额比值']
-                df[f'成交额的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}昨日成交额比值'] + \
-                    df[f'SMA{m*2}昨日成交额比值']
+
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n) / df['收盘'] - 1
     except Exception as e:

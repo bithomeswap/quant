@@ -23,9 +23,9 @@ for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
 
 if '指数' in name.lower():
-    n = 6
+    n = 15
 if 'btc' in name.lower():
-    n = 6
+    n = 15
 if 'stock' in name.lower():
     n = 6
 if 'coin' in name.lower():
@@ -38,6 +38,8 @@ if 'stock' in name.lower():
     df = df[df['开盘收盘幅'] <= 8]
 if 'coin' in name.lower():
     df = df[df['昨日成交额'] >= 1000000]
+    # 开盘价过滤高滑点股票
+    df = df[df[f'开盘'] >= 0.00000500].copy()
 if 'btc' in name.lower():
     df = df[df['昨日成交额'] >= 200000]
 
