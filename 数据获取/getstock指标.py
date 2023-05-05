@@ -40,60 +40,61 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数、
         df['昨日资金贡献'] = df['昨日涨跌幅'] / df['昨日成交额']
         # 定义开盘收盘幅
         df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
+        # 定义9日开盘rsi
+        df[f'{9}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=9)
+        # 定义9日昨日成交额rsi
+        df[f'{9}周期昨日成交额rsi'] = talib.RSI(df['昨日成交额'], timeperiod=9)
+        # 定义9日昨日振幅rsi
+        df[f'{9}周期昨日振幅rsi'] = talib.RSI(df['昨日振幅'], timeperiod=9)
+        # 定义9日昨日涨跌幅rsi
+        df[f'{9}周期昨日涨跌幅rsi'] = talib.RSI(df['昨日涨跌幅'], timeperiod=9)
+        # 定义9日昨日资金贡献rsi
+        df[f'{9}周期昨日资金贡献rsi'] = talib.RSI(df['昨日资金贡献'], timeperiod=9)
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-        for n in range(2, 11):
-            # 计算各种RSI比值
-            df[f'{n}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=n)
-            df[f'{n*10}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=n*10)
-            # 计算各种SMA比值
-            df[f'SMA{n}开盘比值'] = df['开盘'] / \
-                talib.MA(df['开盘'].values, timeperiod=n, matype=0)
-            df[f'SMA{n*10}开盘比值'] = df['开盘'] / \
-                talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
-            df[f'SMA{n}昨日成交额比值'] = df['昨日成交额'] / \
-                talib.MA(df['昨日成交额'].values, timeperiod=n, matype=0)
-            df[f'SMA{n*10}昨日成交额比值'] = df['昨日成交额'] / \
-                talib.MA(df['昨日成交额'].values, timeperiod=n*10, matype=0)
-            df[f'SMA{n}昨日振幅比值'] = df['昨日振幅'] / \
-                talib.MA(df['昨日振幅'].values, timeperiod=n, matype=0)
-            df[f'SMA{n*10}昨日振幅比值'] = df['昨日振幅'] / \
-                talib.MA(df['昨日振幅'].values, timeperiod=n*10, matype=0)
-            df[f'SMA{n}昨日资金贡献比值'] = df['昨日资金贡献'] / \
-                talib.MA(df['昨日资金贡献'].values, timeperiod=n, matype=0)
-            df[f'SMA{n*10}昨日资金贡献比值'] = df['昨日资金贡献'] / \
-                talib.MA(df['昨日资金贡献'].values, timeperiod=n*10, matype=0)
-            # 计算各种最高最低价的距离
-            df[f'{n}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n).max()
-            df[f'{n*10}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n*10).max()
-            df[f'{n}日最低开盘比值'] = df['开盘'] / df['开盘'].rolling(n).min()
-            df[f'{n*10}日最低开盘比值'] = df['开盘'] / df['开盘'].rolling(n*10).min()
-            df[f'{n}日最高昨日成交额比值'] = df['昨日成交额'] / df['昨日成交额'].rolling(n).max()
-            df[f'{n*10}日最高昨日成交额比值'] = df['昨日成交额'] / \
-                df['昨日成交额'].rolling(n*10).max()
-            df[f'{n}日最低昨日成交额比值'] = df['昨日成交额'] / df['昨日成交额'].rolling(n).min()
-            df[f'{n*10}日最低昨日成交额比值'] = df['昨日成交额'] / \
-                df['昨日成交额'].rolling(n*10).min()
-            # 计算各种成交额的增减少对涨跌幅的贡献
-            df[f'前{n}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n}昨日成交额比值']
-            df[f'前{n*10}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n*10}昨日成交额比值']
-        for n in range(2, 11):
-            for m in range(2, 11):
-                if n > m:
-                    df[f'开盘的{n}均值比-{m}均值比'] = df[f'SMA{n}开盘比值'] - \
-                        df[f'SMA{m}开盘比值']
-                    df[f'开盘的{n*10}均值比-{m}均值比'] = df[f'SMA{n*10}开盘比值'] - \
-                        df[f'SMA{m}开盘比值']
-                    df[f'开盘的{n*10}均值比-{m*10}均值比'] = df[f'SMA{n*10}开盘比值'] - \
-                        df[f'SMA{m*10}开盘比值']
-                    df[f'成交额的{n}均值比-{m}均值比'] = df[f'SMA{n}昨日成交额比值'] - \
-                        df[f'SMA{m}昨日成交额比值']
-                    df[f'成交额的{n*10}均值比-{m}均值比'] = df[f'SMA{n*10}昨日成交额比值'] - \
-                        df[f'SMA{m}昨日成交额比值']
-                    df[f'成交额的{n*10}均值比-{m*10}均值比'] = df[f'SMA{n*10}昨日成交额比值'] - \
-                        df[f'SMA{m*10}昨日成交额比值']
         for n in range(1, 10):
+            # 短周期指标
+            df[f'SMA{n*2}开盘比值'] = df['开盘'] / \
+                talib.MA(df['开盘'].values, timeperiod=n*2, matype=0)
+            df[f'SMA{n*2}昨日成交额比值'] = df['昨日成交额'] / \
+                talib.MA(df['昨日成交额'].values, timeperiod=n*2, matype=0)
+            df[f'SMA{n*2}昨日振幅'] = talib.MA(
+                df['昨日振幅'].values, timeperiod=n*2, matype=0)
+            df[f'SMA{n*2}昨日涨跌幅'] = talib.MA(
+                df['昨日涨跌幅'].values, timeperiod=n*2, matype=0)
+        for n in range(1, 10):
+            df[f'{n*5}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n*5).max()
+            df[f'{n*5}日最低开盘比值'] = df['开盘'] / df['开盘'].rolling(n*5).min()
+            # 长周期指标
+            df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
+                talib.MA(df['开盘'].values, timeperiod=n*5, matype=0)
+            df[f'SMA{n*5}昨日成交额比值'] = df['昨日成交额'] / \
+                talib.MA(df['昨日成交额'].values, timeperiod=n*5, matype=0)
+            df[f'SMA{n*5}昨日振幅比值'] = df['昨日振幅'] / \
+                talib.MA(df['昨日振幅'].values, timeperiod=n*5, matype=0)
+            
+
+
+            # df[f'SMA{n*5}昨日资金贡献比值'] = df['昨日资金贡献'] / \
+            #     talib.MA(df['昨日资金贡献'].values, timeperiod=n*5, matype=0)
+            df[f'{n*5}日最高昨日成交额比值'] = df['昨日成交额'] / \
+                df['昨日成交额'].rolling(n*5).max()
+            # df[f'{n*5}日最低昨日成交额比值'] = df['昨日成交额'] / \
+            #     df['昨日成交额'].rolling(n*5).min()
+            
+
+
+            df[f'前{n*5}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n*5}昨日成交额比值']
+            for m in range(1, 10):
+                df[f'开盘的{n*5}均值比-{m*2}均值比'] = df[f'SMA{n*5}开盘比值'] - \
+                    df[f'SMA{m*2}开盘比值']
+                df[f'开盘的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}开盘比值'] + \
+                    df[f'SMA{m*2}开盘比值']
+                df[f'成交额的{n*5}均值比-{m*2}均值比'] = df[f'SMA{n*5}昨日成交额比值'] - \
+                    df[f'SMA{m*2}昨日成交额比值']
+                df[f'成交额的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}昨日成交额比值'] + \
+                    df[f'SMA{m*2}昨日成交额比值']
+        for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n) / df['收盘'] - 1
-            df[f'{n*10}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n*10) / df['收盘'] - 1
     except Exception as e:
         print(f"发生bug: {e}")
     return df

@@ -38,7 +38,8 @@ if 'stock' in name.lower():
     df = df[df['开盘收盘幅'] <= 8]
 if 'coin' in name.lower():
     df = df[df['昨日成交额'] >= 1000000]
-
+if 'btc' in name.lower():
+    df = df[df['昨日成交额'] >= 200000]
 
 # 将数据划分成a个等长度的区间
 a = 24
