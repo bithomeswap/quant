@@ -35,18 +35,10 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df['昨日振幅'] = (df.shift(1)['最高']-df.shift(1)['最低'])/df.shift(1)['开盘']-1
         # 计算昨日涨跌幅
         df['昨日涨跌幅'] = df.shift(1)['涨跌幅']
-
-        df['昨日涨跌幅+1'] = (df['昨日涨跌幅']+1)
-        df['昨日涨跌幅abs'] = abs(df['昨日涨跌幅'])
-
         # 计算昨日成交额
         df['昨日成交额'] = df.shift(1)['成交额']
         # 计算昨日资金贡献
         df['昨日资金贡献'] = df['昨日涨跌幅'] / df['昨日成交额']
-
-        df['昨日资金贡献+1'] = (df['昨日涨跌幅']+1) / df['昨日成交额']
-        df['昨日资金贡献abs'] = abs(df['昨日涨跌幅']) / df['昨日成交额']
-
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         # 固定周期指标
         df[f'{9}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=9)
@@ -58,23 +50,15 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             df['昨日涨跌幅'].values, timeperiod=9, matype=0)
         for n in range(1, 7):
             # 定义长周期比值的均值
-            df[f'SMA{n*5}昨日成交额比值'] = df['昨日成交额'] / \
-                talib.MA(df['昨日成交额'].values, timeperiod=n*5, matype=0)
             df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
                 talib.MA(df['开盘'].values, timeperiod=n*5, matype=0)
+            df[f'SMA{n*5}昨日成交额比值'] = df['昨日成交额'] / \
+                talib.MA(df['昨日成交额'].values, timeperiod=n*5, matype=0)            
+            df[f'SMA{n*5}昨日资金贡献比值'] = df['昨日资金贡献'] / \
+                talib.MA(df['昨日资金贡献'].values, timeperiod=n*5, matype=0)
             # 定义昨日资金贡献rsi
             df[f'{n*2}周期昨日资金贡献rsi'] = talib.RSI(df['昨日资金贡献'], timeperiod=n*2)
-
-            df[f'+1{n*2}周期昨日资金贡献rsi'] = talib.RSI(
-                df['昨日资金贡献+1'], timeperiod=n*2)
-            df[f'abs{n*2}周期昨日资金贡献rsi'] = talib.RSI(
-                df['昨日资金贡献abs'], timeperiod=n*2)
-
             df[f'{n*2}周期昨日涨跌幅rsi'] = talib.RSI(df['昨日涨跌幅'], timeperiod=n*2)
-            df[f'+1{n*2}周期昨日涨跌幅rsi'] = talib.RSI(df['昨日涨跌幅+1'], timeperiod=n*2)
-            df[f'abs{n*2}周期昨日涨跌幅rsi'] = talib.RSI(
-                df['昨日涨跌幅abs'], timeperiod=n*2)
-
             # 定义昨日成交额rsi
             df[f'{n*2}周期昨日成交额rsi'] = talib.RSI(df['昨日成交额'], timeperiod=n*2)
             # 最低最高距离指标(最高看短周期,最低看长周期),判断临近新高新低的位置
