@@ -12,9 +12,9 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数
-name = 'COIN'
+# name = 'COIN'
 # name = 'STOCK'
-# name = 'BTC'
+name = 'BTC'
 # name = '指数'
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
@@ -45,8 +45,10 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df[f'{9}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=9)
         df[f'{9}日最高昨日成交额比值'] = df['昨日成交额']/df['昨日成交额'].rolling(9).max()
         df[f'{20}日最低昨日成交额比值'] = df['昨日成交额'] / df['昨日成交额'].rolling(20).min()
-        df[f'SMA{9}昨日涨跌幅'] = talib.MA(df['昨日涨跌幅'].values, timeperiod=9, matype=0)
-        df[f'SMA{9}昨日振幅'] = talib.MA(df['昨日涨跌幅'].values, timeperiod=9, matype=0)
+        df[f'SMA{9}昨日涨跌幅'] = talib.MA(
+            df['昨日涨跌幅'].values, timeperiod=9, matype=0)
+        df[f'SMA{9}昨日振幅'] = talib.MA(
+            df['昨日涨跌幅'].values, timeperiod=9, matype=0)
         for n in range(1, 7):
             # 定义长周期比值的均值
             df[f'SMA{n*5}昨日成交额比值'] = df['昨日成交额'] / \
