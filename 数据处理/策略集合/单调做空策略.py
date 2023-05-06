@@ -21,19 +21,6 @@ df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
 df = df_merged[df_merged['策略'] == '超跌策略'].copy()
 df['score'] = 0
 
-
-def midfilter(df, col_name, start, end):  # 参数col_names表示列名，参数start表示去掉前百分之多少，参数end表示去掉后百分之多少
-    df = df[df[col_name] >= df[col_name].quantile(start) & (
-        df[col_name] < df[col_name].quantile(end))]
-    return df
-
-
-def topfilter(df, col_name, start, end):  # 参数col_names表示列名，参数start表示保留前百分之多少，参数end表示保留后百分之多少
-    df = df[df[col_name] >= df[col_name].quantile(start) | (
-        df[col_name] < df[col_name].quantile(end))]
-    return df
-
-
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
@@ -41,28 +28,27 @@ for n in range(1, 9):
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
-if 'btc' in name.lower():
-    df = df[df[f'昨日成交额'] >= 20000].copy()
-    # 20日相对超涨
-    df['score'] += df[f'SMA{20}开盘比值'].apply(
-        lambda x: 1 if x >= 1 else 0)  # 确认长期趋势上涨
-    df['score'] += df.groupby('日期')['昨日振幅'].apply(
-        lambda x: 1 if x >= df['昨日振幅'].quantile(0.95) else 0)  # 振幅较大，趋势明显
-    for n in range(6, 11):
-        df['score'] += df[f'SMA{n}开盘比值'].apply(
-            lambda x: 1 if x >= 1 else 0)  # 确认短期趋势下跌
-    # 开盘价过滤高滑点股票
-    df = df[df[f'开盘'] >= 0.01].copy()
-    print(len(df))
+# if 'btc' in name.lower():
+#     df = df[df[f'昨日成交额'] >= 20000].copy()
+#     # 20日相对超涨
+#     df['score'] += df[f'SMA{20}开盘比值'].apply(
+#         lambda x: 1 if x >= 1 else 0)  # 确认长期趋势上涨
+#     df['score'] += df.groupby('日期')['昨日振幅'].apply(
+#         lambda x: 1 if x >= df['昨日振幅'].quantile(0.95) else 0)  # 振幅较大，趋势明显
+#     for n in range(6, 11):
+#         df['score'] += df[f'SMA{n}开盘比值'].apply(
+#             lambda x: 1 if x >= 1 else 0)  # 确认短期趋势下跌
+#     # 开盘价过滤高滑点股票
+#     df = df[df[f'开盘'] >= 0.01].copy()
+    # print(len(df))
 if '指数' in name.lower():
-    df['score'] += df[f'SMA{20}开盘比值'].apply(
-        lambda x: 1 if x >= 1 else 0)  # 确认长期趋势上涨
-    df['score'] += df.groupby('日期')['昨日振幅'].apply(
-        lambda x: 1 if x >= df['昨日振幅'].quantile(0.95) else 0)  # 振幅较大，趋势明显
-    for n in range(6, 11):
-        df['score'] += df[f'SMA{n}开盘比值'].apply(
+    df['score'] += df.groupby('日期')[f'SMA{20}开盘比值'].apply(
+        lambda x: (x >= df[f'SMA{20}开盘比值'].quantile(0.95)).astype(int))  # 确认长期趋势上涨
+    df['score'] += df.groupby('日期')[f'昨日振幅'].apply(
+        lambda x: (x >= df[f'昨日振幅'].quantile(0.95)).astype(int))  # 确认长期趋势上涨
+    for n in range(1, 7):
+        df['score'] += df[f'SMA{n*2}开盘比值'].apply(
             lambda x: 1 if x >= 1 else 0)  # 确认短期趋势下跌
-    print(len(df))
 
 
 # 每天选择分值较高的10个股票，总分值大于5
@@ -78,11 +64,17 @@ cash_balance = 1
 # 用于记录每日的资金余额
 daily_cash_balance = {}
 
+if 'stock' in name.lower():
+    n = 6  # 设置持仓周期
+    m = 0.005  # 设置手续费
+if 'coin' in name.lower():
+    n = 6  # 设置持仓周期
+    m = 0.005  # 设置手续费
 if 'btc' in name.lower():
-    n = 20  # 设置持仓周期
+    n = 15  # 设置持仓周期
     m = -0.0005  # 设置手续费
 if '指数' in name.lower():
-    n = 20  # 设置持仓周期
+    n = 15  # 设置持仓周期
     m = -0.0005  # 设置手续费
 
 df_strategy = pd.DataFrame(columns=['日期', '执行策略'])

@@ -12,8 +12,8 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'BTC'
 # name = '指数'
 collection = db[f'{name}']
@@ -22,7 +22,7 @@ data = pd.DataFrame(list(collection.find()))
 print("数据读取成功")
 
 
-def get_technical_indicators(df):  # 定义计算技术指标的函数、
+def get_technical_indicators(df):  # 定义计算技术指标的函数
     try:
         # 删除最高价和最低价为负值的数据
         df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
@@ -40,50 +40,28 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数、
         df['昨日资金贡献'] = df['昨日涨跌幅'] / df['昨日成交额']
         # 定义开盘收盘幅
         df['开盘收盘幅'] = (df['开盘']/df.shift(1)['收盘'] - 1)*100
-        # 定义9日开盘rsi
-        df[f'{9}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=9)
-        # 定义9日昨日成交额rsi
-        df[f'{9}周期昨日成交额rsi'] = talib.RSI(df['昨日成交额'], timeperiod=9)
-        # 定义9日昨日振幅rsi
-        df[f'{9}周期昨日振幅rsi'] = talib.RSI(df['昨日振幅'], timeperiod=9)
-        # 定义9日昨日涨跌幅rsi
-        df[f'{9}周期昨日涨跌幅rsi'] = talib.RSI(df['昨日涨跌幅'], timeperiod=9)
-        # 定义9日昨日资金贡献rsi
-        df[f'{9}周期昨日资金贡献rsi'] = talib.RSI(df['昨日资金贡献'], timeperiod=9)
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-        for n in range(1, 10):
-            # 短周期指标
-            df[f'SMA{n*2}开盘比值'] = df['开盘'] / \
-                talib.MA(df['开盘'].values, timeperiod=n*2, matype=0)
-            df[f'SMA{n*2}昨日成交额比值'] = df['昨日成交额'] / \
-                talib.MA(df['昨日成交额'].values, timeperiod=n*2, matype=0)
-            df[f'SMA{n*2}昨日振幅'] = talib.MA(
-                df['昨日振幅'].values, timeperiod=n*2, matype=0)
-            df[f'SMA{n*2}昨日涨跌幅'] = talib.MA(
-                df['昨日涨跌幅'].values, timeperiod=n*2, matype=0)
+        # 固定周期指标
+        df[f'{9}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=9)
+        df[f'{9}日最高昨日成交额比值'] = df['昨日成交额']/df['昨日成交额'].rolling(9).max()
+        df[f'{20}日最低昨日成交额比值'] = df['昨日成交额'] / df['昨日成交额'].rolling(20).min()
+        df[f'SMA{9}昨日涨跌幅'] = talib.MA(
+            df['昨日涨跌幅'].values, timeperiod=9, matype=0)
+        df[f'SMA{9}昨日振幅'] = talib.MA(
+            df['昨日涨跌幅'].values, timeperiod=9, matype=0)
         for n in range(1, 7):
-            df[f'{n*5}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n*5).max()
-            df[f'{n*5}日最低开盘比值'] = df['开盘'] / df['开盘'].rolling(n*5).min()
-            # 长周期指标
-            df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
-                talib.MA(df['开盘'].values, timeperiod=n*5, matype=0)
+            # 定义长周期比值的均值
             df[f'SMA{n*5}昨日成交额比值'] = df['昨日成交额'] / \
                 talib.MA(df['昨日成交额'].values, timeperiod=n*5, matype=0)
-            df[f'SMA{n*5}昨日振幅比值'] = df['昨日振幅'] / \
-                talib.MA(df['昨日振幅'].values, timeperiod=n*5, matype=0)
-            df[f'SMA{n*5}昨日资金贡献比值'] = df['昨日资金贡献'] / \
-                talib.MA(df['昨日资金贡献'].values, timeperiod=n*5, matype=0)
-            df[f'{n*5}日最高昨日成交额比值'] = df['昨日成交额'] / \
-                df['昨日成交额'].rolling(n*5).max()
-            df[f'{n*5}日最低昨日成交额比值'] = df['昨日成交额'] / \
-                df['昨日成交额'].rolling(n*5).min()
-            df[f'前{n*5}日周期的昨日资金贡献'] = df['昨日涨跌幅'] / df[f'SMA{n*5}昨日成交额比值']
-            for m in range(1, 10):
-                df[f'昨日成交额的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}昨日成交额比值'] + \
-                    df[f'SMA{m*2}昨日成交额比值']
-                df[f'开盘的{n*5}均值比+{m*2}均值比'] = df[f'SMA{n*5}开盘比值'] + \
-                    df[f'SMA{m*2}开盘比值']
-
+            df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
+                talib.MA(df['开盘'].values, timeperiod=n*5, matype=0)
+            # 定义昨日资金贡献rsi
+            df[f'{n*2}周期昨日资金贡献rsi'] = talib.RSI(df['昨日资金贡献'], timeperiod=n*2)
+            # 定义昨日成交额rsi
+            df[f'{n*2}周期昨日成交额rsi'] = talib.RSI(df['昨日成交额'], timeperiod=n*2)
+            # 最低最高距离指标(最高看短周期,最低看长周期),判断临近新高新低的位置
+            df[f'{n*2}日最高开盘比值'] = df['开盘'] / df['开盘'].rolling(n*2).max()
+            df[f'{n*2}日最低开盘比值'] = df['开盘'] / df['开盘'].rolling(n*2).min()
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = df['收盘'].shift(-n) / df['收盘'] - 1
     except Exception as e:
