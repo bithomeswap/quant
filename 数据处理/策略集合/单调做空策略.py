@@ -23,7 +23,7 @@ df['score'] = 0
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
-    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 300*(1+n*0.2)]
+    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
@@ -40,7 +40,7 @@ print("标的数量", code_count)
 #             lambda x: 1 if x >= 1 else 0)  # 确认短期趋势下跌
 #     # 开盘价过滤高滑点股票
 #     df = df[df[f'开盘'] >= 0.01].copy()
-    # print(len(df))
+# print(len(df))
 if '指数' in name.lower():
     df['score'] += df.groupby('日期')[f'SMA{20}开盘比值'].apply(
         lambda x: (x >= df[f'SMA{20}开盘比值'].quantile(0.95)).astype(int))  # 确认长期趋势上涨
