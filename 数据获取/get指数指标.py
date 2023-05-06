@@ -28,8 +28,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
         df.sort_values(by='日期', inplace=True)    # 以日期列为索引,避免计算错误
 
-        # 计算昨日振幅
-        df['涨跌幅'] = (df['收盘']/df.shift(1)['收盘'] - 1)*100
+        # 计算涨跌幅
+        df['涨跌幅'] = df['收盘']/df.shift(1)['收盘'] - 1
         # 计算昨日振幅
         df['昨日振幅'] = (df.shift(1)['最高']-df.shift(1)['最低'])/df.shift(1)['开盘']
         # 计算昨日涨跌幅
