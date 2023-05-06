@@ -45,8 +45,10 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df[f'{9}周期开盘rsi'] = talib.RSI(df['开盘'], timeperiod=9)
         df[f'{9}日最高昨日成交额比值'] = df['昨日成交额']/df['昨日成交额'].rolling(9).max()
         df[f'{20}日最低昨日成交额比值'] = df['昨日成交额'] / df['昨日成交额'].rolling(20).min()
-        df[f'SMA{9}昨日涨跌幅'] = talib.MA(df['昨日涨跌幅'].values, timeperiod=9, matype=0)
-        df[f'SMA{9}昨日振幅'] = talib.MA(df['昨日涨跌幅'].values, timeperiod=9, matype=0)
+        df[f'SMA{9}昨日涨跌幅'] = talib.MA(
+            df['昨日涨跌幅'].values, timeperiod=9, matype=0)
+        df[f'SMA{9}昨日振幅'] = talib.MA(
+            df['昨日涨跌幅'].values, timeperiod=9, matype=0)
         for n in range(1, 7):
             # 定义长周期比值的均值
             df[f'SMA{n*5}昨日成交额比值'] = df['昨日成交额'] / \
@@ -105,7 +107,9 @@ grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 # requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
 #               'title': 'DataFrame', 'text': message}})
 
-
+# 连接MongoDB数据库并创建新集合
+new_collection = db[f'{name}指标']
+new_collection.drop()  # 清空集合中的所有文档
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -116,9 +120,6 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 grouped.to_csv(file_path, index=False)
 print('准备插入数据')
-# 连接MongoDB数据库并创建新集合
-new_collection = db[f'{name}指标']
-new_collection.drop()  # 清空集合中的所有文档
 # 将数据分批插入
 batch_size = 5000  # 批量插入的大小
 num_batches = len(grouped) // batch_size + 1

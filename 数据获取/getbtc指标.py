@@ -105,7 +105,9 @@ grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 # requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
 #               'title': 'DataFrame', 'text': message}})
 
-
+# 连接MongoDB数据库并创建新集合
+new_collection = db[f'{name}指标']
+new_collection.drop()  # 清空集合中的所有文档
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -116,9 +118,6 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 grouped.to_csv(file_path, index=False)
 print('准备插入数据')
-# 连接MongoDB数据库并创建新集合
-new_collection = db[f'{name}指标']
-new_collection.drop()  # 清空集合中的所有文档
 # 将数据分批插入
 batch_size = 5000  # 批量插入的大小
 num_batches = len(grouped) // batch_size + 1
