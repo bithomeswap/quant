@@ -43,35 +43,53 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df['delta昨日资金贡献'] = df['昨日资金贡献']-df['昨日资金贡献'].copy().shift(1)
         df['up昨日资金贡献'] = df['delta昨日资金贡献'].copy().clip(lower=0)
         df['down昨日资金贡献'] = df['delta昨日资金贡献'].copy().clip(upper=0)*-1
+        df['abs昨日资金贡献'] = abs(df['昨日资金贡献'])
+        df['absdelta昨日资金贡献'] = df['abs昨日资金贡献']-df['abs昨日资金贡献'].copy().shift(1)
+        df['absup昨日资金贡献'] = df['absdelta昨日资金贡献'].copy().clip(lower=0)
+        df['absdown昨日资金贡献'] = df['absdelta昨日资金贡献'].copy().clip(upper=0)*-1
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
         df['delta昨日资金波动'] = df['昨日资金波动']-df['昨日资金波动'].copy().shift(1)
         df['up昨日资金波动'] = df['delta昨日资金波动'].copy().clip(lower=0)
         df['down昨日资金波动'] = df['delta昨日资金波动'].copy().clip(upper=0)*-1
+        df['abs昨日资金波动'] = abs(df['昨日资金波动'])
+        df['absdelta昨日资金波动'] = df['abs昨日资金波动']-df['abs昨日资金波动'].copy().shift(1)
+        df['absup昨日资金波动'] = df['absdelta昨日资金波动'].copy().clip(lower=0)
+        df['absdown昨日资金波动'] = df['absdelta昨日资金波动'].copy().clip(upper=0)*-1
         # 计算当日开盘
         df['delta开盘'] = df['开盘']-df['开盘'].copy().shift(1)
         df['up开盘'] = df['delta开盘'].copy().clip(lower=0)
-        df['down开盘'] = df['delta开盘'].copy().clip(upper=0)*(-1)
+        df['down开盘'] = df['delta开盘'].copy().clip(upper=0)*-1
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         for n in range(2, 7):
             # 定义长周期比值的均值（反向过滤指标）
             df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
                 talib.MA(df['开盘'].values, timeperiod=n*5, matype=0)
             # 定义开盘rsi（正向筛选和反向过滤）
-            df[f'ma_up{n}周期开盘'] = df['up开盘'].copy().rolling(window=n).mean()
-            df[f'ma_down{n}周期开盘'] = df['down开盘'].copy().rolling(
-                window=n).mean()
-            df[f'rs{n}周期开盘'] = df[f'ma_up{n}周期开盘']/df[f'ma_down{n}周期开盘']
+            df[f'ma_up{n*2}周期开盘'] = df['up开盘'].copy().rolling(window=n*2).mean()
+            df[f'ma_down{n*2}周期开盘'] = df['down开盘'].copy().rolling(
+                window=n*2).mean()
+            df[f'rs{n*2}周期开盘'] = df[f'ma_up{n*2}周期开盘']/df[f'ma_down{n*2}周期开盘']
             # 定义昨日资金贡献rsi（正向筛选和反向过滤）
-            df[f'ma_up{n}周期昨日资金贡献'] = df['up昨日资金贡献'].copy().rolling(
-                window=n).mean()
-            df[f'ma_down{n}周期昨日资金贡献'] = df['down昨日资金贡献'].copy().rolling(
-                window=n).mean()
-            df[f'rs{n}周期昨日资金贡献'] = df[f'ma_up{n}周期昨日资金贡献'] / \
-                df[f'ma_down{n}周期昨日资金贡献']
+            df[f'ma_up{n*2}周期昨日资金贡献'] = df['up昨日资金贡献'].copy().rolling(
+                window=n*2).mean()
+            df[f'ma_down{n*2}周期昨日资金贡献'] = df['down昨日资金贡献'].copy().rolling(
+                window=n*2).mean()
+            df[f'rs{n*2}周期昨日资金贡献'] = df[f'ma_up{n*2}周期昨日资金贡献'] / \
+                df[f'ma_down{n*2}周期昨日资金贡献']
+            df[f'ma_up{n*2}周期昨日资金贡献'] = df['up昨日资金贡献'].copy().rolling(window=n*2).mean()
+            df[f'ma_down{n*2}周期昨日资金贡献'] = df['down昨日资金贡献'].copy().rolling(
+                window=n*2).mean()
+            df[f'rs{n*2}周期昨日资金贡献'] = df[f'ma_up{n*2}周期昨日资金贡献'] / \
+                df[f'ma_down{n*2}周期昨日资金贡献']
             # 定义昨日资金波动rsi（正向筛选和反向过滤）
             df[f'ma_up{n*2}周期昨日资金波动'] = df['up昨日资金波动'].copy().rolling(
                 window=n*2).mean()
+            df[f'ma_down{n*2}周期昨日资金波动'] = df['down昨日资金波动'].copy().rolling(
+                window=n*2).mean()
+            df[f'rs{n*2}周期昨日资金波动'] = df[f'ma_up{n*2}周期昨日资金波动'] / \
+                df[f'ma_down{n*2}周期昨日资金波动']
+            df[f'ma_up{n*2}周期昨日资金波动'] = df['up昨日资金波动'].copy().rolling(window=n*2).mean()
             df[f'ma_down{n*2}周期昨日资金波动'] = df['down昨日资金波动'].copy().rolling(
                 window=n*2).mean()
             df[f'rs{n*2}周期昨日资金波动'] = df[f'ma_up{n*2}周期昨日资金波动'] / \
