@@ -32,8 +32,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算涨跌幅
         df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
         # 计算昨日振幅
-        df['昨日振幅'] = ((df['最高'].copy().shift(1)-df['最低'].copy().shift(1)) /
-                      df['开盘'].copy().shift(1)-1)*100
+        df['昨日振幅'] = (df['最高'].copy().shift(
+            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日涨跌幅
         df['昨日涨跌幅'] = df['涨跌幅'].copy().shift(1)
         # 计算昨日成交额
@@ -63,16 +63,19 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
                 window=n).mean()
             df[f'rs{n}周期开盘'] = df[f'ma_up{n}周期开盘']/df[f'ma_down{n}周期开盘']
             # 定义昨日资金贡献rsi（正向筛选和反向过滤）
-            df[f'ma_up{n}周期昨日资金贡献'] = df['up昨日资金贡献'].copy().rolling(window=n).mean()
+            df[f'ma_up{n}周期昨日资金贡献'] = df['up昨日资金贡献'].copy().rolling(
+                window=n).mean()
             df[f'ma_down{n}周期昨日资金贡献'] = df['down昨日资金贡献'].copy().rolling(
                 window=n).mean()
-            df[f'rs{n}周期昨日资金贡献'] = df[f'ma_up{n}周期昨日资金贡献']/df[f'ma_down{n}周期昨日资金贡献']
+            df[f'rs{n}周期昨日资金贡献'] = df[f'ma_up{n}周期昨日资金贡献'] / \
+                df[f'ma_down{n}周期昨日资金贡献']
             # 定义昨日资金波动rsi（正向筛选和反向过滤）
             df[f'ma_up{n*2}周期昨日资金波动'] = df['up昨日资金波动'].copy().rolling(
                 window=n*2).mean()
             df[f'ma_down{n*2}周期昨日资金波动'] = df['down昨日资金波动'].copy().rolling(
                 window=n*2).mean()
-            df[f'rs{n*2}周期昨日资金波动'] = df[f'ma_up{n*2}周期昨日资金波动']/df[f'ma_down{n*2}周期昨日资金波动']
+            df[f'rs{n*2}周期昨日资金波动'] = df[f'ma_up{n*2}周期昨日资金波动'] / \
+                df[f'ma_down{n*2}周期昨日资金波动']
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
