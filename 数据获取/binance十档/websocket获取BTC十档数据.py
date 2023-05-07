@@ -43,7 +43,7 @@ def on_message(_, message):
         if collection.count_documents({'lastUpdateId': lastUpdateId}) == 0:
             collection.insert_one(order_data)
 
-        # logging.info(f"{symbol} {order_data} {lastUpdateId}")  # 打印数据不要总是输出日志，避免影响负载状态
+        # logging.info(f"{symbol} {order_data} {lastUpdateId}")
     except Exception as e:
         print("Error:", e)
 
