@@ -27,7 +27,7 @@ if '指数' in name.lower():
 if 'btc' in name.lower():
     n = 15
 if 'stock' in name.lower():
-    n = 6
+    n = 15
 if 'coin' in name.lower():
     n = 6
 mubiao = f'{n}日后总涨跌幅（未来函数）'

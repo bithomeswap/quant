@@ -2,8 +2,10 @@ import math
 import pandas as pd
 import os
 
+name = 'COIN'
+# name = 'STOCK'
 # name = 'BTC'
-name = '指数'
+# name = '指数'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -14,11 +16,6 @@ dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
-
-df_mean = df.groupby('日期')[f'SMA{20}开盘比值'].mean().reset_index(name='均值')
-df_mean['策略'] = df_mean['均值'].apply(lambda x: '震荡策略' if x >= 1 else '超跌策略')
-df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
-df = df_merged[df_merged['策略'] == '震荡策略'].copy()
 df['score'] = 0
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
@@ -28,64 +25,54 @@ for n in range(1, 9):
 code_count = len(df['代码'].drop_duplicates())
 print("标的数量", code_count)
 
-# if 'btc' in name.lower():
-#     # 成交额过滤劣质股票
-#     df = df[df[f'昨日成交额'] >= 200000].copy()
-#     df['score'] += df.groupby('日期')[f'SMA{20}开盘比值'].apply(
-#         lambda x: 1 if x >= df[f'SMA{20}开盘比值'].quantile(0.95) else 0)  # 确认长期趋势上涨
-#     df['score'] += df.groupby('日期')['昨日振幅'].apply(
-#         lambda x: 1 if x >= df['昨日振幅'].quantile(0.95) else 0)  # 振幅较大，趋势明显
-#     for n in range(6, 11):
-#         df['score'] += df[f'SMA{n}开盘比值'].apply(
-#             lambda x: 1 if x >= 1 else 0)  # 确认短期趋势下跌
-#     # 开盘价过滤高滑点股票
-#     df = df[df[f'开盘'] >= 0.01].copy()
+if 'btc' in name.lower():
+    # 成交额过滤劣质股票
+    df = df[df[f'昨日成交额'] >= 200000].copy()
+    for n in range(2, 7):
+        # 对短期趋势上涨进行打分
+        df['score'] += df[f'SMA{n*2}开盘比值'].apply(lambda x: 1 if x >= 1 else 0)
+    df = df[(df['SMA30开盘比值'] >= 1)].copy()
+    # 开盘价过滤高滑点股票
+    df = df[df[f'开盘'] >= 0.01].copy()
 if '指数' in name.lower():
-    # df=df[f'昨日振幅']具体策略中,一个指标截取,其他指标过滤,不能都是截取,最后没标的了.另外就是行情本身的过滤.
+    for n in range(2, 7):
+        # 对短期趋势上涨进行打分
+        df['score'] += df[f'SMA{n*2}开盘比值'].apply(lambda x: 1 if x >= 1 else 0)
+    df = df[(df['SMA30开盘比值'] >= 1)].copy()
+if 'coin' in name.lower():
+    # 昨日成交额过滤劣质股票
+    df = df[df[f'昨日成交额'] >= 1000000].copy()
 
-    df['score'] += df.groupby('日期')[f'SMA{20}开盘比值'].apply(
-        lambda x: (x >= df[f'SMA{20}开盘比值'].quantile(0.9)).astype(int))  # 确认长期趋势上涨的前百分之十
-    df['score'] += df.groupby('日期')[f'昨日振幅'].apply(
-        lambda x: (x >= df[f'昨日振幅'].quantile(0.9)).astype(int))  # 确认长期趋势上涨的前百分之十
-
-    # df['score'] += df.groupby('日期')[f'昨日振幅'].apply(
-    #     lambda x: (x <= x.quantile(0.1)).astype(int))  # 确认长期趋势下跌的后百分之十
-
-    for n in range(1, 7):
-        df['score'] += df[f'SMA{n*2}开盘比值'].apply(
-            lambda x: 1 if x >= 1 else 0)  # 确认短期趋势下跌
-# if 'coin' in name.lower():
-#     # 昨日成交额过滤劣质股票
-#     df = df[df[f'昨日成交额'] >= 1000000].copy()
-#     # 牛市过滤
-#     df = df[df[f'SMA{20}开盘比值'] >= 1].copy()
-#     df['score'] += df.groupby('日期')['昨日振幅'].apply(
-#         lambda x: 1 if x >= df['昨日振幅'].quantile(0.95) else 0)  # 振幅较大，趋势明显
-#     df['score'] += df.groupby('日期')[f'开盘'].apply(
-#         lambda x: 1 if x >= df[f'开盘'].quantile(0.95) else 0)  # 确认价格较低
-#     # 开盘价过滤高滑点股票
-#     df = df[df[f'开盘'] >= 0.00000500].copy()
-# if 'stock' in name.lower():
-#     # 价格过滤劣质股票
-#     df = df[(df['真实价格'] >= 4)].copy()
-#     # 牛市过滤
-#     df = df[df[f'SMA{20}开盘比值'] >= 1].copy()
-#     df['score'] += df.groupby('日期')['昨日振幅'].apply(
-#         lambda x: 1 if x >= df['昨日振幅'].quantile(0.95) else 0)  # 振幅较大，趋势明显
-#     df['score'] += df.groupby('日期')[f'开盘'].apply(
-#         lambda x: 1 if x >= df[f'昨日成交额'].quantile(0.95) else 0)  # 确认价格较低
-#     # 开盘收盘幅过滤无法买入股票
-#     df = df[
-#         (df['开盘收盘幅'] <= 8)
-#         &
-#         (df['开盘收盘幅'] >= 0)
-#     ].copy()
+    df = df[df[f'昨日振幅'] >= df[f'昨日振幅'].quantile(0.9)]  # 确认长期趋势上涨的前百分之十
+    df = df[df[f'昨日振幅'] <= df[f'昨日振幅'].quantile(0.1)]  # 确认长期趋势上涨的后百分之十
+    # 比例打分
+    # df['score'] += df.groupby('日期')[f'昨日振幅'].apply(lambda x: (x <= x.quantile(0.1)).astype(int))
+    for n in range(2, 7):
+        # 对短期趋势上涨进行打分
+        df['score'] += df[f'SMA{n*2}开盘比值'].apply(lambda x: 1 if x >= 1 else 0)
+    df = df[(df['SMA30开盘比值'] >= 1)].copy()
+    # 开盘价过滤高滑点股票
+    df = df[df[f'开盘'] >= 0.00000500].copy()
+    print(len(df))
+if 'stock' in name.lower():
+    # 价格过滤劣质股票
+    df = df[(df['真实价格'] >= 4)].copy()
+    for n in range(2, 7):
+        # 对短期趋势上涨进行打分
+        df['score'] += df[f'SMA{n*2}开盘比值'].apply(lambda x: 1 if x >= 1 else 0)
+    df = df[(df['SMA30开盘比值'] >= 1)].copy()
+    # 开盘收盘幅过滤无法买入股票
+    df = df[
+        (df['开盘收盘幅'] <= 8)
+        &
+        (df['开盘收盘幅'] >= 0)
+    ].copy()
 
 
-# 每天选择分值较高的10个股票，总分值大于5
+# 每天选择分值较高且最小得分大于1的股票
 df = df.groupby(['日期']).apply(
     lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
-df = df.groupby(['日期']).filter(lambda x: x['score'].sum() > 5)
+df = df.groupby(['日期']).filter(lambda x: x['score'].sum() >= 1)
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'
 df.to_csv(trading_detail_filename, index=False)

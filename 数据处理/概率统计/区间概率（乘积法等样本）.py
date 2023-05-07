@@ -21,7 +21,7 @@ file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 9):
+for n in range(1, 5):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
@@ -32,7 +32,7 @@ if 'stock' in name.lower():
 if 'coin' in name.lower():
     df = df[df['昨日成交额'] >= 1000000].copy()
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据
-mubiao = '10日最高开盘价比值'
+mubiao = f'SMA{n*2}开盘比值'
 print('任务已经开始')
 # df = df.dropna(subset=[mubiao])
 df = df.dropna()
