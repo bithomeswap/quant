@@ -35,7 +35,7 @@ if 'btc' in name.lower():
     df = df[df[f'开盘'] >= 0.01].copy()
 if '指数' in name.lower():
     for n in range(2, 7):
-        df['score'] += df[f'SMA{n*2}开盘比值'].apply(
+        df['score'] += df[f'SMA{n*5}开盘比值'].apply(
             lambda x: 1 if x <= 1 else 0)  # 对短期趋势下跌进行打分
     df=df[(df['SMA30开盘比值'] <=1)].copy()
 print(len(df))

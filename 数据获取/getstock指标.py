@@ -80,7 +80,7 @@ grouped = data.groupby('代码', group_keys=False).apply(get_technical_indicator
 def paiming(df):  # 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
     # 计算每个指标的排名
     for column in df.columns:
-        if ('未来函数' not in str(column)) & ('收盘' != str(column)) & ('最高' != str(column)) & ('最低' != str(column)) & ('成交量' != str(column)) & ('代码' != str(column)) & ('开盘' != str(column)):
+        if '未来函数' not in str(column):
             df = pd.concat([df, (df[str(column)].rank(
                 method='max', ascending=False) / len(df)).rename(f'{str(column)}_rank')], axis=1)
     return df
