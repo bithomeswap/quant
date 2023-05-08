@@ -25,7 +25,8 @@ for n in range(1, 5):  # 去掉n日后总涨跌幅大于百分之三百的噪音
 df_mean = df.groupby('日期')[f'SMA{20}开盘比值'].mean().reset_index(name='均值')
 df_mean['策略'] = df_mean['均值'].apply(lambda x: '多头行情' if x >= 1 else '空头行情')
 df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
-df = df_merged[df_merged['策略'] == '空头策略'].copy()
+# df = df_merged[df_merged['策略'] == '空头策略'].copy()
+# df = df_merged[df_merged['策略'] == '多头策略'].copy()
 df['score'] = 0
 
 # 空头备份

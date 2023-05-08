@@ -2,8 +2,8 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
-name = 'STOCK'
+name = 'COIN'
+# name = 'STOCK'
 # name = 'BTC'
 
 # 获取当前.py文件的绝对路径
@@ -21,11 +21,6 @@ print("标的数量", code_count)
 for n in range(1, 5):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
-df_mean = df.groupby('日期')[f'SMA{20}开盘比值'].mean().reset_index(name='均值')
-df_mean['策略'] = df_mean['均值'].apply(lambda x: '多头行情' if x >= 1 else '空头行情')
-df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
-df = df_merged[df_merged['策略'] == '多头策略'].copy()
-df['score'] = 0
 
 # if 'btc' in name.lower():
 #     # 排除掉资金结算前后的持仓
@@ -35,52 +30,47 @@ df['score'] = 0
 if 'coin' in name.lower():
     df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
     df = df[df[f'开盘'] >= 0.00000500].copy()  # 开盘价过滤高滑点股票
-    df['score'] = 0
-    df['score'] += df[f'昨日资金波动_rank'].copy().apply(lambda x: 1 if x <= 0.05 else 0)
-    df['score'] += df[f'昨日资金贡献_rank'].copy().apply(lambda x: 1 if x <= 0.05 else 0)
-    df = df[df[f'score'] >= 1].copy()
-    df['score'] = 0
-    df['score'] += df[f'昨日振幅_rank'].copy().apply(lambda x: 1 if x <= 0.2 else 0)
-    df['score'] += df[f'昨日成交额_rank'].copy().apply(lambda x: 1 if x <= 0.2 else 0)
-    df['score'] += df[f'delta开盘_rank'].copy().apply(lambda x: 1 if x <= 0.2 else 0)
-    df['score'] += df[f'昨日涨跌_rank'].copy().apply(lambda x: 1 if x <= 0.5 else 0)
-    df['score'] += df[f'delta昨日涨跌_rank'].copy().apply(lambda x: 1 if x <= 0.5 else 0)
-    for n in range(2, 6):  # 对短期趋势上涨进行打分
-        df['score'] += df[f'ma_delta{n*2}周期昨日资金贡献_rank'].copy().apply(
-            lambda x: 1 if x <= 0.5 else 0)
-        df['score'] += df[f'ma_delta{n*2}周期昨日资金波动_rank'].copy().apply(
-            lambda x: 1 if x <= 0.5 else 0)
-    df = df.groupby(['日期']).apply(
-        lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
-    df = df[df[f'score'] >= 1].copy()
+    # 反向
+    # df = df[(df['开盘收盘幅_rank'] <= 0.9)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    # df = df[(df['昨日振幅_rank'] >= 0.3)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    # 正向
+    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    # df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+
+    # for n in range(2, 10):  # 对短期趋势上涨进行打分
+    #     df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &
+    #             (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    #     df = df[(df[f'SMA{n*10}开盘比值_rank'] >= 0.1)&
+    #             (df[f'SMA{n*10}开盘比值_rank'] <= 0.9)].copy()
+
+    # df['score'] = 0
+    # for n in range(2, 10):  # 对短期趋势上涨进行打分
+    #     df['score'] += df[f'SMA{n}开盘比值'].copy().apply(lambda x: 1 if x >=1 else 0)
+    # df = df.groupby(['日期']).apply(
+    #     lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
+    # df = df[df[f'score'] >= 1].copy()
     print(len(df))
 if 'stock' in name.lower():
     df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
     df = df[(df['开盘收盘幅'] <= 8)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    df['score'] = 0
-    df['score'] += df[f'昨日资金波动_rank'].copy().apply(lambda x: 1 if x <= 0.05 else 0)
-    df['score'] += df[f'delta昨日资金波动_rank'].copy().apply(lambda x: 1 if x <=
-                                                        0.05 else 0)
-    df = df[df[f'score'] >= 1].copy()
-    df['score'] = 0
-    df['score'] += df[f'昨日资金贡献_rank'].copy().apply(lambda x: 1 if x <= 0.05 else 0)
-    df['score'] += df[f'delta昨日资金贡献_rank'].copy().apply(lambda x: 1 if x <=
-                                                        0.05 else 0)
-    df = df[df[f'score'] >= 1].copy()
-    df['score'] = 0
-    df['score'] += df[f'昨日振幅_rank'].copy().apply(lambda x: 1 if x <= 0.2 else 0)
-    df['score'] += df[f'昨日成交额_rank'].copy().apply(lambda x: 1 if x <= 0.2 else 0)
-    df['score'] += df[f'delta开盘_rank'].copy().apply(lambda x: 1 if x <= 0.2 else 0)
-    df['score'] += df[f'昨日涨跌_rank'].copy().apply(lambda x: 1 if x <= 0.5 else 0)
-    df['score'] += df[f'delta昨日涨跌_rank'].copy().apply(lambda x: 1 if x <= 0.5 else 0)
-    for n in range(2, 6):  # 对短期趋势上涨进行打分
-        df['score'] += df[f'ma_delta{n*2}周期昨日资金贡献_rank'].copy().apply(
-            lambda x: 1 if x <= 0.5 else 0)
-        df['score'] += df[f'ma_delta{n*2}周期昨日资金波动_rank'].copy().apply(
-            lambda x: 1 if x <= 0.5 else 0)
-    df = df.groupby(['日期']).apply(
-        lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
-    df = df[df[f'score'] >= 1].copy()
+    # 反向
+    df = df[(df['开盘收盘幅_rank'] <= 0.9)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日振幅_rank'] >= 0.3)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    # 正向
+    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    for n in range(2, 10):  # 对短期趋势上涨进行打分
+        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &
+                (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+        df = df[(df[f'SMA{n*10}开盘比值_rank'] >= 0.1) &
+                (df[f'SMA{n*10}开盘比值_rank'] <= 0.9)].copy()
+
+    # df['score'] = 0
+    # for n in range(2, 10):  # 对短期趋势上涨进行打分
+    #     df['score'] += df[f'SMA{n}开盘比值'].copy().apply(lambda x: 1 if x >=1 else 0)
+    # df = df.groupby(['日期']).apply(
+    #     lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
+    # df = df[df[f'score'] >= 1].copy()
     print(len(df))
 
 # 将交易标的细节输出到一个csv文件

@@ -7,6 +7,7 @@
 from binance.client import Client
 from pymongo import MongoClient
 import time
+import pandas as pd
 
 # 币安的api配置
 api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
@@ -27,12 +28,12 @@ collection = db[f'{name}']
 client = Client(api_key, api_secret)
 
 # 获取所有USDT计价的现货交易对
-ticker_prices = client.get_exchange_info()['symbols']
+ticker_prices = client.futures_exchange_info()['symbols']
 
 usdt_ticker_prices = [
-    ticker_price for ticker_price in ticker_prices if ticker_price['quoteAsset'] == 'USDT' and ("DOWN" not in ticker_price['symbol']) and ("UP" not in ticker_price['symbol'])]
+    ticker_price for ticker_price in ticker_prices if ticker_price['quoteAsset'] == 'USDT' and ticker_price['contractType'] == 'PERPETUAL']
+print(f"当前币安永续合约有{len(ticker_prices)}个交易对")
 
-print(f"当前币安现货有{len(ticker_prices)}个交易对")
 # 遍历所有现货交易对，并获取日K线数据
 for ticker_price in usdt_ticker_prices:
     symbol = ticker_price['symbol']
@@ -41,7 +42,7 @@ for ticker_price in usdt_ticker_prices:
     latest_data = collection.find_one(
         {"代码": symbol}, {"timestamp": 1}, sort=[('timestamp', -1)])
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
-    klines = client.get_historical_klines(
+    klines = client.futures_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_8HOUR,
         limit=800
@@ -95,12 +96,12 @@ for ticker_price in usdt_ticker_prices:
     if len(data_list) > 0:
         collection.insert_many(data_list)
 print('任务已经完成')
-time.sleep(60)
-limit = 1200000
-if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([('日期', 1)]).limit(
-        collection.count_documents({})-limit)
-    ids_to_delete = [data['_id'] for data in oldest_data]
-    collection.delete_many({'_id': {'$in': ids_to_delete}})
-    # 往外读取数据的时候再更改索引吧
-print('数据清理成功')
+# time.sleep(60)
+# limit = 1200000
+# if collection.count_documents({}) >= limit:
+#     oldest_data = collection.find().sort([('日期', 1)]).limit(
+#         collection.count_documents({})-limit)
+#     ids_to_delete = [data['_id'] for data in oldest_data]
+#     collection.delete_many({'_id': {'$in': ids_to_delete}})
+#     # 往外读取数据的时候再更改索引吧
+# print('数据清理成功')
