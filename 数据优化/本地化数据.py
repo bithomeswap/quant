@@ -6,8 +6,10 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 
-name = 'COIN'
+# 设置参数
+# name = 'COIN'
 # name = 'STOCK'
+name = 'BTC'
 
 collection = db[f"{name}"]
 # 读取MongoDB中的数据

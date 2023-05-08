@@ -6,9 +6,8 @@ import datetime
 import os
 
 # name = 'COIN'
-name = 'STOCK'
-# name = 'BTC'
-# name = '指数'
+# name = 'STOCK'
+name = 'BTC'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -32,7 +31,7 @@ if 'stock' in name.lower():
 if 'coin' in name.lower():
     df = df[df['昨日成交额'] >= 1000000].copy()
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据
-mubiao = f'SMA{n*2}开盘比值'
+mubiao = f'开盘'
 print('任务已经开始')
 # df = df.dropna(subset=[mubiao])
 df = df.dropna()

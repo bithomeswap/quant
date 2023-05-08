@@ -4,9 +4,10 @@ import talib
 import os
 from pymongo import MongoClient
 
-# 选择要分析的产品
-name = "COIN"
-# name = "STOCK"
+# 设置参数
+# name = 'COIN'
+# name = 'STOCK'
+name = 'BTC'
 
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')

@@ -17,7 +17,11 @@ api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
+# 设置参数
+# name = 'COIN'
+# name = 'STOCK'
 name = 'BTC'
+
 collection = db[f'{name}']
 
 # 创建Binance客户端
@@ -43,9 +47,11 @@ for ticker_price in usdt_ticker_prices:
         interval=Client.KLINE_INTERVAL_1MINUTE,
         limit=800
     )
-    # KLINE_INTERVAL_1MINUTE = '1m'
+
+    # 实际上实盘的时候，这里应该改成八小时
     # KLINE_INTERVAL_15MINUTE='15m'
-    # KLINE_INTERVAL_1DAY = '1d'
+    # KLINE_INTERVAL_8HOUR='8h'
+    # KLINE_INTERVAL_1DAY ='1d'
     # 插入到集合中
     for kline in klines:
         timestamp = kline[0] / 1000

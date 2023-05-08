@@ -4,7 +4,8 @@ import math
 import os
 
 # name = 'COIN'
-name = 'STOCK'
+# name = 'STOCK'
+name = 'BTC'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
