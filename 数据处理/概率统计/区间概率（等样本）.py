@@ -21,7 +21,7 @@ file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
-for n in range(1, 5):
+for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式

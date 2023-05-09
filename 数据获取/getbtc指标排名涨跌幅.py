@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import datetime
 import os
-
 # 设置参数
 name = 'BTC'
 # name = 'COIN'
@@ -26,14 +25,14 @@ if 'btc' in name.lower():
     n = 15
 if 'stock' in name.lower():
     n = 6
-if 'coin' in name.lower():
+if '证' in name.lower():
     n = 6
 mubiao = f'{n}日后总涨跌幅（未来函数）'
 
 # 过滤符合条件的数据
 if 'stock' in name.lower():
-    df = df[df['真实价格'] >= 4].copy()
-    df = df[df['开盘收盘幅'] <= 8].copy()
+    df = df[df['真实价格'] >= 4].copy()  # 真实价格过滤劣质股票
+    df = df[df['开盘收盘幅'] <= 1].copy()  # 开盘收盘幅过滤涨停无法买入股票
 if 'coin' in name.lower():
     # 过滤低成交的垃圾股
     df = df[df['昨日成交额'] >= 1000000].copy()
@@ -44,7 +43,8 @@ if 'btc' in name.lower():
     df = df[df['昨日成交额'] >= 10000].copy()
     # 过滤条件(清算规避)：不在0、8、14整点时间之前20分钟的数据（时间戳对应的标准时间）
     df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
-    df = df[df['资金结算'].apply(lambda x: not ((x.hour in [7, 15, 23]) and (x.minute > 40)))]
+    df = df[df['资金结算'].apply(lambda x: not (
+        (x.hour in [7, 15, 23]) and (x.minute > 40)))]
 
 # 将数据划分成a个等长度的区间
 a = 50
