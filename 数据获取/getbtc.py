@@ -45,7 +45,7 @@ for ticker_price in usdt_ticker_prices:
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
     klines = client.futures_klines(
         symbol=symbol,
-        interval=Client.KLINE_INTERVAL_1MINUTE,
+        interval=Client.KLINE_INTERVAL_5MINUTE,
         limit=800
     )
 
