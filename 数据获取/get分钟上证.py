@@ -11,8 +11,8 @@ db = client['wth000']
 # 设置参数
 # name = '分钟COIN'
 # name = 'COIN'
-# name = '分钟上证'
-name = '上证'
+name = '分钟上证'
+# name = '上证'
 # name = '分钟深证'
 # name = '深证'
 
@@ -34,9 +34,11 @@ df = df[~df['名称'].str.contains('ST')]
 # 过滤掉退市股票
 df = df[~df['名称'].str.contains('退')]
 if '深证' in name.lower():
-    df = df[df['代码'].str.startswith(('000', '001'))][['代码', '名称']]  # 获取上证的前复权日k数据
+    df = df[df['代码'].str.startswith(('000', '001'))][[
+        '代码', '名称']]  # 获取上证的前复权日k数据
 if '上证' in name.lower():
-    df = df[df['代码'].str.startswith(('600', '601'))][['代码', '名称']]  # 获取深证的前复权日k数据
+    df = df[df['代码'].str.startswith(('600', '601'))][[
+        '代码', '名称']]  # 获取深证的前复权日k数据
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     # print(code)
@@ -50,23 +52,19 @@ for code in df['代码']:
         upsert_docs = False
         latest_timestamp = latest[0]["timestamp"]
         start_date_query = datetime.datetime.fromtimestamp(
-            latest_timestamp).strftime('%Y%m%d')
+            latest_timestamp).strftime('%Y-%m-%d')
 
     # 通过 akshare 获取目标指数的日K线数据
-    k_data = ak.stock_zh_a_hist(
-        symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
-    k_data_true = ak.stock_zh_a_hist(
-        symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
+    k_data = ak.stock_zh_a_hist_min_em(
+        symbol=code, period=5)
     try:
-        k_data_true = k_data_true[['日期', '开盘']].rename(columns={'开盘': '真实价格'})
-        k_data = pd.merge(k_data, k_data_true, on='日期', how='left')
         k_data['代码'] = float(code)
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-
-        k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        k_data['日期'] = k_data['时间']
         # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-        #     datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        #     datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
+            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
 
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
@@ -97,7 +95,7 @@ for code in df['代码']:
     except Exception as e:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
-# time.sleep(60)
+time.sleep(60)
 limit = 500000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(

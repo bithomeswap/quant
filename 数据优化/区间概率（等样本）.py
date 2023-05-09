@@ -5,10 +5,12 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-# name = 'BTC'
+# name = '分钟COIN'
 # name = 'COIN'
+name = '分钟上证'
 # name = '上证'
-name = '深证'
+# name = '分钟深证'
+# name = '深证'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -25,10 +27,10 @@ for n in range(1, 9):
 
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
 df = df.loc[:, ~df.columns.str.contains('未来60日')]  # 去掉未来函数
-if 'stock' in name.lower():
+if ('证' in name.lower()) and ('分钟' not in name.lower()):
     df = df[df['真实价格'] >= 4].copy()
     df = df[df['开盘收盘幅'] <= 8].copy()
-if 'coin' in name.lower():
+if ('coin' in name.lower()) and ('分钟' not in name.lower()):
     df = df[df['昨日成交额'] >= 1000000].copy()
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据
 mubiao = f'开盘'

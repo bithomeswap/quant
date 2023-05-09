@@ -3,9 +3,11 @@ import pandas as pd
 import os
 
 # 设置参数
-# name = 'BTC'
+# name = '分钟COIN'
 # name = 'COIN'
+# name = '分钟上证'
 # name = '上证'
+# name = '分钟深证'
 name = '深证'
 
 # 获取当前.py文件的绝对路径
@@ -23,8 +25,8 @@ print("标的数量", code_count)
 for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
-if 'btc' in name.lower():
-    # 排除掉资金结算前后的持仓
+if ('coin' in name.lower()) and ('分钟' in name.lower()):
+    # 过滤低成交的垃圾股
     df = df[df[f'昨日成交额'] >= 10000].copy()  # 成交额过滤劣质股票
     df = df[df[f'开盘'] >= 0.01].copy()  # 开盘价过滤高滑点股票
     # 正向
@@ -34,10 +36,13 @@ if 'btc' in name.lower():
         df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
+    # 排除掉资金结算前后的持仓
     df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
-    df = df[df['资金结算'].apply(lambda x: not ((x.hour in [7, 15, 23]) and (x.minute > 40)))]
-    print(len(df))
-if 'coin' in name.lower():
+    df = df[df['资金结算'].apply(lambda x: not (
+        (x.hour in [7, 15, 23]) and (x.minute > 40)))]
+    print(len(df),name)
+if ('coin' in name.lower()) and ('分钟' not in name.lower()):
+    # 过滤低成交的垃圾股
     df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
     df = df[df[f'开盘'] >= 0.00000500].copy()  # 开盘价过滤高滑点股票
     # 正向
@@ -47,8 +52,8 @@ if 'coin' in name.lower():
         df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
-    print(len(df))
-if '证' in name.lower():
+    print(len(df),name)
+if ('证' in name.lower()) and ('分钟' not in name.lower()):
     df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
     df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     # 正向
@@ -58,7 +63,11 @@ if '证' in name.lower():
         df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
-    print(len(df))
+    print(len(df),name)
+if ('证' in name.lower()) and ('分钟' in name.lower()):
+    print(name)
+
+
 
 # 将交易标的细节输出到一个csv文件
 trading_detail_filename = f'{name}交易标的细节.csv'

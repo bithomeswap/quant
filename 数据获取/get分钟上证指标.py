@@ -11,8 +11,8 @@ db = client['wth000']
 # 设置参数
 # name = '分钟COIN'
 # name = 'COIN'
-# name = '分钟上证'
-name = '上证'
+name = '分钟上证'
+# name = '上证'
 # name = '分钟深证'
 # name = '深证'
 
@@ -97,8 +97,8 @@ for code in df['代码']:
     except Exception as e:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
-# time.sleep(60)
-limit = 500000
+time.sleep(60)
+limit = 1200000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

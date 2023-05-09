@@ -18,9 +18,11 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数
-name = 'BTC'
+name = '分钟COIN'
 # name = 'COIN'
+# name = '分钟上证'
 # name = '上证'
+# name = '分钟深证'
 # name = '深证'
 
 collection = db[f'{name}']
@@ -98,7 +100,7 @@ for ticker_price in usdt_ticker_prices:
         collection.insert_many(data_list)
 print('任务已经完成')
 # time.sleep(60)
-limit = 1200000
+limit = 500000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

@@ -12,8 +12,8 @@ db = client['wth000']
 # name = '分钟COIN'
 # name = 'COIN'
 # name = '分钟上证'
-name = '上证'
-# name = '分钟深证'
+# name = '上证'
+name = '分钟深证'
 # name = '深证'
 
 collection = db[f"{name}"]
@@ -34,9 +34,11 @@ df = df[~df['名称'].str.contains('ST')]
 # 过滤掉退市股票
 df = df[~df['名称'].str.contains('退')]
 if '深证' in name.lower():
-    df = df[df['代码'].str.startswith(('000', '001'))][['代码', '名称']]  # 获取上证的前复权日k数据
+    df = df[df['代码'].str.startswith(('000', '001'))][[
+        '代码', '名称']]  # 获取上证的前复权日k数据
 if '上证' in name.lower():
-    df = df[df['代码'].str.startswith(('600', '601'))][['代码', '名称']]  # 获取深证的前复权日k数据
+    df = df[df['代码'].str.startswith(('600', '601'))][[
+        '代码', '名称']]  # 获取深证的前复权日k数据
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     # print(code)
@@ -97,8 +99,8 @@ for code in df['代码']:
     except Exception as e:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
-# time.sleep(60)
-limit = 500000
+time.sleep(60)
+limit = 1200000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
