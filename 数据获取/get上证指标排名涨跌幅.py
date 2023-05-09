@@ -24,7 +24,7 @@ for n in range(1, 9):
 if 'btc' in name.lower():
     n = 15
 if 'coin' in name.lower():
-    n = 8
+    n = 15
 if '证' in name.lower():
     n = 8
 mubiao = f'{n}日后总涨跌幅（未来函数）'

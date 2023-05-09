@@ -4,16 +4,16 @@ import os
 
 # 设置参数
 # name = 'BTC'
-name = 'COIN'
+# name = 'COIN'
 # name = '上证'
-# name = '深证'
+name = '深证'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
 dir_path = os.path.dirname(file_path)
-# 获取当前.py文件所在目录的上三级目录的路径
-dir_path = os.path.dirname(os.path.dirname(os.path.dirname(dir_path)))
+# 获取当前.py文件所在目录的上两级目录的路径
+dir_path = os.path.dirname(os.path.dirname(dir_path))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
 
@@ -23,7 +23,6 @@ print("标的数量", code_count)
 for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
-
 if 'btc' in name.lower():
     # 排除掉资金结算前后的持仓
     df = df[df[f'昨日成交额'] >= 10000].copy()  # 成交额过滤劣质股票
@@ -31,11 +30,12 @@ if 'btc' in name.lower():
     # 正向
     df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 10):  # 对短期趋势上涨进行打分
-        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) & (
-            df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    for n in range(2, 20):  # 对短期趋势上涨进行打分
+        df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
+    df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
+    df = df[df['资金结算'].apply(lambda x: not ((x.hour in [7, 15, 23]) and (x.minute > 40)))]
     print(len(df))
 if 'coin' in name.lower():
     df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
@@ -43,8 +43,8 @@ if 'coin' in name.lower():
     # 正向
     df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 10):  # 对短期趋势上涨进行打分
-        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) & (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    for n in range(2, 20):  # 对短期趋势上涨进行打分
+        df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
     print(len(df))
@@ -54,9 +54,8 @@ if '证' in name.lower():
     # 正向
     df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 10):  # 对短期趋势上涨进行打分
-        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) & (
-            df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    for n in range(2, 20):  # 对短期趋势上涨进行打分
+        df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
     print(len(df))

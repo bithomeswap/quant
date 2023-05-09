@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# # -*- coding: utf-8 -*-
 # 指定解释器位置
 #!/root/miniconda3/bin/python
 # nohup /root/miniconda3/bin/python /root/binance_trade_tool_vpn/quant/数据获取/getbtc指标.py
@@ -18,8 +18,8 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数
-# name = 'BTC'
-name = 'COIN'
+name = 'BTC'
+# name = 'COIN'
 # name = '上证'
 # name = '深证'
 
@@ -98,11 +98,11 @@ for ticker_price in usdt_ticker_prices:
         collection.insert_many(data_list)
 print('任务已经完成')
 # time.sleep(60)
-# limit = 1200000
-# if collection.count_documents({}) >= limit:
-#     oldest_data = collection.find().sort([('日期', 1)]).limit(
-#         collection.count_documents({})-limit)
-#     ids_to_delete = [data['_id'] for data in oldest_data]
-#     collection.delete_many({'_id': {'$in': ids_to_delete}})
-#     # 往外读取数据的时候再更改索引吧
-# print('数据清理成功')
+limit = 1200000
+if collection.count_documents({}) >= limit:
+    oldest_data = collection.find().sort([('日期', 1)]).limit(
+        collection.count_documents({})-limit)
+    ids_to_delete = [data['_id'] for data in oldest_data]
+    collection.delete_many({'_id': {'$in': ids_to_delete}})
+    # 往外读取数据的时候再更改索引吧
+print('数据清理成功')
