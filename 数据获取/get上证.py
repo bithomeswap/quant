@@ -31,8 +31,8 @@ df = ak.stock_zh_a_spot_em()
 df = df[~df['名称'].str.contains('ST')]
 # 过滤掉退市股票
 df = df[~df['名称'].str.contains('退')]
-# df = df[df['代码'].str.startswith(('60'))][['代码', '名称']]  # 获取深证的前复权日k数据
-df = df[df['代码'].str.startswith(('000', '001'))][['代码', '名称']]  # 获取上证的前复权日k数据
+df = df[df['代码'].str.startswith(('60'))][['代码', '名称']]  # 获取深证的前复权日k数据
+# df = df[df['代码'].str.startswith(('000', '001'))][['代码', '名称']]  # 获取上证的前复权日k数据
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     # print(code)
@@ -60,7 +60,9 @@ for code in df['代码']:
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
 
         k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+            datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
+        #     datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
 
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
