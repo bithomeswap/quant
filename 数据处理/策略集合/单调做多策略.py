@@ -31,8 +31,9 @@ if 'btc' in name.lower():
     # 正向
     df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 24):  # 对短期趋势上涨进行打分
-        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &(df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    for n in range(2, 10):  # 对短期趋势上涨进行打分
+        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) & (
+            df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
     print(len(df))
@@ -42,8 +43,8 @@ if 'coin' in name.lower():
     # 正向
     df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 24):  # 对短期趋势上涨进行打分
-        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &(df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    for n in range(2, 10):  # 对短期趋势上涨进行打分
+        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) & (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
     print(len(df))
@@ -53,8 +54,9 @@ if '证' in name.lower():
     # 正向
     df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 24):  # 对短期趋势上涨进行打分
-        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &(df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
+    for n in range(2, 10):  # 对短期趋势上涨进行打分
+        df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) & (
+            df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
         df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
         df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
     print(len(df))
@@ -73,7 +75,7 @@ if '证' in name.lower():
     m = 0.005  # 设置手续费
 if 'coin' in name.lower():
     n = 18  # 设置持仓周期
-    m = 0.001  # 设置手续费
+    m = 0.005  # 设置手续费
     # df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
     # df = df[df['资金结算'].apply(lambda x: not ((x.hour in [7, 15, 23]) and (x.minute > 40)))]
 if 'btc' in name.lower():

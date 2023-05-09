@@ -23,10 +23,10 @@ for n in range(1, 9):
 
 if 'btc' in name.lower():
     n = 15
-if 'stock' in name.lower():
-    n = 6
+if 'coin' in name.lower():
+    n = 8
 if '证' in name.lower():
-    n = 6
+    n = 8
 mubiao = f'{n}日后总涨跌幅（未来函数）'
 
 # 过滤符合条件的数据
