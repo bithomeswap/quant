@@ -2,9 +2,9 @@ import math
 import pandas as pd
 import os
 
-# name = 'COIN'
+name = 'COIN'
 # name = 'STOCK'
-name = 'BTC'
+# name = 'BTC'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
