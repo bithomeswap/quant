@@ -4,9 +4,9 @@ import os
 
 # 设置参数
 # name = 'BTC'
-# name = 'COIN'
+name = 'COIN'
 # name = '上证'
-name = '深证'
+# name = '深证'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -32,8 +32,8 @@ if 'btc' in name.lower():
     df = df[(df['开盘收盘幅_rank'] <= 0.9)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日振幅_rank'] >= 0.3)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     # 正向
-    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     for n in range(2, 10):  # 对短期趋势上涨进行打分
         df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &
                 (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
@@ -53,8 +53,8 @@ if 'coin' in name.lower():
     df = df[(df['开盘收盘幅_rank'] <= 0.9)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日振幅_rank'] >= 0.3)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     # 正向
-    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     for n in range(2, 10):  # 对短期趋势上涨进行打分
         df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &
                 (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
@@ -74,8 +74,8 @@ if '证' in name.lower():
     df = df[(df['开盘收盘幅_rank'] <= 0.9)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     df = df[(df['昨日振幅_rank'] >= 0.3)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     # 正向
-    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     for n in range(2, 10):  # 对短期趋势上涨进行打分
         df = df[(df[f'SMA{n}开盘比值_rank'] >= 0.1) &
                 (df[f'SMA{n}开盘比值_rank'] <= 0.9)].copy()
