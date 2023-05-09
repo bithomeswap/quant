@@ -13,9 +13,9 @@ client = MongoClient(
 db = client['wth000']
 # 设置参数
 # name = 'BTC'
-name = 'COIN'
+# name = 'COIN'
 # name = '上证'
-# name = '深证'
+name = '深证'
 
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式

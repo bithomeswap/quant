@@ -3,11 +3,11 @@ import numpy as np
 import datetime
 import os
 
-
 # 设置参数
+name = 'BTC'
 # name = 'COIN'
-name = 'STOCK'
-# name = 'BTC'
+# name = '上证'
+# name = '深证'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -44,8 +44,7 @@ if 'btc' in name.lower():
     df = df[df['昨日成交额'] >= 10000].copy()
     # 过滤条件(清算规避)：不在0、8、14整点时间之前20分钟的数据（时间戳对应的标准时间）
     df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
-    df = df[df['资金结算'].apply(lambda x: not (
-        (x.hour in [7, 15, 23]) and (x.minute > 40)))]
+    df = df[df['资金结算'].apply(lambda x: not ((x.hour in [7, 15, 23]) and (x.minute > 40)))]
 
 # 将数据划分成a个等长度的区间
 a = 50

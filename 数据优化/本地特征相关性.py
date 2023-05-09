@@ -3,11 +3,11 @@ import pandas as pd
 import talib
 import os
 from pymongo import MongoClient
-
 # 设置参数
+# name = 'BTC'
 # name = 'COIN'
-# name = 'STOCK'
-name = 'BTC'
+# name = '上证'
+name = '深证'
 
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
