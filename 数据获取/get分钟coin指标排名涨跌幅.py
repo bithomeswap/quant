@@ -23,12 +23,31 @@ df = pd.read_csv(file_path)
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
-if 'coin' in name.lower():
-    n = 15
-if '证' in name.lower():
-    n = 8
+if ('证' in name.lower()) and ('分钟' in name.lower()):
+    n = 18  # 设置持仓周期
+if ('证' in name.lower()) and ('分钟' not in name.lower()):
+    n = 18  # 设置持仓周期
+if ('coin' in name.lower()) and ('分钟' in name.lower()):
+    n = 18  # 设置持仓周期
+    m = 0.0005  # 设置手续费
+    df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
+    df = df[df['资金结算'].apply(lambda x: not (
+        (x.hour in [7, 15, 23]) and (x.minute > 40)))]
+if ('coin' in name.lower()) and ('分钟' not in name.lower()):
+    n = 6  # 设置持仓周期
 mubiao = f'{n}日后总涨跌幅（未来函数）'
 
+if ('证' in name.lower()) and ('分钟' in name.lower()):
+    df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
+    df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    # 正向
+    df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    for n in range(2, 20):  # 对短期趋势上涨进行打分
+        df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
+        df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
+        df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
+    print(name)
 # 过滤符合条件的数据
 if ('证' in name.lower()) and ('分钟' not in name.lower()):
     df = df[df['真实价格'] >= 4].copy()  # 真实价格过滤劣质股票
@@ -45,8 +64,7 @@ if ('coin' in name.lower()) and ('分钟' in name.lower()):
     df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
     df = df[df['资金结算'].apply(lambda x: not (
         (x.hour in [7, 15, 23]) and (x.minute > 40)))]
-if ('证' in name.lower()) and ('分钟' in name.lower()):
-    print(name)
+
 
 # 将数据划分成a个等长度的区间
 a = 50

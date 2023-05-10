@@ -76,26 +76,35 @@ def paiming(df):  # 计算每个标的的各个指标在当日的排名，并将
 grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 
 
-# # 今日筛选股票推送(多头)
-# df = grouped.sort_values(by='日期')
-# # 获取最后一天的数据
-# last_day = df.iloc[-1]['日期']
-# # 计算总共统计的股票数量
-# code_count = len(df['代码'].drop_duplicates())
-# df = df[df[f'日期'] == last_day].copy()
-# # 成交额过滤劣质股票
-# df = df[df[f'昨日成交额'] >= 20000000].copy()
+# 今日筛选股票推送(多头)
+df = grouped.sort_values(by='日期')
+# 获取最后一天的数据
+last_day = df.iloc[-1]['日期']
+# 计算总共统计的股票数量
+code_count = len(df['代码'].drop_duplicates())
+df = df[df[f'日期'] == last_day].copy()
+# 成交额过滤劣质股票
+df = df[df[f'昨日成交额'] >= 20000000].copy()
+df = df[df[f'开盘'] >= 0.01].copy()  # 开盘价过滤高滑点股票
+# 正向
+df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+for n in range(2, 20):  # 对短期趋势上涨进行打分
+    df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
+    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
+    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
+# 排除掉资金结算前后的持仓
+df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
+df = df[df['资金结算'].apply(lambda x: not (
+    (x.hour in [7, 15, 23]) and (x.minute > 40)))]
 
-# # 开盘价过滤高滑点股票
-# df = df[df[f'开盘'] >= 0.01].copy()
-# print(len(df))
-# # 发布到钉钉机器人
-# df['市场'] = name
-# message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdown()
-# print(type(message))
-# webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
-# requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
-#               'title': 'DataFrame', 'text': message}})
+# 发布到钉钉机器人
+df['市场'] = name
+message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdown()
+print(type(message))
+webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
+requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
+              'title': 'DataFrame', 'text': message}})
 
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']

@@ -19,10 +19,9 @@ name = '深证'
 collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
-# 读取180天内的数据，这里面还得排除掉节假日,初始数据建议220,实际更新的时候更新15天就行
-date_ago = current_date - datetime.timedelta(days=600)
-# date_ago = current_date - datetime.timedelta(days=15)
-# current_date = current_date - datetime.timedelta(days=10)
+# 读取数据时长
+date_ago = current_date - datetime.timedelta(days=100)
+# date_ago= current_date - datetime.timedelta(days=10)
 
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 end_date = current_date.strftime('%Y%m%d')
@@ -98,7 +97,7 @@ for code in df['代码']:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
 # time.sleep(60)
-limit = 500000
+limit = 200000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
