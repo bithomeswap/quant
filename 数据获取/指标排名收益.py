@@ -3,7 +3,7 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-names = ['深证','分钟COIN', '上证','分钟COIN','COIN','分钟COIN']
+names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN']
 for name in names:
     # 获取当前.py文件的绝对路径
     file_path = os.path.abspath(__file__)
@@ -48,7 +48,6 @@ for name in names:
         df = df[df['资金结算'].apply(lambda x: not (
             (x.hour in [7, 15, 23]) and (x.minute > 40)))]
 
-
     # 将数据划分成a个等长度的区间
     a = 50
     ranges = []
@@ -78,5 +77,6 @@ for name in names:
         result_df = pd.concat([result_df, col_result_df])
         # print(result_df)
     # 保存结果
-    result_df.to_csv(f'{name}_{n}日后指标排名区间涨跌幅.csv')
+    result_df.to_csv(f'./涨跌分布/{name}_{n}日后指标排名区间涨跌幅.csv')
+    # result_df.to_csv(f'{name}_{n}日后指标排名区间涨跌幅.csv')
     print('任务已经完成！')
