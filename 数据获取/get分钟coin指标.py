@@ -48,7 +48,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-        for n in range(2, 20):
+        for n in range(2, 10):
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n}日总成交额'] = df['昨日成交额'].copy().rolling(n).sum()
             df[f'过去{n}日资金贡献'] = df[f'过去{n}日总涨跌']/df[f'过去{n}日总成交额']
