@@ -80,23 +80,16 @@ grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 df = grouped.sort_values(by='日期')
 # 获取最后一天的数据
 last_day = df.iloc[-1]['日期']
-# 计算总共统计的股票数量
-code_count = len(df['代码'].drop_duplicates())
 df = df[df[f'日期'] == last_day].copy()
-# 成交额过滤劣质股票
-df = df[df[f'昨日成交额'] >= 20000000].copy()
+df = df[df[f'昨日成交额'] >= 20000000].copy()  # 成交额过滤劣质股票
 df = df[df[f'开盘'] >= 0.01].copy()  # 开盘价过滤高滑点股票
 # 正向
-df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
 for n in range(2, 10):  # 对短期趋势上涨进行打分
-    df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
-    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
-    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
-# 排除掉资金结算前后的持仓
-df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
-df = df[df['资金结算'].apply(lambda x: not (
-    (x.hour in [7, 15, 23]) and (x.minute > 40)))]
+    df = df[(df[f'过去{n}日总涨跌'] >= 0.2)].copy()
+    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.4)].copy()
+    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.6)].copy()
 # 发布到钉钉机器人
 df['市场'] = name
 print(df)

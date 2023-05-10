@@ -36,8 +36,7 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算涨跌幅
         df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
         # 计算昨日振幅
-        df['昨日振幅'] = (df['最高'].copy().shift(
-            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
+        df['昨日振幅'] = (df['最高'].copy().shift(1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
         # 计算昨日成交量
@@ -80,8 +79,6 @@ grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 df = grouped.sort_values(by='日期')
 # 获取最后一天的数据
 last_day = df.iloc[-1]['日期']
-# 计算总共统计的股票数量
-code_count = len(df['代码'].drop_duplicates())
 df = df[df[f'日期'] == last_day].copy()
 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
 df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票

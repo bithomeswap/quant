@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # 设置参数
-names = ['深证','分钟COIN', '上证','分钟COIN','COIN','分钟COIN']
+names = ['深证', '分钟COIN', '上证', '分钟COIN', 'COIN', '分钟COIN']
 for name in names:
     # 获取当前.py文件的绝对路径
     file_path = os.path.abspath(__file__)
@@ -19,7 +19,6 @@ for name in names:
 
     for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
         df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
-
 
     if ('coin' in name.lower()) and ('分钟' not in name.lower()):
         # 过滤低成交的垃圾股
@@ -107,6 +106,7 @@ for name in names:
         cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
     df_cash_balance = pd.DataFrame(
         {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-    df_strategy_and_return = pd.merge(df_daily_return, df_cash_balance, on='日期')
+    df_strategy_and_return = pd.merge(
+        df_daily_return, df_cash_balance, on='日期')
     # 输出每日执行策略和净资产收益率到csv文件
     df_strategy_and_return.to_csv(f'{name}每日策略和资产状况.csv', index=False)
