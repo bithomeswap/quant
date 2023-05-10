@@ -48,7 +48,7 @@ for ticker_price in usdt_ticker_prices:
     klines = client.futures_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_1MINUTE,
-        limit=500
+        limit=1000
     )
 
     # 实际上实盘的时候，这里应该改成八小时
@@ -100,7 +100,7 @@ for ticker_price in usdt_ticker_prices:
         collection.insert_many(data_list)
 print('任务已经完成')
 # time.sleep(60)
-limit = 200000
+limit = 500000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

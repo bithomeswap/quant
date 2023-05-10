@@ -34,24 +34,24 @@ if ('coin' in name.lower()) and ('分钟' in name.lower()):
     df = df[df['资金结算'].apply(lambda x: not (
         (x.hour in [7, 15, 23]) and (x.minute > 40)))]
     # 正向
-    df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    for n in range(2, 20):  # 对短期趋势上涨进行打分
-        df = df[(df[f'过去{n}日总涨跌'] >= 0.5)].copy()
-        df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.1)].copy()
-        df = df[(df[f'过去{n}日总成交额_rank'] >= 0.9)].copy()
+    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    for n in range(2, 10):  # 对短期趋势上涨进行打分
+        df = df[(df[f'过去{n}日总涨跌'] >= 0.2)].copy()
+        df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.4)].copy()
+        df = df[(df[f'过去{n}日总成交额_rank'] >= 0.6)].copy()
     print(len(df), name)
 if ('coin' in name.lower()) and ('分钟' not in name.lower()):
     # 过滤低成交的垃圾股
     df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
     df = df[df[f'开盘'] >= 0.00000500].copy()  # 开盘价过滤高滑点股票
     # 正向
-    df = df[(df['昨日资金贡献_rank'] <= 0.05)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-    df = df[(df['昨日资金波动_rank'] <= 0.05)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+    df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
     for n in range(2, 10):  # 对短期趋势上涨进行打分
-        df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
-        df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.1)].copy()
-        df = df[(df[f'过去{n}日总成交额_rank'] >= 0.9)].copy()
+        df = df[(df[f'过去{n}日总涨跌'] >= 0.2)].copy()
+        df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.4)].copy()
+        df = df[(df[f'过去{n}日总成交额_rank'] >= 0.6)].copy()
     print(len(df), name)
 if ('证' in name.lower()) and ('分钟' not in name.lower()):
     df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
@@ -92,7 +92,7 @@ if ('证' in name.lower()) and ('分钟' not in name.lower()):
     n = 18  # 设置持仓周期
     m = 0.005  # 设置手续费
 if ('coin' in name.lower()) and ('分钟' in name.lower()):
-    n = 18  # 设置持仓周期
+    n = 6  # 设置持仓周期
     m = 0.0000  # 设置手续费
     df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
     df = df[df['资金结算'].apply(lambda x: not (

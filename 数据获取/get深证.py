@@ -20,7 +20,7 @@ collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
 # 读取数据时长
-date_ago = current_date - datetime.timedelta(days=100)
+date_ago = current_date - datetime.timedelta(days=600)
 # date_ago= current_date - datetime.timedelta(days=10)
 
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
@@ -33,9 +33,11 @@ df = df[~df['名称'].str.contains('ST')]
 # 过滤掉退市股票
 df = df[~df['名称'].str.contains('退')]
 if '深证' in name.lower():
-    df = df[df['代码'].str.startswith(('000', '001'))][['代码', '名称']]  # 获取上证的前复权日k数据
+    df = df[df['代码'].str.startswith(('000', '001'))][[
+        '代码', '名称']]  # 获取上证的前复权日k数据
 if '上证' in name.lower():
-    df = df[df['代码'].str.startswith(('600', '601'))][['代码', '名称']]  # 获取深证的前复权日k数据
+    df = df[df['代码'].str.startswith(('600', '601'))][[
+        '代码', '名称']]  # 获取深证的前复权日k数据
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     # print(code)
@@ -97,7 +99,7 @@ for code in df['代码']:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
 # time.sleep(60)
-limit = 200000
+limit = 500000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
