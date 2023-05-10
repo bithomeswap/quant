@@ -24,9 +24,6 @@ for name in names:
         n = 6  # 设置持仓周期
     if ('coin' in name.lower()) and ('分钟' in name.lower()):
         n = 6  # 设置持仓周期
-        df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
-        df = df[df['资金结算'].apply(lambda x: not (
-            (x.hour in [7, 15, 23]) and (x.minute > 40)))]
     if ('coin' in name.lower()) and ('分钟' not in name.lower()):
         n = 6  # 设置持仓周期
     mubiao = f'{n}日后总涨跌幅（未来函数）'

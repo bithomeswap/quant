@@ -3,7 +3,8 @@ import pandas as pd
 import os
 
 # 设置参数
-names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN']
+names = ['分钟COIN']
+# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN']
 
 for name in names:
     # 获取当前.py文件的绝对路径
@@ -41,11 +42,11 @@ for name in names:
         df = df[df['资金结算'].apply(lambda x: not (
             (x.hour in [7, 15, 23]) and (x.minute > 40)))]
         # 正向
-        df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-        df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金贡献_rank'] >= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金波动_rank'] >= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         for n in range(2, 10):  # 对短期趋势上涨进行打分
-            df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
-            df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
+            df = df[(df[f'过去{n}日总成交额'] >= 0.5)].copy()
+            df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.5)].copy()
         print(len(df), name)
     if ('证' in name.lower()) and ('分钟' not in name.lower()):
         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
@@ -64,10 +65,6 @@ for name in names:
         # 正向
         df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-        for n in range(2, 10):  # 对短期趋势上涨进行打分
-            df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
-            df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
-            df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
         print(len(df), name)
 
     # 将交易标的细节输出到一个csv文件
