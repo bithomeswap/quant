@@ -104,7 +104,7 @@ message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdo
 print(type(message))
 webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
 requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
-              'title': 'DataFrame', 'text': message}})
+              'title': f'{name}', 'text': message}})
 
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']

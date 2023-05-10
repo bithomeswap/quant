@@ -36,7 +36,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算涨跌幅
         df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
         # 计算昨日振幅
-        df['昨日振幅'] = (df['最高'].copy().shift(1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
+        df['昨日振幅'] = (df['最高'].copy().shift(
+            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
         # 计算昨日成交量
@@ -96,7 +97,7 @@ message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdo
 print(type(message))
 webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
 requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
-              'title': 'DataFrame', 'text': message}})
+              'title': f'{name}', 'text': message}})
 
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']
