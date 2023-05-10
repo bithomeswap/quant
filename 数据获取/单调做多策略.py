@@ -86,10 +86,10 @@ cash_balance = 1
 daily_cash_balance = {}
 
 if ('证' in name.lower()) and ('分钟' in name.lower()):
-    n = 18  # 设置持仓周期
+    n = 6  # 设置持仓周期
     m = 0.000  # 设置手续费
 if ('证' in name.lower()) and ('分钟' not in name.lower()):
-    n = 18  # 设置持仓周期
+    n = 6  # 设置持仓周期
     m = 0.005  # 设置手续费
 if ('coin' in name.lower()) and ('分钟' in name.lower()):
     n = 6  # 设置持仓周期
