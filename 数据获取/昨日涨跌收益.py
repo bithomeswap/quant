@@ -5,10 +5,10 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-# name = '分钟COIN'
+name = '分钟COIN'
 # name = 'COIN'
 # name = '分钟上证'
-name = '上证'
+# name = '上证'
 # name = '分钟深证'
 # name = '深证'
 
@@ -33,7 +33,9 @@ if ('证' in name.lower()) and ('分钟' not in name.lower()):
 if ('coin' in name.lower()) and ('分钟' not in name.lower()):
     df = df[df['昨日成交额'] >= 1000000].copy()
 df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据
-mubiao = f'昨日涨跌'
+
+n = 2
+mubiao = f'过去{n}日总涨跌'
 print('任务已经开始')
 # df = df.dropna(subset=[mubiao])
 df = df.dropna()

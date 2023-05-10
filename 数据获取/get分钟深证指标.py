@@ -40,18 +40,33 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
+        df['delta昨日成交额'] = df['昨日成交额']-df['昨日成交额'].copy().shift(1)
         # 计算昨日成交量
         df['昨日成交量'] = df['成交量'].copy().shift(1)
+        df['delta昨日成交量'] = df['昨日成交量']-df['昨日成交量'].copy().shift(1)
         # 计算昨日涨跌
         df['昨日涨跌'] = df['涨跌幅'].copy().shift(1)+1
+        df['delta昨日涨跌'] = df['昨日涨跌']-df['昨日涨跌'].copy().shift(1)
         # 计算昨日资金贡献
         df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
+        df['delta昨日资金贡献'] = df['昨日资金贡献']-df['昨日资金贡献'].copy().shift(1)
+        df['up昨日资金贡献'] = df['delta昨日资金贡献'].copy().clip(lower=0)
+        df['down昨日资金贡献'] = df['delta昨日资金贡献'].copy().clip(upper=0)*-1
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
+        df['delta昨日资金波动'] = df['昨日资金波动']-df['昨日资金波动'].copy().shift(1)
+        df['up昨日资金波动'] = df['delta昨日资金波动'].copy().clip(lower=0)
+        df['down昨日资金波动'] = df['delta昨日资金波动'].copy().clip(upper=0)*-1
         for n in range(2, 10):
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n}日总成交额'] = df['昨日成交额'].copy().rolling(n).sum()
             df[f'过去{n}日资金贡献'] = df[f'过去{n}日总涨跌']/df[f'过去{n}日总成交额']
+            # 定义昨日资金贡献rsi（正向筛选和反向过滤）
+            df[f'ma_up{n*2}周期昨日资金贡献'] = df['up昨日资金贡献'].copy().rolling(window=n*2).mean()
+            df[f'ma_down{n*2}周期昨日资金贡献'] = df['down昨日资金贡献'].copy().rolling(window=n*2).mean()
+            # 定义昨日资金波动rsi（正向筛选和反向过滤）
+            df[f'ma_up{n*2}周期昨日资金波动'] = df['up昨日资金波动'].copy().rolling(window=n*2).mean()
+            df[f'ma_down{n*2}周期昨日资金波动'] = df['down昨日资金波动'].copy().rolling(window=n*2).mean()
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
