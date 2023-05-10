@@ -1,5 +1,0 @@
-要保存Miniconda环境包，可以使用以下命令：
-conda env export > environment.yml
-这将把当前环境中所有安装的包及其版本信息保存到名为“environment.yml”的文件中。您可以在需要时使用此文件重新创建该环境。要重新创建环境，请使用以下命令：
-conda env create -f environment.yml
-注意：在执行此命令之前，请确保已经安装了Miniconda并正确配置了环境变量。

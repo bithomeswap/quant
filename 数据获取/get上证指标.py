@@ -27,9 +27,10 @@ print("数据读取成功")
 
 def get_technical_indicators(df):  # 定义计算技术指标的函数
     try:
+        df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         # 删除最高价和最低价为负值的数据
         df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
-        df.sort_values(by='日期', inplace=True)    # 以日期列为索引,避免计算错误
+        df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
         # 定义开盘收盘幅
         df['开盘收盘幅'] = df['开盘']/df['收盘'].copy().shift(1) - 1
         # 计算涨跌幅
@@ -47,7 +48,6 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
-        df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         for n in range(2, 10):
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n}日总成交额'] = df['昨日成交额'].copy().rolling(n).sum()
@@ -92,9 +92,9 @@ for n in range(2, 10):  # 对短期趋势上涨进行打分
     df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
     df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
     df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
-    
 # 发布到钉钉机器人
 df['市场'] = name
+print(df)
 message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdown()
 print(type(message))
 webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
