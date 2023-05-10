@@ -75,12 +75,13 @@ def paiming(df):  # 计算每个标的的各个指标在当日的排名，并将
 # 分组并计算指标排名
 grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 
+
 # 今日筛选股票推送(多头)
 df = grouped.sort_values(by='日期')
 # 获取最后一天的数据
 last_day = df.iloc[-1]['日期']
 # 计算总共统计的股票数量
-code_count = len(df['代码'].copy().drop_duplicates())
+code_count = len(df['代码'].drop_duplicates())
 df = df[df[f'日期'] == last_day].copy()
 df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
 df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票

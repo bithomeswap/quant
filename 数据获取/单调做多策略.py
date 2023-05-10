@@ -3,7 +3,8 @@ import pandas as pd
 import os
 
 # 设置参数
-names = ['深证','分钟COIN', '上证','分钟COIN','COIN','分钟COIN']
+names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN']
+
 for name in names:
     # 获取当前.py文件的绝对路径
     file_path = os.path.abspath(__file__)
@@ -20,18 +21,16 @@ for name in names:
     for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
         df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
-
     if ('coin' in name.lower()) and ('分钟' not in name.lower()):
         # 过滤低成交的垃圾股
         df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
         df = df[df[f'开盘'] >= 0.00000500].copy()  # 开盘价过滤高滑点股票
         # 正向
-        df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-        df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         for n in range(2, 10):  # 对短期趋势上涨进行打分
-            df = df[(df[f'过去{n}日总涨跌'] >= 0.2)].copy()
-            df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.4)].copy()
-            df = df[(df[f'过去{n}日总成交额_rank'] >= 0.6)].copy()
+            df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
+            df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
         print(len(df), name)
     if ('coin' in name.lower()) and ('分钟' in name.lower()):
         # 过滤低成交的垃圾股
@@ -41,8 +40,12 @@ for name in names:
         df['资金结算'] = pd.to_datetime(df['timestamp'], unit='s')
         df = df[df['资金结算'].apply(lambda x: not (
             (x.hour in [7, 15, 23]) and (x.minute > 40)))]
+        # 正向
+        df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         for n in range(2, 10):  # 对短期趋势上涨进行打分
-            df = df[(df[f'过去{n}日总涨跌'] >= 0.5)].copy()
+            df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
+            df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
         print(len(df), name)
     if ('证' in name.lower()) and ('分钟' not in name.lower()):
         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
@@ -58,8 +61,13 @@ for name in names:
     if ('证' in name.lower()) and ('分钟' in name.lower()):
         df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
         df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        # 正向
+        df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         for n in range(2, 10):  # 对短期趋势上涨进行打分
-            df = df[(df[f'过去{n}日总涨跌'] >= 0.5)].copy()
+            df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
+            df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
+            df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
         print(len(df), name)
 
     # 将交易标的细节输出到一个csv文件
@@ -107,6 +115,7 @@ for name in names:
         cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
     df_cash_balance = pd.DataFrame(
         {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-    df_strategy_and_return = pd.merge(df_daily_return, df_cash_balance, on='日期')
+    df_strategy_and_return = pd.merge(
+        df_daily_return, df_cash_balance, on='日期')
     # 输出每日执行策略和净资产收益率到csv文件
     df_strategy_and_return.to_csv(f'{name}每日策略和资产状况.csv', index=False)
