@@ -24,7 +24,7 @@ for name in names:
     if ('coin' in name.lower()) and ('分钟' not in name.lower()):
         # 过滤低成交的垃圾股
         df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
-        df = df[df[f'开盘'] >= 0.00000500].copy()  # 开盘价过滤高滑点股票
+        df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
         # 正向
         df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
@@ -47,11 +47,12 @@ for name in names:
             df = df[df['资金结算'].apply(lambda x: not (
                 (x.hour in [7, 15, 23]) and (x.minute > 40)))]
             # 正向
-            df = df[(df['昨日资金波动_rank'] >= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            df = df[(df[f'昨日涨跌'] >= 1)].copy()
+            # df = df[(df['昨日资金波动_rank'] >= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
             for n in range(6, 10):  # 过去几天在下跌
                 df = df[(df[f'过去{n}日总涨跌'] <= 1)].copy()
-                df = df[(df[f'过去{n}日总成交额_rank'] <= 0.5)].copy()
-                df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.9)].copy()
+                # df = df[(df[f'过去{n}日总成交额_rank'] <= 0.5)].copy()
+                # df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.9)].copy()
             print(len(df), name)
             n = 9  # 设置持仓周期
             m = 0.0000  # 设置手续费
@@ -64,13 +65,13 @@ for name in names:
             df = df[df['资金结算'].apply(lambda x: not (
                 (x.hour in [7, 15, 23]) and (x.minute > 40)))]
             # 正向
-            df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-            df = df[(df['昨日资金贡献_rank'] <= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-            for n in range(6, 10):  # 过去几天在下跌
-                df = df[(df[f'过去{n}日总涨跌'] >= 1)].copy()
-                df = df[(df[f'过去{n}日总成交额_rank'] >= 0.5)].copy()
-                df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.5)].copy()
-            print(len(df), name)
+            # df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            # df = df[(df['昨日资金贡献_rank'] <= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            # for n in range(6, 10):  # 过去几天在下跌
+            #     df = df[(df[f'过去{n}日总涨跌'] >= 1)].copy()
+            #     df = df[(df[f'过去{n}日总成交额_rank'] >= 0.5)].copy()
+            #     df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.5)].copy()
+            # print(len(df), name)
             n = 9  # 设置持仓周期
             m = -0.0000  # 设置手续费
     # df[f'score'] = 0
@@ -88,12 +89,13 @@ for name in names:
             df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
             df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
             # 正向
-            df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-            df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            df = df[(df[f'昨日涨跌'] >= 1)].copy()
+            # df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            # df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
             for n in range(6, 10):  # 过去几天在下跌
-                df = df[(df[f'过去{n}日总涨跌'] >= 1)].copy()
-                df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
-                df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
+                df = df[(df[f'过去{n}日总涨跌'] <= 1)].copy()
+                # df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
+                # df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
             print(len(df), name)
             n = 9  # 设置持仓周期
             m = 0.0000  # 设置手续费
@@ -101,13 +103,13 @@ for name in names:
             # 过滤低成交的垃圾股
             df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
             df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-            # 正向
-            df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-            df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-            for n in range(6, 10):  # 过去几天在下跌
-                df = df[(df[f'过去{n}日总涨跌'] >= 1)].copy()
-                df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
-                df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
+            # # 正向
+            # df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            # df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+            # for n in range(6, 10):  # 过去几天在下跌
+            #     df = df[(df[f'过去{n}日总涨跌'] >= 1)].copy()
+            #     df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
+            #     df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
             print(len(df), name)
             n = 9  # 设置持仓周期
             m = -0.0000  # 设置手续费
@@ -116,11 +118,11 @@ for name in names:
         df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
         df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         # 正向
-        # df = df[(df['昨日资金波动_rank'] >= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['昨日资金波动_rank'] >= 0.5)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         for n in range(6, 10):  # 过去几天在下跌
-            # df = df[(df[f'过去{n}日总涨跌'] <= 1)].copy()
+            df = df[(df[f'过去{n}日总涨跌'] <= 1)].copy()
             df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-            # df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.9)].copy()
+            df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.9)].copy()
         print(len(df), name)
         n = 9  # 设置持仓周期
         m = 0.005  # 设置手续费

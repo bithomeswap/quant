@@ -100,7 +100,7 @@ for ticker_price in usdt_ticker_prices:
         collection.insert_many(data_list)
 print('任务已经完成')
 # time.sleep(60)
-limit = 500000
+limit = 300000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
