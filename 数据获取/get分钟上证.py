@@ -95,7 +95,7 @@ for code in df['代码']:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
 # time.sleep(60)
-limit = 300000
+limit = 600000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

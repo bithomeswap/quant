@@ -36,7 +36,7 @@ for name in names:
             df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
             df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
         print(len(df), name)
-        n = 18  # 设置持仓周期
+        n = 6  # 设置持仓周期
         m = 0.003  # 设置手续费
     # 缩量下跌的转正时刻
     if ('coin' in name.lower()) and ('分钟' in name.lower()):
@@ -49,7 +49,7 @@ for name in names:
             df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
             df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.8)].copy()
         print(len(df), name)
-        n = 18  # 设置持仓周期
+        n = 6  # 设置持仓周期
         m = 0.0000  # 设置手续费
     if ('证' in name.lower()) and ('分钟' not in name.lower()):
         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票

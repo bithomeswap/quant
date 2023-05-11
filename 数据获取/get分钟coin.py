@@ -80,26 +80,26 @@ for ticker_price in usdt_ticker_prices:
                 filter, {'$set': update_data})
         else:
             data_list.append({'timestamp': timestamp,
-                            '代码': symbol,
-                            '日期': date,
-                            '开盘': float(kline[1]),
-                            '最高': float(kline[2]),
-                            '最低': float(kline[3]),
-                            '收盘': float(kline[4]),
-                            '成交量': float(kline[5]),
-                            '收盘timestamp': float(kline[6]/1000),
-                            '成交额': float(kline[7]),
-                            '成交笔数': float(kline[8]),
-                            '主动买入成交量': float(kline[9]),
-                            '主动买入成交额':  float(kline[10])
-                            })
+                              '代码': symbol,
+                              '日期': date,
+                              '开盘': float(kline[1]),
+                              '最高': float(kline[2]),
+                              '最低': float(kline[3]),
+                              '收盘': float(kline[4]),
+                              '成交量': float(kline[5]),
+                              '收盘timestamp': float(kline[6]/1000),
+                              '成交额': float(kline[7]),
+                              '成交笔数': float(kline[8]),
+                              '主动买入成交量': float(kline[9]),
+                              '主动买入成交额':  float(kline[10])
+                              })
     # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
     if len(data_list) > 0:
         collection.insert_many(data_list)
 
 print('任务已经完成')
 # time.sleep(60)
-limit = 300000
+limit = 600000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
