@@ -86,12 +86,11 @@ df = df[df[f'日期'] == last_day].copy()
 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
 df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
 # 正向
-df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
 df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-for n in range(2, 10):  # 对短期趋势上涨进行打分
-    df = df[(df[f'过去{n}日总涨跌'] >= 0.1)].copy()
-    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.3)].copy()
-    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.7)].copy()
+df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+for n in range(6, 10):  # 过去几天在下跌
+    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
+    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
 # 发布到钉钉机器人
 df['市场'] = name
 print(df)

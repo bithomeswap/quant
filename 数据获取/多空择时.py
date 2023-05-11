@@ -28,11 +28,10 @@ for name in names:
         # df_quantile = df.groupby('日期')[f'昨日资金贡献_rank'].quantile(q=0.33).reset_index(name='第一三分位数')
         # df_quantile['策略'] = df_quantile['第一三分位数'].apply(lambda x: '多头策略' if x >= 0 else '空头策略')
         # 这里的分位数计算是从小到大的
-        
+
         # # df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
         # # df = df_merged[df_merged['策略'] == '多头策略'].copy()
 
-        # 过滤低成交的垃圾股
         df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
         df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
         # 正向
@@ -46,7 +45,6 @@ for name in names:
         m = 0.003  # 设置手续费
     # 缩量下跌的转正时刻
     if ('coin' in name.lower()) and ('分钟' in name.lower()):
-        # 过滤低成交的垃圾股
         df = df[df[f'昨日成交额'] >= 10000].copy()  # 成交额过滤劣质股票
         df = df[df[f'开盘'] >= 0.01].copy()  # 开盘价过滤高滑点股票
         # 正向
@@ -59,7 +57,6 @@ for name in names:
         n = 9  # 设置持仓周期
         m = 0.0000  # 设置手续费
     if ('证' in name.lower()) and ('分钟' not in name.lower()):
-        # 过滤低成交的垃圾股
         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
         df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         # 正向

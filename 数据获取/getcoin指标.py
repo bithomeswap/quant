@@ -81,15 +81,14 @@ df = grouped.sort_values(by='日期')
 # 获取最后一天的数据
 last_day = df.iloc[-1]['日期']
 df = df[df[f'日期'] == last_day].copy()
-df = df[df[f'昨日成交额'] >= 20000000].copy()  # 成交额过滤劣质股票
-df = df[df[f'开盘'] >= 0.01].copy()  # 开盘价过滤高滑点股票
+df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
+df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
 # 正向
-df = df[(df['昨日资金贡献_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-df = df[(df['昨日资金波动_rank'] <= 0.2)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-for n in range(2, 10):  # 对短期趋势上涨进行打分
-    df = df[(df[f'过去{n}日总涨跌'] >= 0.2)].copy()
-    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.4)].copy()
-    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.6)].copy()
+df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+for n in range(6, 10):  # 对短期趋势上涨进行打分
+    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
+    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
 # 发布到钉钉机器人
 df['市场'] = name
 print(df)
