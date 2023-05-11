@@ -40,7 +40,7 @@ print(f"当前币安永续合约有{len(ticker_prices)}个交易对")
 
 # 遍历所有现货交易对，并获取日K线数据
 for ticker_price in usdt_ticker_prices:
-    if  ('1000' not in name.lower()) :
+    if  ('0' not in name.lower()) :
         symbol = ticker_price['symbol']
         data_list = []
         # 找到该标的最新的时间戳
