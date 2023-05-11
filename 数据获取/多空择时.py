@@ -17,21 +17,16 @@ for name in names:
 
     code_count = len(df['代码'].drop_duplicates())
     print("标的数量", code_count)
+    # df_mean = df.groupby('日期')[f'SMA30日比值'].mean().reset_index(name='均值')
+    # df_mean['策略'] = df_mean['均值'].apply(
+    #     lambda x: '多头策略' if x >= 1 else '空头策略')
+    # df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
+    # df = df_merged[df_merged['策略'] == '多头策略'].copy()
 
     for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
         df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
     if ('coin' in name.lower()) and ('分钟' not in name.lower()):
-        # df_mean = df.groupby('日期')[f'昨日资金贡献_rank'].mean().reset_index(name='均值')
-        # df_mean['策略'] = df_mean['均值'].apply(lambda x: '多头策略' if x >= 0 else '空头策略')
-
-        # df_quantile = df.groupby('日期')[f'昨日资金贡献_rank'].quantile(q=0.33).reset_index(name='第一三分位数')
-        # df_quantile['策略'] = df_quantile['第一三分位数'].apply(lambda x: '多头策略' if x >= 0 else '空头策略')
-        # 这里的分位数计算是从小到大的
-
-        # # df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
-        # # df = df_merged[df_merged['策略'] == '多头策略'].copy()
-
         df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
         df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
         # 正向
@@ -41,7 +36,7 @@ for name in names:
             df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
             df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
         print(len(df), name)
-        n = 9  # 设置持仓周期
+        n = 18  # 设置持仓周期
         m = 0.003  # 设置手续费
     # 缩量下跌的转正时刻
     if ('coin' in name.lower()) and ('分钟' in name.lower()):
@@ -54,7 +49,7 @@ for name in names:
             df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
             df = df[(df[f'过去{n}日资金贡献_rank'] >= 0.8)].copy()
         print(len(df), name)
-        n = 9  # 设置持仓周期
+        n = 18  # 设置持仓周期
         m = 0.0000  # 设置手续费
     if ('证' in name.lower()) and ('分钟' not in name.lower()):
         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
