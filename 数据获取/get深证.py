@@ -20,7 +20,7 @@ collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
 # 读取数据时长
-date_ago = current_date - datetime.timedelta(days=600)
+date_ago = current_date - datetime.timedelta(days=400)
 # date_ago= current_date - datetime.timedelta(days=10)
 
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"

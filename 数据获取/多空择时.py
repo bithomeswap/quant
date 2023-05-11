@@ -1,7 +1,6 @@
 import math
 import pandas as pd
 import os
-
 # 设置参数
 # names = ['COIN', '分钟COIN', '深证', '分钟深证', '上证', '分钟上证',]
 names = ['深证', '分钟深证', '上证', '分钟上证',]
@@ -18,11 +17,12 @@ for name in names:
 
     code_count = len(df['代码'].drop_duplicates())
     print("标的数量", code_count)
+
     # df_mean = df.groupby('日期')[f'SMA30日比值'].mean().reset_index(name='均值')
-    # df_mean['策略'] = df_mean['均值'].apply(
-    #     lambda x: '多头策略' if x >= 1 else '空头策略')
-    # df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
-    # df = df_merged[df_merged['策略'] == '多头策略'].copy()
+    # df_mean['行情'] = df_mean['均值'].apply(
+    #     lambda x: '多头行情' if x >= 1 else '空头行情')
+    # df_merged = pd.merge(df, df_mean[['日期', '行情']], on='日期', how='left')
+    # df = df_merged[df_merged['行情'] == '多头行情'].copy()
 
     for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
         df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]

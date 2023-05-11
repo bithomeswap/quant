@@ -1,3 +1,4 @@
+import tradelist
 import pytz
 import datetime
 import math
@@ -52,12 +53,14 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n}日总成交额'] = df['昨日成交额'].copy().rolling(n).sum()
             df[f'过去{n}日资金贡献'] = df[f'过去{n}日总涨跌']/df[f'过去{n}日总成交额']
-            df[f'SMA{n*5}开盘比值'] = df['开盘'] / talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
+            df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
+                talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
+
 
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码', group_keys=False).apply(get_technical_indicators)
@@ -75,30 +78,7 @@ def paiming(df):  # 计算每个标的的各个指标在当日的排名，并将
 # 分组并计算指标排名
 grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 
-
-# 今日筛选股票推送(多头)
-df = grouped.sort_values(by='日期')
-# 获取最后一天的数据
-last_day = df.iloc[-1]['日期']
-# 计算总共统计的股票数量
-code_count = len(df['代码'].drop_duplicates())
-df = df[df[f'日期'] == last_day].copy()
-df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
-df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-# 正向
-df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-for n in range(6, 10):  # 过去几天在下跌
-    df = df[(df[f'过去{n}日总成交额_rank'] >= 0.8)].copy()
-    df = df[(df[f'过去{n}日资金贡献_rank'] <= 0.2)].copy()
-# 发布到钉钉机器人
-df['市场'] = name
-print(df)
-message = df[['市场', '代码', '日期', '开盘', '昨日振幅']].to_markdown()
-print(type(message))
-webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
-requests.post(webhook, json={'msgtype': 'markdown', 'markdown': {
-              'title': f'{name}', 'text': message}})
+tradelist.tradelist(grouped, name)
 
 # 连接MongoDB数据库并创建新集合
 new_collection = db[f'{name}指标']
