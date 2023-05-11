@@ -93,9 +93,9 @@ for ticker_price in usdt_ticker_prices:
                             '主动买入成交量': float(kline[9]),
                             '主动买入成交额':  float(kline[10])
                             })
-        # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
-        if len(data_list) > 0:
-            collection.insert_many(data_list)
+    # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
+    if len(data_list) > 0:
+        collection.insert_many(data_list)
 
 print('任务已经完成')
 # time.sleep(60)
