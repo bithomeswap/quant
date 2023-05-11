@@ -22,10 +22,15 @@ for name in names:
         df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
     if ('coin' in name.lower()) and ('分钟' not in name.lower()):
-        df_mean = df.groupby('日期')[f'昨日资金贡献_rank'].mean().reset_index(name='均值')
-        df_mean['策略'] = df_mean['均值'].apply(lambda x: '多头策略' if x >= 0 else '空头策略')
-        df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
-        df = df_merged[df_merged['策略'] == '多头策略'].copy()
+        # df_mean = df.groupby('日期')[f'昨日资金贡献_rank'].mean().reset_index(name='均值')
+        # df_mean['策略'] = df_mean['均值'].apply(lambda x: '多头策略' if x >= 0 else '空头策略')
+
+        # df_quantile = df.groupby('日期')[f'昨日资金贡献_rank'].quantile(q=0.33).reset_index(name='第一三分位数')
+        # df_quantile['策略'] = df_quantile['第一三分位数'].apply(lambda x: '多头策略' if x >= 0 else '空头策略')
+        # 这里的分位数计算是从小到大的
+        
+        # # df_merged = pd.merge(df, df_mean[['日期', '策略']], on='日期', how='left')
+        # # df = df_merged[df_merged['策略'] == '多头策略'].copy()
 
         # 过滤低成交的垃圾股
         df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票

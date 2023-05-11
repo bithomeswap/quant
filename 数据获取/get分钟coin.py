@@ -48,7 +48,7 @@ for ticker_price in usdt_ticker_prices:
         klines = client.get_klines(
             symbol=symbol,
             interval=Client.KLINE_INTERVAL_1MINUTE,
-            limit=1000
+            limit=100
         )
 
         # 实际上实盘的时候，这里应该改成八小时
@@ -98,13 +98,14 @@ for ticker_price in usdt_ticker_prices:
         # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
         if len(data_list) > 0:
             collection.insert_many(data_list)
-    print('任务已经完成')
-    # time.sleep(60)
-    limit = 300000
-    if collection.count_documents({}) >= limit:
-        oldest_data = collection.find().sort([('日期', 1)]).limit(
-            collection.count_documents({})-limit)
-        ids_to_delete = [data['_id'] for data in oldest_data]
-        collection.delete_many({'_id': {'$in': ids_to_delete}})
-        # 往外读取数据的时候再更改索引吧
-    print('数据清理成功')
+
+print('任务已经完成')
+# time.sleep(60)
+limit = 300000
+if collection.count_documents({}) >= limit:
+    oldest_data = collection.find().sort([('日期', 1)]).limit(
+        collection.count_documents({})-limit)
+    ids_to_delete = [data['_id'] for data in oldest_data]
+    collection.delete_many({'_id': {'$in': ids_to_delete}})
+    # 往外读取数据的时候再更改索引吧
+print('数据清理成功')
