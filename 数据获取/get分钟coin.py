@@ -45,7 +45,7 @@ for ticker_price in usdt_ticker_prices:
     latest_data = collection.find_one(
         {"代码": symbol}, {"timestamp": 1}, sort=[('timestamp', -1)])
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
-    klines = client.futures_klines(
+    klines = client.get_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_1MINUTE,
         limit=1000
