@@ -52,11 +52,13 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n}日总成交额'] = df['昨日成交额'].copy().rolling(n).sum()
             df[f'过去{n}日资金贡献'] = df[f'过去{n}日总涨跌']/df[f'过去{n}日总成交额']
+            df[f'SMA{n*5}开盘比值'] = df['开盘'] / talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
+
 
 # 按照“代码”列进行分组并计算技术指标
 grouped = data.groupby('代码', group_keys=False).apply(get_technical_indicators)
@@ -79,8 +81,6 @@ grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
 df = grouped.sort_values(by='日期')
 # 获取最后一天的数据
 last_day = df.iloc[-1]['日期']
-# 计算总共统计的股票数量
-code_count = len(df['代码'].drop_duplicates())
 df = df[df[f'日期'] == last_day].copy()
 df = df[df[f'昨日成交额'] >= 10000].copy()  # 成交额过滤劣质股票
 df = df[df[f'开盘'] >= 0.01].copy()  # 开盘价过滤高滑点股票

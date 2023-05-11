@@ -3,7 +3,8 @@ import pandas as pd
 import os
 
 # 设置参数
-names = ['COIN', '分钟COIN', '深证', '分钟深证', '上证', '分钟上证',]
+# names = ['COIN', '分钟COIN', '深证', '分钟深证', '上证', '分钟上证',]
+names = ['深证', '分钟深证', '上证', '分钟上证',]
 
 for name in names:
     # 获取当前.py文件的绝对路径
@@ -53,7 +54,9 @@ for name in names:
         m = 0.0000  # 设置手续费
     if ('证' in name.lower()) and ('分钟' not in name.lower()):
         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
-        df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['开盘收盘幅']>=-0.08) & (df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        # 以昨日暴涨作为指标的二次确认条件
+        # df = df[(df[f'昨日涨跌'] >= 1.5)].copy()
         # 正向
         df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
@@ -65,7 +68,7 @@ for name in names:
         m = 0.005  # 设置手续费
     if ('证' in name.lower()) and ('分钟' in name.lower()):
         df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
-        df = df[(df['开盘收盘幅'] <= 1)].copy()  # 开盘收盘幅过滤涨停无法买入股票
+        df = df[(df['开盘收盘幅']>=-0.08) & (df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
         # 正向
         df = df[(df[f'昨日涨跌'] >= 1)].copy()
         df = df[(df['昨日资金波动_rank'] >= 0.5)].copy()
@@ -77,7 +80,7 @@ for name in names:
         m = 0.0000  # 设置手续费
 
     # 将交易标的细节输出到一个csv文件
-    trading_detail_filename = f'{name}交易标的细节.csv'
+    trading_detail_filename = f'{name}交易细节.csv'
     df.to_csv(trading_detail_filename, index=False)
 
     # 假设开始时有1元资金,实操时每个月还得归集一下资金，以免收益不平均
@@ -109,4 +112,4 @@ for name in names:
         df_daily_return, df_cash_balance, on='日期')
     # 输出每日执行策略和净资产收益率到csv文件
     # df_strategy_and_return.to_csv(f'/{name}每日策略和资产状况.csv', index=False)
-    df_strategy_and_return.to_csv(f'./资产变动/{name}每日策略和资产状况.csv', index=False)
+    df_strategy_and_return.to_csv(f'./资产变动/{name}资产变动.csv', index=False)
