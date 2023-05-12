@@ -32,29 +32,9 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 删除最高价和最低价为负值的数据
         df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
         df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-        # 定义开盘收盘幅
-        df['开盘收盘幅'] = df['开盘']/df['收盘'].copy().shift(1) - 1
-        # 计算涨跌幅
-        df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
-        # 计算昨日振幅
-        df['昨日振幅'] = (df['最高'].copy().shift(
-            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
-        # 计算昨日成交额
-        df['昨日成交额'] = df['成交额'].copy().shift(1)
-        # 计算昨日成交量
-        df['昨日成交量'] = df['成交量'].copy().shift(1)
-        # 计算昨日涨跌
-        df['昨日涨跌'] = df['涨跌幅'].copy().shift(1)+1
-        # 计算昨日资金贡献
-        df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
-        # 计算昨日资金波动
-        df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
         for n in range(2, 10):
+            df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
-            df[f'过去{n}日总成交额'] = df['昨日成交额'].copy().rolling(n).sum()
-            df[f'过去{n}日资金贡献'] = df[f'过去{n}日总涨跌']/df[f'过去{n}日总成交额']
-            df[f'SMA{n*5}开盘比值'] = df['开盘'] / \
-                talib.MA(df['开盘'].values, timeperiod=n*10, matype=0)
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
