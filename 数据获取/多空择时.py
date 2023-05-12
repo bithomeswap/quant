@@ -2,8 +2,9 @@ import math
 import pandas as pd
 import os
 # 设置参数
-names = ['COIN', '分钟COIN', '深证', '分钟深证', '上证', '分钟上证',]
-# names = ['深证', '分钟深证', '上证', '分钟上证',]
+# names = ['分钟COIN', '分钟深证', '分钟上证',]
+names = ['COIN', '深证', '上证',]
+
 
 for name in names:
     try:
@@ -28,24 +29,15 @@ for name in names:
                 df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
                 df = df[(df['开盘_rank'] >= 0.5)].copy()  # 真实价格过滤劣质股票
 
-                df = df[(df['昨日振幅_rank'] >= 0.1) & (
-                    df[f'昨日振幅_rank'] <= 0.9)].copy()
-                df = df[(df['昨日涨跌_rank'] >= 0.1) & (
-                    df[f'昨日涨跌_rank'] <= 0.9)].copy()
-                df = df[(df['昨日资金波动_rank'] <= 0.5)].copy()  
-                df = df[(df['昨日资金贡献_rank'] <= 0.5)].copy()  
-                df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()  
-                df = df[(df['昨日成交额_rank'] >= 0.5)].copy()  
+                df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()
+                df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()
+                df = df[(df['昨日成交额_rank'] >= 0.5)].copy()
+                df = df[(df['昨日振幅_rank'] >= 0.1) & (df[f'昨日振幅_rank'] <= 0.9)].copy()
+                df = df[(df['昨日涨跌_rank'] >= 0.1) & (df[f'昨日涨跌_rank'] <= 0.9)].copy()
                 for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &
-                            (df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &
-                            (df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
-                    df = df[(df[f'过去{n}日累计昨日资金贡献_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n}日累计昨日成交额_rank'] <= 0.5)].copy()
-                    df = df[(df[f'过去{n}日累计昨日资金波动_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n}日累计昨日资金成本_rank'] <= 0.5)].copy()
-
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
                 m = 0.003  # 设置手续费
                 n = 6  # 设置持仓周期
             if ('分钟' in name.lower()):
@@ -60,26 +52,17 @@ for name in names:
             if ('分钟' not in name.lower()):
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
                 df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-                df = df[(df['真实价格_rank'] <= 0.8)].copy()  # 真实价格过滤劣质股票
-                df = df[(df['真实价格_rank'] >= 0.2)].copy()  # 真实价格过滤劣质股票
+                df = df[(df['真实价格_rank'] <= 0.8) & (df['真实价格_rank'] >= 0.2)].copy()  # 真实价格过滤劣质股票
 
-                df = df[(df['昨日振幅_rank'] >= 0.1) & (
-                    df[f'昨日振幅_rank'] <= 0.9)].copy()
-                df = df[(df['昨日涨跌_rank'] >= 0.1) & (
-                    df[f'昨日涨跌_rank'] <= 0.9)].copy()
-                df = df[(df['昨日资金波动_rank'] <= 0.5)].copy()  
-                df = df[(df['昨日资金贡献_rank'] <= 0.5)].copy()  
-                df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()  
-                df = df[(df['昨日成交额_rank'] >= 0.5)].copy()  
+                df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()
+                df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()
+                df = df[(df['昨日成交额_rank'] >= 0.5)].copy()
+                df = df[(df['昨日振幅_rank'] >= 0.1) & (df[f'昨日振幅_rank'] <= 0.9)].copy()
+                df = df[(df['昨日涨跌_rank'] >= 0.1) & (df[f'昨日涨跌_rank'] <= 0.9)].copy()
                 for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &
-                            (df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &
-                            (df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
-                    df = df[(df[f'过去{n}日累计昨日资金贡献_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n}日累计昨日成交额_rank'] <= 0.5)].copy()
-                    df = df[(df[f'过去{n}日累计昨日资金波动_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n}日累计昨日资金成本_rank'] <= 0.5)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
                 m = 0.005  # 设置手续费
                 n = 18  # 设置持仓周期
             if ('分钟' in name.lower()):

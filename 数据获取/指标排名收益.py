@@ -34,7 +34,7 @@ for name in names:
             if ('分钟' not in name.lower()):
                 df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
-                m = 0.005  # 设置手续费                
+                m = 0.005  # 设置手续费 
                 n = 18  # 设置持仓周期
             if ('分钟' in name.lower()):
                 df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
