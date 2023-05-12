@@ -19,7 +19,8 @@ data[['日期', '指数开盘']] = data[["日期", "开盘"]]
 dataetf[['日期', 'ETF开盘']] = dataetf[["日期", "开盘"]]
 print(data)
 df = pd.merge(data[['日期', '指数开盘']], dataetf[['日期', 'ETF开盘']], on='日期')
-df['指数反向偏离'] = df["指数开盘"]/df["ETF开盘"]
+df['指数偏离']=df["指数开盘"]/df.loc[0, "指数开盘"]
+df['ETF偏离']=df["ETF开盘"]/df.loc[0, "ETF开盘"]
 print(df)
 
 # 获取当前.py文件的绝对路径
