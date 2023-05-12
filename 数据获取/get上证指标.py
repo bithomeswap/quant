@@ -50,11 +50,10 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         df['昨日资金成本'] = df['昨日涨跌'] * df['昨日成交额']
         for n in range(2, 10):
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
-            df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
             df[f'过去{n}日累计昨日成交额'] = df['昨日成交额'].copy().rolling(n).sum()
             df[f'过去{n}日累计昨日资金贡献'] = df['昨日资金贡献'].copy().rolling(n).sum()
-            df[f'过去{n*5}日累计昨日资金波动'] = df['昨日资金波动'].copy().rolling(n*5).sum()
-            df[f'过去{n*5}日累计昨日资金成本'] = df['昨日资金成本'].copy().rolling(n*5).sum()
+            df[f'过去{n}日累计昨日资金波动'] = df['昨日资金波动'].copy().rolling(n).sum()
+            df[f'过去{n}日累计昨日资金成本'] = df['昨日资金成本'].copy().rolling(n).sum()
         for n in range(1, 20):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
