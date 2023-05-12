@@ -19,6 +19,8 @@ name = '分钟上证'
 # name = '上证'
 # name = '分钟深证'
 # name = '深证'
+# name = '分钟ETF'
+# name = 'ETF'
 
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式

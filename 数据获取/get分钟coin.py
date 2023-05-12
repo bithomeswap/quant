@@ -24,6 +24,8 @@ name = '分钟COIN'
 # name = '上证'
 # name = '分钟深证'
 # name = '深证'
+# name = '分钟ETF'
+# name = 'ETF'
 
 collection = db[f'{name}']
 

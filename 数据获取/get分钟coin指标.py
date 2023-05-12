@@ -19,6 +19,8 @@ name = '分钟COIN'
 # name = '上证'
 # name = '分钟深证'
 # name = '深证'
+# name = '分钟ETF'
+# name = 'ETF'
 
 collection = db[f'{name}']
 # 获取数据并转换为DataFrame格式
@@ -37,7 +39,8 @@ def get_technical_indicators(df):  # 定义计算技术指标的函数
         # 计算涨跌幅
         df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
         # 计算昨日振幅
-        df['昨日振幅'] = (df['最高'].copy().shift(1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
+        df['昨日振幅'] = (df['最高'].copy().shift(
+            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
         # 计算昨日涨跌
