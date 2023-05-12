@@ -9,8 +9,8 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 
-name = "指数"
-# name = "分钟指数"
+# name = "指数"
+name = "分钟指数"
 
 collection = db[f"{name}"]
 # 获取当前日期
@@ -45,18 +45,19 @@ for code in df:
             latest_timestamp).strftime('%Y%m%d')
 
     # 通过 akshare 获取目标指数的分钟K线数据
-    k_data = ak.index_zh_a_hist(symbol=code, period="daily")
+    k_data = ak.index_zh_a_hist_min_em(symbol=code, period="1")
     k_data = k_data[k_data["开盘"] != 0]
 
     try:
         k_data['代码'] = float(code)
+        k_data["日期"] = k_data["时间"]
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-        
-        # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-        #     datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+
         k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
-        
+            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
+        #     datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+
         k_data = k_data.sort_values(by=["代码", "日期"])
         docs_to_update = k_data.to_dict('records')
         if upsert_docs:
@@ -87,7 +88,7 @@ for code in df:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
 # time.sleep(60)
-limit = 300000
+limit = 1200000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

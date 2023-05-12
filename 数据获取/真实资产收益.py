@@ -101,8 +101,7 @@ for name in names:
             cash_balance *= (1 + daily_return)
             daily_cash_balance[date] = cash_balance
             cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
-        df_cash_balance = pd.DataFrame(
-            {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
+        df_cash_balance = pd.DataFrame( {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
         df_strategy_and_return = pd.merge(
             df_daily_return, df_cash_balance, on='日期')
         # 输出每日执行策略和净资产收益率到csv文件
