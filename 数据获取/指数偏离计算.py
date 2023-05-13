@@ -18,7 +18,6 @@ print('任务开始')
 data[['日期', '指数开盘']] = data[["日期", "开盘"]]
 n = 0
 df = ak.fund_etf_spot_em()
-print(df)
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     try:
@@ -26,11 +25,13 @@ for code in df['代码']:
         n += 1
         etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
         if n==1:
-            df = pd.merge(data[['日期', '指数开盘']], etf[['日期', f'{code}']], on='日期')
-            df['指数偏离'] = df["指数开盘"]/df.loc[0, "指数开盘"]
+            df = pd.merge(data[['日期', '指数开盘']], etf[['日期', f'{code}']], on='日期', how='left')
+            # df['指数偏离'] = df["指数开盘"]/df.loc[0, "指数开盘"]
+            df[f'{code}偏离'] = df[f'{code}'] / df["指数开盘"].dropna().iloc[-1]
         if n > 1:
-            df = pd.merge(df, etf[['日期', f'{code}']], on='日期')
-        df[f'{code}偏离'] = df[f'{code}']/df.loc[0, f'{code}']
+            df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
+        # df[f'{code}偏离'] = df[f'{code}']/df.loc[0, f'{code}']
+        df[f'{code}偏离'] = df[f'{code}'] / df[f'{code}'].dropna().iloc[-1]
         # df[f'{code}指数偏离'] = df[f'{code}偏离']/df['指数偏离']
         df = df.drop(f'{code}', axis=1)
         print(df)
