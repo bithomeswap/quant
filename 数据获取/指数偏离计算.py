@@ -16,6 +16,14 @@ name = "ETF"
 collection = db[f"{name}"]
 print('任务开始')
 data[['日期', '指数开盘']] = data[["日期", "开盘"]]
+# 计算一年前的日期
+now = datetime.datetime.now()
+one_year_ago = int((now - datetime.timedelta(days=365)).timestamp())
+# 根据过滤条件保留符合条件的行
+data = data[data['timestamp'] >= one_year_ago]
+# 输出结果
+print(data)
+
 n = 0
 df = ak.fund_etf_spot_em()
 # 遍历目标指数代码，获取其分钟K线数据
@@ -24,20 +32,19 @@ for code in df['代码']:
         etf = pd.DataFrame(list(collection.find(({"代码": float(f'{code}')}))))
         n += 1
         etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
-        if n == 1:
-            df = pd.merge(data[['日期', '指数开盘']],
-                          etf[['日期', f'{code}']], on='日期', how='left')
-            # df['指数偏离'] = df["指数开盘"]/df.loc[0, "指数开盘"]
+        if n==1:
+            df = pd.merge(data[['日期', '指数开盘']], etf[['日期', f'{code}']], on='日期', how='left')
             df[f'{code}偏离'] = df[f'{code}'] / df["指数开盘"].dropna().iloc[-1]
         if n > 1:
             df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
-        # df[f'{code}偏离'] = df[f'{code}']/df.loc[0, f'{code}']
         df[f'{code}偏离'] = df[f'{code}'] / df[f'{code}'].dropna().iloc[-1]
         # df[f'{code}指数偏离'] = df[f'{code}偏离']/df['指数偏离']
         df = df.drop(f'{code}', axis=1)
         print(df)
     except Exception as e:
         print(f"发生bug: {e}")
+df = df.drop(f'指数开盘', axis=1)
+
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
