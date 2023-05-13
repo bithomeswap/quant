@@ -32,17 +32,19 @@ for code in df['代码']:
         etf = pd.DataFrame(list(collection.find(({"代码": float(f'{code}')}))))
         n += 1
         etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
-        if n==1:
-            df = pd.merge(data[['日期', '指数开盘']], etf[['日期', f'{code}']], on='日期', how='left')
-            df[f'{code}偏离'] = df[f'{code}'] / df["指数开盘"].dropna().iloc[-1]
+        if n == 1:
+            df = pd.merge(data[['日期', '指数开盘']],
+                          etf[['日期', f'{code}']], on='日期', how='left')
         if n > 1:
             df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
-        df[f'{code}偏离'] = df[f'{code}'] / df[f'{code}'].dropna().iloc[-1]
-        # df[f'{code}指数偏离'] = df[f'{code}偏离']/df['指数偏离']
+        df[f'{code}偏离'] = (df[f'{code}'] / df[f'{code}'].dropna().iloc[-1])
         df = df.drop(f'{code}', axis=1)
-        print(df)
+        # print(df)
     except Exception as e:
         print(f"发生bug: {e}")
+    # if n == 20:
+    #     break
+df[f'指数偏离'] = df['指数开盘'] / df["指数开盘"].dropna().iloc[-1]
 df = df.drop(f'指数开盘', axis=1)
 
 # 获取当前.py文件的绝对路径
