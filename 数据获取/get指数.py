@@ -32,8 +32,7 @@ df = ['000001', '000002', '000003', '000004', '000005',
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df:
     # print(code)
-    latest = list(collection.find({"代码": float(code)}, {
-                  "timestamp": 1}).sort("timestamp", -1).limit(1))
+    latest = list(collection.find({"代码": float(code)}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
     # print(latest)
     if len(latest) == 0:
         upsert_docs = True

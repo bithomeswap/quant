@@ -11,20 +11,31 @@ client = MongoClient(
 db = client["wth000"]
 name = "指数"
 collection = db[f"{name}"]
-data = pd.DataFrame(list(collection.find({"代码": float('000001')})))
+data = pd.DataFrame(list(collection.find({"代码": float('000002')})))
 name = "ETF"
 collection = db[f"{name}"]
-dataetf = pd.DataFrame(list(collection.find({"代码": float('512010')})))
+print('任务开始')
 data[['日期', '指数开盘']] = data[["日期", "开盘"]]
-dataetf[['日期', 'ETF开盘']] = dataetf[["日期", "开盘"]]
-print(data)
-df = pd.merge(data[['日期', '指数开盘']], dataetf[['日期', 'ETF开盘']], on='日期')
-df['指数偏离'] = df["指数开盘"]/df.loc[0, "指数开盘"]
-df['ETF偏离'] = df["ETF开盘"]/df.loc[0, "ETF开盘"]
-df['ETF指数偏离'] = df['ETF偏离']/df['指数偏离']
-
+n = 0
+df = ak.fund_etf_spot_em()
 print(df)
-
+# 遍历目标指数代码，获取其分钟K线数据
+for code in df['代码']:
+    try:
+        etf = pd.DataFrame(list(collection.find(({"代码": float(f'{code}')}))))
+        n += 1
+        etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
+        if n==1:
+            df = pd.merge(data[['日期', '指数开盘']], etf[['日期', f'{code}']], on='日期')
+            df['指数偏离'] = df["指数开盘"]/df.loc[0, "指数开盘"]
+        if n > 1:
+            df = pd.merge(df, etf[['日期', f'{code}']], on='日期')
+        df[f'{code}偏离'] = df[f'{code}']/df.loc[0, f'{code}']
+        # df[f'{code}指数偏离'] = df[f'{code}偏离']/df['指数偏离']
+        df = df.drop(f'{code}', axis=1)
+        print(df)
+    except Exception as e:
+        print(f"发生bug: {e}")
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
