@@ -24,8 +24,9 @@ for code in df['代码']:
         etf = pd.DataFrame(list(collection.find(({"代码": float(f'{code}')}))))
         n += 1
         etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
-        if n==1:
-            df = pd.merge(data[['日期', '指数开盘']], etf[['日期', f'{code}']], on='日期', how='left')
+        if n == 1:
+            df = pd.merge(data[['日期', '指数开盘']],
+                          etf[['日期', f'{code}']], on='日期', how='left')
             # df['指数偏离'] = df["指数开盘"]/df.loc[0, "指数开盘"]
             df[f'{code}偏离'] = df[f'{code}'] / df["指数开盘"].dropna().iloc[-1]
         if n > 1:
