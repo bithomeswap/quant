@@ -1,11 +1,14 @@
+import tradelist
 import pytz
-import time
-from pymongo import MongoClient
 import datetime
+import math
+import requests
 import pandas as pd
-import akshare as ak
+import talib
+import os
+from pymongo import MongoClient
 
-
+# 连接MongoDB数据库
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
@@ -19,80 +22,81 @@ db = client['wth000']
 name = '分钟ETF'
 # name = 'ETF'
 
-collection = db[f"{name}"]
-# 获取当前日期
-current_date = datetime.datetime.now()
-# 读取数据时长
-date_ago = current_date - datetime.timedelta(days=400)
-# date_ago= current_date - datetime.timedelta(days=10)
+collection = db[f'{name}']
+# 获取数据并转换为DataFrame格式
+data = pd.DataFrame(list(collection.find()))
+print("数据读取成功")
 
-start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
-end_date = current_date.strftime('%Y%m%d')
 
-# 获取 A 股所有 ETF 基金代码
-df = ak.fund_etf_spot_em()
-
-# 遍历目标指数代码，获取其分钟K线数据
-for code in df['代码']:
-    # print(code)
-    latest = list(collection.find({"代码": float(code)}, {
-                  "timestamp": 1}).sort("timestamp", -1).limit(1))
-    # print(latest)
-    if len(latest) == 0:
-        upsert_docs = True
-        start_date_query = start_date
-    else:
-        upsert_docs = False
-        latest_timestamp = latest[0]["timestamp"]
-        start_date_query = datetime.datetime.fromtimestamp(
-            latest_timestamp).strftime('%Y%m%d')
-
-    # 通过 akshare 获取目标指数的日K线数据
-    k_data = ak.fund_etf_hist_min_em(symbol=code, period=1)
+def get_technical_indicators(df):  # 定义计算技术指标的函数
     try:
-        k_data['代码'] = float(code)
-        k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-        k_data['日期'] = k_data['时间']
-        # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-        #     datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
-        k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
-
-        k_data = k_data.sort_values(by=["代码", "日期"])
-        docs_to_update = k_data.to_dict('records')
-        if upsert_docs:
-            # print(f"{name}({code}) 新增数据")
-            try:
-                collection.insert_many(docs_to_update)
-            except Exception as e:
-                pass
-        else:
-            bulk_insert = []
-            for doc in docs_to_update:
-                if doc["timestamp"] > latest_timestamp:
-                    # 否则，加入插入列表
-                    bulk_insert.append(doc)
-                if doc["timestamp"] == float(latest_timestamp):
-                    try:
-                        collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {
-                            "$set": doc}, upsert=True)
-                    except Exception as e:
-                        pass
-            # 执行批量插入操作
-            if bulk_insert:
-                try:
-                    collection.insert_many(bulk_insert)
-                except Exception as e:
-                    pass
+        df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+        # 删除最高价和最低价为负值的数据
+        df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
+        df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+        # 定义开盘收盘幅
+        df['开盘收盘幅'] = df['开盘']/df['收盘'].copy().shift(1) - 1
+        # 计算涨跌幅
+        df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
+        # 计算昨日振幅
+        df['昨日振幅'] = (df['最高'].copy().shift(
+            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
+        # 计算昨日成交额
+        df['昨日成交额'] = df['成交额'].copy().shift(1)
+        # 计算昨日涨跌
+        df['昨日涨跌'] = df['涨跌幅'].copy().shift(1)+1
+        # 计算昨日资金贡献
+        df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
+        # 计算昨日资金波动
+        df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
+        # 计算昨日资金贡献
+        df['昨日资金成本'] = df['昨日涨跌'] * df['昨日成交额']
+        for n in range(2, 10):
+            df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
+            df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
+        for n in range(1, 20):
+            df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
-        print(e, f'因为{code}停牌')
-print('任务已经完成')
-# time.sleep(60)
-limit = 600000
-if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([('日期', 1)]).limit(
-        collection.count_documents({})-limit)
-    ids_to_delete = [data['_id'] for data in oldest_data]
-    collection.delete_many({'_id': {'$in': ids_to_delete}})
-    # 往外读取数据的时候再更改索引吧
-print('数据清理成功')
+        print(f"发生bug: {e}")
+    return df
+
+
+# 按照“代码”列进行分组并计算技术指标
+grouped = data.groupby('代码', group_keys=False).apply(get_technical_indicators)
+
+
+def paiming(df):  # 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
+    # 计算每个指标的排名
+    for column in df.columns:
+        if '未来函数' not in str(column):
+            df = pd.concat([df, (df[str(column)].rank(
+                method='max', ascending=False) / len(df)).rename(f'{str(column)}_rank')], axis=1)
+    return df
+
+
+# 分组并计算指标排名
+grouped = grouped.groupby(['日期'], group_keys=False).apply(paiming)
+
+tradelist.tradelist(grouped, name)
+
+# 连接MongoDB数据库并创建新集合
+new_collection = db[f'{name}指标']
+new_collection.drop()  # 清空集合中的所有文档
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上两级目录的路径
+dir_path = os.path.dirname(os.path.dirname(dir_path))
+# 保存数据到指定目录
+file_path = os.path.join(dir_path, f'{name}指标.csv')
+grouped.to_csv(file_path, index=False)
+print('准备插入数据')
+# 将数据分批插入
+batch_size = 5000  # 批量插入的大小
+num_batches = len(grouped) // batch_size + 1
+for i in range(num_batches):
+    start_idx = i * batch_size
+    end_idx = (i + 1) * batch_size
+    data_slice = grouped[start_idx:end_idx]
+    new_collection.insert_many(data_slice.to_dict('records'))
