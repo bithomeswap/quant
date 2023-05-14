@@ -285,6 +285,7 @@ def clearn():
         collection_write.delete_many({'_id': {'$in': ids_to_delete}})
     print('数据清理成功')
 
+
 while True:
     buy(symbols)
     time.sleep(60)
