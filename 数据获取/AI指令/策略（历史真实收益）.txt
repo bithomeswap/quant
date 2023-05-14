@@ -8,28 +8,24 @@
 3.可以使用参考代码，但是不一定准确，请你批判的使用
 
 二、规则说明
-1.计算完每日的平均收益后
-每日把总资金分成n份，每份资金以n+1为步频单独计算滚动收益和当日收益
-2.
-3.
+0.每一条交易记录都计算df[f'{n}日后当日收益']=([f'{n}日后总涨跌幅（未来函数）']+1)/([f'{n-1}日后总涨跌幅（未来函数）']+1)-1
+1.初始资金为n+1，每次进行收益计算时，收益计算方式不变，但是每一份资金分别计算，计算的时间跨度为n；
+2.每一份资金分别计算每回合的收益率和资产变动情况；
+3.每天计算前n天内：
+1天前所有标的的df[f'{1}日后当日收益']+
+2天前所有标的的df[f'{2}日后当日收益']+
+......
+n天前所有标的的df[f'{n}日后当日收益']+
+的和，即为当日理论上的盘中每日回撤（数据暂时不支持统计分钟级回撤），
 
 参考资料：https: //github.com/bithomeswap/quant
 
-
 一、参考代码
 import math
-import os
-import talib
 import pandas as pd
-import requests
-import json
-import time
-from pymongo import MongoClient
-from binance.client import Client
+import os
 # 设置参数
-names = ['分钟COIN', '分钟深证', '分钟上证',]
-# names = ['COIN', '深证', '上证',]
-
+names = ['ETF', '分钟ETF']
 
 for name in names:
     try:
@@ -48,6 +44,8 @@ for name in names:
         for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
             df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
+        m = 0.001  # 设置手续费
+        n =6   # 设置持仓周期
 
         # 将交易标的细节输出到一个csv文件
         trading_detail_filename = f'{name}交易细节.csv'
@@ -68,8 +66,8 @@ for name in names:
             if group.empty:
                 daily_return = 0
             else:
-                daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                                1).mean()*(1-m)-1)/n  # 计算平均收益率
+                daily_return = (
+                    (group[f'{n}日后总涨跌幅（未来函数）'] + 1).mean()*(1-m)-1)/n  # 计算平均收益率
             df_daily_return = pd.concat(
                 [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
             # 更新资金余额并记录每日资金余额
@@ -78,10 +76,15 @@ for name in names:
             cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
         df_cash_balance = pd.DataFrame(
             {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-        df_strategy_and_return = pd.merge(
+        result_df = pd.merge(
             df_daily_return, df_cash_balance, on='日期')
-        # 输出每日执行策略和净资产收益率到csv文件
-        # df_strategy_and_return.to_csv(f'/{name}每日策略和资产状况.csv', index=False)
-        df_strategy_and_return.to_csv(f'./资产变动/{name}资产变动.csv', index=False)
+        # 新建涨跌分布文件夹在上级菜单下，并保存结果
+        parent_path = os.path.abspath('.')
+        dir_name = '资产变动'
+        dir_path = os.path.join(parent_path, dir_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        result_df.to_csv(f'{dir_path}/{name}资产变动.csv')
+        print('任务已经完成！')
     except Exception as e:
         print(f"发生bug: {e}")

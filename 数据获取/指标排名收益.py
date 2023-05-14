@@ -3,10 +3,10 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-# names = ['分钟COIN', '分钟深证', '分钟上证','分钟ETF']
-# names = ['COIN', '深证', '上证','ETF']
+# names = ['分钟COIN', '分钟深证', '分钟上证']
+names = ['COIN', '深证', '上证']
 # names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
-names = ['ETF', '分钟ETF']
+# names = ['ETF', '分钟ETF']
 for name in names:
     try:
         # 获取当前.py文件的绝对路径
@@ -21,7 +21,9 @@ for name in names:
         # 去掉噪音数据
         for n in range(1, 9):
             df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
-
+        
+        m = 0.001  # 设置手续费
+        n = 18  # 设置持仓周期
         if ('coin' in name.lower()):
             if ('分钟' not in name.lower()):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
@@ -30,6 +32,15 @@ for name in names:
                 n = 6  # 设置持仓周期
             if ('分钟' in name.lower()):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
+                m = 0.0000  # 设置手续费
+                n = 6  # 设置持仓周期
+        if ('etf' in name.lower()):
+            if ('分钟' not in name.lower()):
+                df = df[df[f'真实价格'] >= 0.5].copy()  # 开盘价过滤高滑点股票
+                m = 0.003  # 设置手续费
+                n = 6  # 设置持仓周期
+            if ('分钟' in name.lower()):
+                df = df[(df['开盘'] >= 0.5)].copy()  # 真实价格过滤劣质股票
                 m = 0.0000  # 设置手续费
                 n = 6  # 设置持仓周期
         if ('证' in name.lower()):
@@ -43,18 +54,6 @@ for name in names:
                 df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
                 m = 0.0000  # 设置手续费
                 n = 18  # 设置持仓周期
-        if ('etf' in name.lower()):
-            if ('分钟' not in name.lower()):
-                df = df[df[f'真实价格'] >= 0.5].copy()  # 开盘价过滤高滑点股票
-                m = 0.001  # 设置手续费
-                n = 18  # 设置持仓周期
-            if ('分钟' in name.lower()):
-                df = df[(df['开盘'] >= 0.5)].copy()  # 真实价格过滤劣质股票
-                m = 0.001  # 设置手续费
-                n = 18  # 设置持仓周期
-        else:
-            m = 0.001  # 设置手续费
-            n = 18  # 设置持仓周期
         mubiao = f'{n}日后总涨跌幅（未来函数）'
         # 将数据划分成a个等长度的区间
         a = 20
