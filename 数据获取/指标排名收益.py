@@ -3,10 +3,11 @@ import numpy as np
 import datetime
 import os
 # 设置参数
+# names = ['ETF', '分钟ETF']
 # names = ['分钟COIN', '分钟深证', '分钟上证']
 names = ['COIN', '深证', '上证']
 # names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
-# names = ['ETF', '分钟ETF']
+
 for name in names:
     try:
         # 获取当前.py文件的绝对路径
@@ -21,7 +22,7 @@ for name in names:
         # 去掉噪音数据
         for n in range(1, 9):
             df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
-        
+
         m = 0.001  # 设置手续费
         n = 18  # 设置持仓周期
         if ('coin' in name.lower()):
@@ -49,11 +50,11 @@ for name in names:
                 df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
                 m = 0.005  # 设置手续费
-                n = 18  # 设置持仓周期
+                n = 15  # 设置持仓周期
             if ('分钟' in name.lower()):
                 df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
                 m = 0.0000  # 设置手续费
-                n = 18  # 设置持仓周期
+                n = 15  # 设置持仓周期
         mubiao = f'{n}日后总涨跌幅（未来函数）'
         # 将数据划分成a个等长度的区间
         a = 20
