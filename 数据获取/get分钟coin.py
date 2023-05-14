@@ -49,7 +49,7 @@ for ticker_price in usdt_ticker_prices:
     klines = client.get_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_1MINUTE,
-        limit=1000
+        # limit=1000
     )
     # 实际上实盘的时候，这里应该改成八小时
     # KLINE_INTERVAL_15MINUTE='15m'

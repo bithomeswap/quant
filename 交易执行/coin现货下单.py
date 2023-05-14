@@ -74,11 +74,11 @@ symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 
 
 def buy(symbols):
-    balances = client.futures_account_balance()  # 获取永续合约账户资产余额
+    balances = client.get_account()['balances']  # 获取现货账户资产余额
     for balance in balances:
         if balance['asset'] == 'USDT':
-            usdt_balance = balance['balance']
-    print('USDT余额：', usdt_balance)
+            usdt_balance = float(balance['free'])
+            print('USDT余额：', usdt_balance)
     # 添加异常计数器
     error_count = 0
     for symbol in symbols:
