@@ -1,10 +1,5 @@
-import os
-import talib
-import pandas as pd
-import requests
 import math
 import datetime
-import pytz
 import time
 import schedule
 from binance.client import Client
@@ -54,18 +49,12 @@ client = Client(api_key, api_secret, testnet=True)
 dbclient = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = dbclient["wth000"]
-name = "BTC"
-# collection = db[f'{name}']
-# # 获取数据并转换为DataFrame格式
-# data = pd.DataFrame(list(collection.find()))
-
-# print("数据读取成功")
+name = "COIN"
 collection_write = db[f'{name}order']
-
 # 获取计划交易的标的
 symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 
-# def sell_all():市价卖出所有代币
+# def sell_all():  # 市价卖出所有代币
 #     # 获取账户余额
 #     balances = client.get_account()['balances']
 #     for balance in balances:
@@ -84,14 +73,12 @@ symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 # sell_all()
 
 
-balances = client.get_account()['balances']  # 获取现货账户资产余额
-for balance in balances:
-    if balance['asset'] == 'USDT':
-        usdt_balance = float(balance['free'])
-        print('USDT余额：', usdt_balance)
-
-
-def buy():
+def buy(symbols):
+    balances = client.futures_account_balance()  # 获取永续合约账户资产余额
+    for balance in balances:
+        if balance['asset'] == 'USDT':
+            usdt_balance = balance['balance']
+    print('USDT余额：', usdt_balance)
     # 添加异常计数器
     error_count = 0
     for symbol in symbols:
@@ -177,7 +164,7 @@ def buy():
     time.sleep(1)
 
 
-def sell():
+def sell(symbols):
     # 首先更新订单状态
     try:
         for symbol in symbols:
@@ -202,7 +189,7 @@ def sell():
                 print('历史成交订单更新', order)
             # 获取当前已完成的订单（1小时内）
             start_time = int((datetime.datetime.now() -
-                              datetime.timedelta(hours=1)).timestamp() * 1000)
+                             datetime.timedelta(hours=1)).timestamp() * 1000)
             all_orders = client.get_all_orders(
                 symbol=symbol, startTime=start_time)
             # 遍历已完成的订单
@@ -242,7 +229,6 @@ def sell():
             stepSize = float(symbol_info['filters'][1]['minQty'])
             print(f"{symbol}数量步长: {stepSize}")
             # 实时获取当前卖一和卖二价格
-            # 实时获取当前卖一和卖二价格
             depth = client.get_order_book(symbol=symbol, limit=5)
             ask_price_1 = float(depth['asks'][0][0])
             bid_price_1 = float(depth['bids'][0][0])
@@ -259,8 +245,8 @@ def sell():
                 # 如果订单尚未完全成交，则尝试卖出
                 if (order['status'] != 'end') & (order['buy_quantity'] != 0) & (order['buy_quantity'] != order['sell_quantity']):
                     # 计算卖出时间
-                    # sell_time = order['time'] + 86400
-                    sell_time = order['time']
+                    sell_time = order['time'] + 86400
+                    # sell_time = order['time']
                     # 如果卖出时间已经到了，就执行卖出操作
                     if int(time.time()) >= sell_time:
                         # 卖出订单
@@ -299,20 +285,10 @@ def clearn():
         collection_write.delete_many({'_id': {'$in': ids_to_delete}})
     print('数据清理成功')
 
-
-buy()
-sell()
-clearn()
-
-# 每5分钟执行一次买入操作
-schedule.every(60).minutes.do(buy)
-
-# 每分钟执行一次卖出操作
-schedule.every(60).minutes.do(sell)
-
-# 每小时执行一次清理操作
-schedule.every(3600).minutes.do(sell)
-
 while True:
-    schedule.run_pending()
-    time.sleep(1)
+    buy(symbols)
+    time.sleep(60)
+    sell(symbols)
+    time.sleep(60)
+    clearn()
+    time.sleep(3600)

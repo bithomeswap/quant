@@ -36,18 +36,11 @@ client = Client(api_key, api_secret, testnet=True,
 dbclient = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = dbclient["wth000"]
-name = "BTC"
-# collection = db[f'{name}']
-# # 获取数据并转换为DataFrame格式
-# data = pd.DataFrame(list(collection.find()))
-
+name = "COIN"
 collection_write = db[f'{name}期货order']
-
 # 获取计划交易的标的
 symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
-
 symbol_dict = client.futures_exchange_info()
-
 
 # def sell_all():  # 市价平仓所有持仓
 #     for symbol in symbols:    # 获取当前持仓信息
@@ -71,14 +64,12 @@ symbol_dict = client.futures_exchange_info()
 # sell_all()
 
 
-balances = client.futures_account_balance()  # 获取永续合约账户资产余额
-for balance in balances:
-    if balance['asset'] == 'USDT':
-        usdt_balance = balance['balance']
-print('USDT余额：', usdt_balance)
-
-
-def buy():
+def buy(symbols):
+    balances = client.futures_account_balance()  # 获取永续合约账户资产余额
+    for balance in balances:
+        if balance['asset'] == 'USDT':
+            usdt_balance = balance['balance']
+    print('USDT余额：', usdt_balance)
     # 添加异常计数器
     error_count = 0
     for symbol in symbols:
@@ -170,7 +161,7 @@ def buy():
     time.sleep(1)
 
 
-def sell():
+def sell(symbols):
     # 首先更新订单状态
     try:
         for symbol in symbols:
@@ -301,20 +292,10 @@ def clearn():
         collection_write.delete_many({'_id': {'$in': ids_to_delete}})
     print('数据清理成功')
 
-
-buy()
-sell()
-clearn()
-
-# 每5分钟执行一次买入操作
-schedule.every(60).minutes.do(buy)
-
-# 每分钟执行一次卖出操作
-schedule.every(60).minutes.do(sell)
-
-# 每小时执行一次清理操作
-schedule.every(3600).minutes.do(sell)
-
 while True:
-    schedule.run_pending()
-    time.sleep(1)
+    buy(symbols)
+    time.sleep(60)
+    sell(symbols)
+    time.sleep(60)
+    clearn()
+    time.sleep(3600)
