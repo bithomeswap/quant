@@ -26,6 +26,9 @@ import pandas as pd
 import os
 # 设置参数
 names = ['ETF', '分钟ETF']
+# names = ['分钟COIN', '分钟深证', '分钟上证']
+# names = ['COIN', '深证', '上证']
+# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
 
 for name in names:
     try:
@@ -45,25 +48,34 @@ for name in names:
             df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
         m = 0.001  # 设置手续费
-        n =6   # 设置持仓周期
+        n = 18  # 设置持仓周期
+
+        df = df.groupby('代码', group_keys=False)
+
+        # 计算每个标的每个日期的未来当日收益(拿来确认回撤用)
+        for i in range(1, n+1):
+            col = f'{i}日后总涨跌幅（未来函数）'
+            df[col+'_shift'] = df.groupby('代码')[col].shift(-i)
+            # df[f'{i}日后当日收益'] = (df[col] + 1) / (df[col+'_shift'] + 1) - 1
+            for j in range(0, n):
+                for k in range(0, n):
+                    df.loc[j+k+1, f'{k+1}份资金_{i}日后当日收益'] = (df.loc[j:k+j, col].mean() + 1) / (
+                        df.loc[j:k+j, col+'_shift'].mean() + 1) - 1
+        # # 计算累加收益率和回撤
+        # df_grouped = df.groupby(['日期'], group_keys=False).apply(lambda x: x[[f'{i}日后当日收益' for i in range(1, n+1)]]).sum(axis=0).reset_index()
+        # df_grouped['回撤'] = df_grouped.iloc[:, 1:].cumsum(axis=1).min(axis=1)
+        # 每天的回撤应该是分别计算每份资金的当日持仓的回撤，例如说第1份资金
 
         # 将交易标的细节输出到一个csv文件
         trading_detail_filename = f'{name}交易细节.csv'
         df.to_csv(trading_detail_filename, index=False)
 
-        # 假设开始时有1元资金,实操时每个月还得归集一下资金，以免收益不平均
-        cash_balance = 1
-        # 用于记录每日的资金余额
-        daily_cash_balance = {}
-
-        df_strategy = pd.DataFrame(columns=['日期', '执行策略'])
+        cash_balance = 1  # 初始资金设置为1元
+        daily_cash_balance = {}  # 用于每日的资金余额
         df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
-
         cash_balance_list = []
-        # 记录每个交易日是否执行了策略，并输出到csv文件中
         for date, group in df.groupby('日期'):
-            # 如果当日没有入选标的，则单日收益率为0
-            if group.empty:
+            if group.empty:  # 如果当日没有入选标的，则单日收益率为0
                 daily_return = 0
             else:
                 daily_return = (
@@ -76,8 +88,7 @@ for name in names:
             cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
         df_cash_balance = pd.DataFrame(
             {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-        result_df = pd.merge(
-            df_daily_return, df_cash_balance, on='日期')
+        result_df = pd.merge(df_daily_return, df_cash_balance, on='日期')
         # 新建涨跌分布文件夹在上级菜单下，并保存结果
         parent_path = os.path.abspath('.')
         dir_name = '资产变动'
