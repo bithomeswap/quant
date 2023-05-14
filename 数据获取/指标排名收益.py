@@ -3,7 +3,10 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN']
+# names = ['分钟COIN', '分钟深证', '分钟上证','分钟ETF']
+# names = ['COIN', '深证', '上证','ETF']
+# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
+names = ['ETF', '分钟ETF']
 for name in names:
     try:
         # 获取当前.py文件的绝对路径
@@ -34,13 +37,24 @@ for name in names:
             if ('分钟' not in name.lower()):
                 df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
-                m = 0.005  # 设置手续费 
+                m = 0.005  # 设置手续费
                 n = 18  # 设置持仓周期
             if ('分钟' in name.lower()):
                 df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
                 m = 0.0000  # 设置手续费
                 n = 18  # 设置持仓周期
-
+        if ('etf' in name.lower()):
+            if ('分钟' not in name.lower()):
+                df = df[df[f'真实价格'] >= 0.5].copy()  # 开盘价过滤高滑点股票
+                m = 0.001  # 设置手续费
+                n = 18  # 设置持仓周期
+            if ('分钟' in name.lower()):
+                df = df[(df['开盘'] >= 0.5)].copy()  # 真实价格过滤劣质股票
+                m = 0.001  # 设置手续费
+                n = 18  # 设置持仓周期
+        else:
+            m = 0.001  # 设置手续费
+            n = 18  # 设置持仓周期
         mubiao = f'{n}日后总涨跌幅（未来函数）'
         # 将数据划分成a个等长度的区间
         a = 20
@@ -71,9 +85,13 @@ for name in names:
                 col_result_df = pd.concat(
                     [col_result_df, result_sub_df], axis=1)
             result_df = pd.concat([result_df, col_result_df])
-        # 保存结果
-        result_df.to_csv(f'./涨跌分布/{name}_{n}日后指标排名区间涨跌幅.csv')
-        # result_df.to_csv(f'{name}_{n}日后指标排名区间涨跌幅.csv')
+        # 新建涨跌分布文件夹在上级菜单下，并保存结果
+        parent_path = os.path.abspath('.')
+        dir_name = '涨跌分布'
+        dir_path = os.path.join(parent_path, dir_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        result_df.to_csv(f'{dir_path}/{name}_{n}日后指标排名区间涨跌幅.csv')
         print('任务已经完成！')
     except Exception as e:
         print(f"发生bug: {e}")

@@ -5,12 +5,14 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-name = '分钟COIN'
+# name = '分钟COIN'
 # name = 'COIN'
 # name = '分钟上证'
 # name = '上证'
 # name = '分钟深证'
 # name = '深证'
+# name = '分钟ETF'
+name = 'ETF'
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

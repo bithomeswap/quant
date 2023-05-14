@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import os
 import akshare as ak
 import pandas as pd
@@ -44,9 +45,21 @@ for code in df['代码']:
         print(df)
     except Exception as e:
         print(f"发生bug: {e}")
-    if n == 20:
+    if n == 100:
         break
 df = df.drop(f'指数开盘', axis=1)
+
+# 绘图
+# 设置中文字体和短横线符号
+plt.rcParams['font.family'] = ['Microsoft YaHei']
+plt.rcParams['axes.unicode_minus'] = False
+plt.figure(figsize=(16, 8))
+plt.plot(df.set_index('日期'))
+plt.legend(df.columns.drop('日期'))
+plt.xlabel('日期')
+plt.ylabel('指数偏离度')
+plt.title(f'{n}种ETF指数对比')
+plt.show()
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

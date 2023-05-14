@@ -2,8 +2,10 @@ import math
 import pandas as pd
 import os
 # 设置参数
-names = ['分钟COIN', '分钟深证', '分钟上证',]
-# names = ['COIN', '深证', '上证',]
+# names = ['分钟COIN', '分钟深证', '分钟上证', '分钟ETF']
+# names = ['COIN', '深证', '上证','ETF']
+# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
+names = ['ETF', '分钟ETF']
 
 
 for name in names:
@@ -33,11 +35,15 @@ for name in names:
                 df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()
                 df = df[(df['昨日成交额_rank'] >= 0.5)].copy()
-                df = df[(df['昨日振幅_rank'] >= 0.1) & (df[f'昨日振幅_rank'] <= 0.9)].copy()
-                df = df[(df['昨日涨跌_rank'] >= 0.1) & (df[f'昨日涨跌_rank'] <= 0.9)].copy()
+                df = df[(df['昨日振幅_rank'] >= 0.1) & (
+                    df[f'昨日振幅_rank'] <= 0.9)].copy()
+                df = df[(df['昨日涨跌_rank'] >= 0.1) & (
+                    df[f'昨日涨跌_rank'] <= 0.9)].copy()
                 for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) & (
+                        df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) & (
+                        df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
                 m = 0.003  # 设置手续费
                 n = 6  # 设置持仓周期
             if ('分钟' in name.lower()):
@@ -52,17 +58,22 @@ for name in names:
             if ('分钟' not in name.lower()):
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
                 df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-                df = df[(df['真实价格_rank'] <= 0.8) & (df['真实价格_rank'] >= 0.2)].copy()  # 真实价格过滤劣质股票
+                df = df[(df['真实价格_rank'] <= 0.8) & (
+                    df['真实价格_rank'] >= 0.2)].copy()  # 真实价格过滤劣质股票
 
                 df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()
                 df = df[(df['昨日成交额_rank'] >= 0.5)].copy()
-                df = df[(df['昨日振幅_rank'] >= 0.1) & (df[f'昨日振幅_rank'] <= 0.9)].copy()
-                df = df[(df['昨日涨跌_rank'] >= 0.1) & (df[f'昨日涨跌_rank'] <= 0.9)].copy()
+                df = df[(df['昨日振幅_rank'] >= 0.1) & (
+                    df[f'昨日振幅_rank'] <= 0.9)].copy()
+                df = df[(df['昨日涨跌_rank'] >= 0.1) & (
+                    df[f'昨日涨跌_rank'] <= 0.9)].copy()
                 for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) &(df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) & (
+                        df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.1) & (
+                        df[f'过去{n}日总涨跌_rank'] <= 0.9)].copy()
                 m = 0.005  # 设置手续费
                 n = 18  # 设置持仓周期
             if ('分钟' in name.lower()):
@@ -73,7 +84,29 @@ for name in names:
                 m = 0.0000  # 设置手续费
                 n = 18  # 设置持仓周期
             print(len(df), name)
-
+        if ('etf' in name.lower()):
+            if ('分钟' not in name.lower()):
+                df = df[df[f'真实价格'] >= 0.5].copy()  # 开盘价过滤高滑点股票
+                df = df[(df['昨日振幅_rank'] >= 0.2)].copy()
+                for n in (2, 9):
+                    if n <= 5:
+                        df = df[(df[f'过去{n*5}日总涨跌_rank'] <= 0.1) |
+                                (df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
+                    if n >= 8:
+                        df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.95)].copy()
+                m = 0.001  # 设置手续费
+                n = 18  # 设置持仓周期
+            if ('分钟' in name.lower()):
+                df = df[(df['开盘'] >= 0.5)].copy()  # 真实价格过滤劣质股票
+                for n in (2, 9):
+                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
+                    df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
+                m = 0.0000  # 设置手续费
+                n = 18  # 设置持仓周期
+            print(len(df), name)
+        else:
+            m = 0.001  # 设置手续费
+            n = 18  # 设置持仓周期
         # 将交易标的细节输出到一个csv文件
         trading_detail_filename = f'{name}交易细节.csv'
         df.to_csv(trading_detail_filename, index=False)
@@ -93,19 +126,25 @@ for name in names:
             if group.empty:
                 daily_return = 0
             else:
-                daily_return = ((group[f'{n}日后总涨跌幅（未来函数）'] +
-                                1).mean()*(1-m)-1)/n  # 计算平均收益率
+                daily_return = (
+                    (group[f'{n}日后总涨跌幅（未来函数）'] + 1).mean()*(1-m)-1)/n  # 计算平均收益率
             df_daily_return = pd.concat(
                 [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
             # 更新资金余额并记录每日资金余额
             cash_balance *= (1 + daily_return)
             daily_cash_balance[date] = cash_balance
             cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
-        df_cash_balance = pd.DataFrame( {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-        df_strategy_and_return = pd.merge(
+        df_cash_balance = pd.DataFrame(
+            {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
+        result_df = pd.merge(
             df_daily_return, df_cash_balance, on='日期')
-        # 输出每日执行策略和净资产收益率到csv文件
-        # df_strategy_and_return.to_csv(f'/{name}每日策略和资产状况.csv', index=False)
-        df_strategy_and_return.to_csv(f'./资产变动/{name}资产变动.csv', index=False)
+        # 新建涨跌分布文件夹在上级菜单下，并保存结果
+        parent_path = os.path.abspath('.')
+        dir_name = '资产变动'
+        dir_path = os.path.join(parent_path, dir_name)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        result_df.to_csv(f'{dir_path}/{name}资产变动.csv')
+        print('任务已经完成！')
     except Exception as e:
         print(f"发生bug: {e}")
