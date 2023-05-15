@@ -18,14 +18,10 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数
-name = '分钟COIN'
-# name = 'COIN'
 # name = '分钟上证'
-# name = '上证'
 # name = '分钟深证'
-# name = '深证'
-# name = '分钟ETF'
-# name = 'ETF'
+# name = '分钟指数'
+name = '分钟COIN'
 
 collection = db[f'{name}']
 

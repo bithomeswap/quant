@@ -6,7 +6,6 @@ import datetime
 import os
 # 设置参数
 name = 'ETF'
-
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -22,7 +21,7 @@ for n in range(1, 9):
 
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
 
-mubiao = f'真实价格'
+mubiao = f'昨日涨跌'
 
 if ('coin' in name.lower()):
     if ('分钟' not in name.lower()):

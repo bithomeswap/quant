@@ -3,10 +3,7 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-# names = ['ETF', '分钟ETF']
-# names = ['分钟COIN', '分钟深证', '分钟上证']
-names = ['COIN', '深证', '上证']
-# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
+names = ['分钟COIN', 'COIN', '分钟上证', '上证', '分钟深证', '深证', '指数',  'ETF', 'TEST']
 
 for name in names:
     try:
