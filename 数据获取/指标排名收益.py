@@ -24,7 +24,7 @@ for name in names:
             df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
         m = 0.001  # 设置手续费
-        n = 18  # 设置持仓周期
+        n = 6  # 设置持仓周期
         if ('coin' in name.lower()):
             if ('分钟' not in name.lower()):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
@@ -37,13 +37,13 @@ for name in names:
                 n = 6  # 设置持仓周期
         if ('etf' in name.lower()):
             if ('分钟' not in name.lower()):
-                df = df[df[f'真实价格'] >= 0.5].copy()  # 开盘价过滤高滑点股票
+                df = df[df[f'真实价格'] >= 0.8].copy()  # 开盘价过滤高滑点股票
                 m = 0.003  # 设置手续费
-                n = 4  # 设置持仓周期
+                n = 6  # 设置持仓周期
             if ('分钟' in name.lower()):
                 df = df[(df['开盘'] >= 0.5)].copy()  # 真实价格过滤劣质股票
                 m = 0.0000  # 设置手续费
-                n = 4  # 设置持仓周期
+                n = 6  # 设置持仓周期
         if ('证' in name.lower()):
             n = 6  # 设置持仓周期
             if ('分钟' not in name.lower()):

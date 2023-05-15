@@ -22,7 +22,7 @@ for n in range(1, 9):
 
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
 
-mubiao = f'过去{30}日总涨跌'
+mubiao = f'真实价格'
 
 if ('coin' in name.lower()):
     if ('分钟' not in name.lower()):

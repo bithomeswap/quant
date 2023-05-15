@@ -70,6 +70,7 @@ def tradelist(df, name):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
                 df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
                 df = df[(df['开盘_rank'] >= 0.5)].copy()  # 真实价格过滤劣质股票
+
                 df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()
@@ -97,7 +98,6 @@ def tradelist(df, name):
             if ('分钟' not in name.lower()):
                 df = df[df[f'真实价格'] >= 0.5].copy()  # 真实价格过滤劣质股票
                 df = df[(df['开盘收盘幅'] <= 0.08)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-
                 df = df[(df['昨日涨跌_rank'] >= 0.5)].copy()
                 for n in (2, 9):
                     if n <= 4:
@@ -105,7 +105,7 @@ def tradelist(df, name):
                         df = df[(df[f'过去{n}日总涨跌'] <= 1)].copy()
                     if n == 8:
                         df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.95)].copy()
-                m = 0.001  # 设置手续费
+                m = 0.005  # 设置手续费
                 n = 4  # 设置持仓周期
             if ('分钟' in name.lower()):
                 df = df[(df['开盘'] >= 0.5)].copy()  # 真实价格过滤劣质股票
@@ -115,12 +115,13 @@ def tradelist(df, name):
                 m = 0.0000  # 设置手续费
                 n = 4  # 设置持仓周期
             print(len(df), name)
-        if ('证' in name.lower()):
+        if ('证' in name.lower()) or ('test' in name.lower()):
             if ('分钟' not in name.lower()):
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
                 df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
                 df = df[(df['真实价格_rank'] <= 0.8) & (
                     df['真实价格_rank'] >= 0.2)].copy()  # 真实价格过滤劣质股票
+
                 df = df[(df['昨日资金波动_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= 0.1)].copy()
                 df = df[(df['昨日资金成本_rank'] >= 0.5)].copy()
@@ -189,8 +190,12 @@ async def process_data(name):
         end_idx = (i + 1) * batch_size
         data_slice = grouped[start_idx:end_idx]
         new_collection.insert_many(data_slice.to_dict('records'))
+    print(f'{name}数据插入结束')
+
 # 定义异步函数，用于协程方式并发执行任务
-names = ['分钟COIN', 'COIN', '分钟上证', '上证', '分钟深证', '深证', '分钟ETF', 'ETF','TEST']
+names = ['分钟COIN', 'COIN', '分钟上证', '上证',
+         '分钟深证', '深证', '分钟ETF', 'ETF', '指数', 'TEST']
+# names = ['指数', 'TEST']
 
 
 async def process_all_data():

@@ -1,34 +1,45 @@
-
 工作场景：
 你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，同时你的代码当中很少有bug存在
 
 一、注意事项：
-1.尽量使用向量化计算，避免使用if语句和for循环，避免频繁使用解释器导致效率降低
+1.尽量使用向量化计算，避免频繁使用解释器导致效率降低
 2.直接给我完整代码
 3.可以使用参考代码，但是不一定准确，请你批判的使用
 
 二、规则说明
-0.每一条交易记录都计算df[f'{n}日后当日收益']=([f'{n}日后总涨跌幅（未来函数）']+1)/([f'{n-1}日后总涨跌幅（未来函数）']+1)-1
-1.初始资金为n+1，每次进行收益计算时，收益计算方式不变，但是每一份资金分别计算，计算的时间跨度为n；
-2.每一份资金分别计算每回合的收益率和资产变动情况；
-3.每天计算前n天内：
-1天前所有标的的df[f'{1}日后当日收益']+
-2天前所有标的的df[f'{2}日后当日收益']+
+1.计算昨日资金波动，算法是在date中获取前n天，并取df中前n天至当天的所有数据，每天计算该份资金在当日的真实波动为：
+2.每天计算该份资金在当日的真实波动为：
+1天前所有标的的df[f'{1}日后当日涨跌（未来函数）']+
 ......
-n天前所有标的的df[f'{n}日后当日收益']+
+n天前所有标的的df[f'{n}日后当日涨跌（未来函数）']+
 的和，即为当日理论上的盘中每日回撤（数据暂时不支持统计分钟级回撤），
-
 参考资料：https: //github.com/bithomeswap/quant
+3.直接给我完整代码，辛苦你了，改天请你吃烧烤，谢谢。
 
 一、参考代码
 import math
 import pandas as pd
 import os
 # 设置参数
-names = ['ETF', '分钟ETF']
+# names = ['ETF', '分钟ETF']
 # names = ['分钟COIN', '分钟深证', '分钟上证']
-# names = ['COIN', '深证', '上证']
-# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF']
+names = ['COIN', '深证', '上证']
+# names = ['TEST', '指数']
+# names = ['深证', '分钟深证', '上证', '分钟上证', 'COIN', '分钟COIN','ETF','分钟ETF','TEST', '指数']
+
+
+def get_ruturn(df):  # 定义计算技术指标的函数
+    try:
+        # 删除最高价和最低价为负值的数据
+        df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
+        df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+        for n in range(1, 20):
+            df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
+            df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
+    except Exception as e:
+        print(f"发生bug: {e}")
+    return df
+
 
 for name in names:
     try:
@@ -40,62 +51,42 @@ for name in names:
         dir_path = os.path.dirname(os.path.dirname(dir_path))
         file_path = os.path.join(dir_path, f'{name}指标.csv')
         df = pd.read_csv(file_path)
-
-        code_count = len(df['代码'].drop_duplicates())
-        print("标的数量", code_count)
-
-        for n in range(1, 9):  # 去掉n日后总涨跌幅大于百分之三百的噪音数据
-            df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
+        # 按照“代码”列进行分组并计算技术指标
+        # df = df.groupby('代码', group_keys=False).apply(get_ruturn)
+        dates = df['日期'].drop_duplicates().tolist()  # 获取所有不重复日期
 
         m = 0.001  # 设置手续费
-        n = 18  # 设置持仓周期
+        n = 6  # 设置持仓周期
 
-        df = df.groupby('代码', group_keys=False)
 
-        # 计算每个标的每个日期的未来当日收益(拿来确认回撤用)
-        for i in range(1, n+1):
-            col = f'{i}日后总涨跌幅（未来函数）'
-            df[col+'_shift'] = df.groupby('代码')[col].shift(-i)
-            # df[f'{i}日后当日收益'] = (df[col] + 1) / (df[col+'_shift'] + 1) - 1
-            for j in range(0, n):
-                for k in range(0, n):
-                    df.loc[j+k+1, f'{k+1}份资金_{i}日后当日收益'] = (df.loc[j:k+j, col].mean() + 1) / (
-                        df.loc[j:k+j, col+'_shift'].mean() + 1) - 1
-        # # 计算累加收益率和回撤
-        # df_grouped = df.groupby(['日期'], group_keys=False).apply(lambda x: x[[f'{i}日后当日收益' for i in range(1, n+1)]]).sum(axis=0).reset_index()
-        # df_grouped['回撤'] = df_grouped.iloc[:, 1:].cumsum(axis=1).min(axis=1)
-        # 每天的回撤应该是分别计算每份资金的当日持仓的回撤，例如说第1份资金
-
-        # 将交易标的细节输出到一个csv文件
-        trading_detail_filename = f'{name}交易细节.csv'
-        df.to_csv(trading_detail_filename, index=False)
-
-        cash_balance = 1  # 初始资金设置为1元
-        daily_cash_balance = {}  # 用于每日的资金余额
-        df_daily_return = pd.DataFrame(columns=['日期', '收益率'])
-        cash_balance_list = []
-        for date, group in df.groupby('日期'):
-            if group.empty:  # 如果当日没有入选标的，则单日收益率为0
-                daily_return = 0
-            else:
-                daily_return = (
-                    (group[f'{n}日后总涨跌幅（未来函数）'] + 1).mean()*(1-m)-1)/n  # 计算平均收益率
-            df_daily_return = pd.concat(
-                [df_daily_return, pd.DataFrame({'日期': [date], '收益率': [daily_return]})])
-            # 更新资金余额并记录每日资金余额
-            cash_balance *= (1 + daily_return)
-            daily_cash_balance[date] = cash_balance
-            cash_balance_list.append(cash_balance)  # 添加每日资金余额到列表中
-        df_cash_balance = pd.DataFrame(
-            {'日期': list(daily_cash_balance.keys()), '资金余额': list(daily_cash_balance.values())})
-        result_df = pd.merge(df_daily_return, df_cash_balance, on='日期')
+        # result_df = pd.DataFrame({})
+        # for i in range(1, n+1):
+        #     days = dates[i::n]  # 持有n天则掉仓周期为n，实际上资金实盘当中是单独留一份备用金补给亏的多的日期以及资金周转
+        #     daydf = df.loc[df['日期'].isin(days)]
+        #     daydf.to_csv(f'{name}_{i}份交易细节.csv', index=False)  # 输出交易细节
+        #     cash_balance = 1  # 初始资金设置为1元
+        #     daily_cash_balance = {}  # 用于记录每日的资金余额
+        #     result = []
+        #     # 每份资金的收益率
+        #     for date, group in daydf.groupby('日期'):
+        #         if group.empty:  # 如果当日没有入选标的，则收益率为0
+        #             daily_return = 0
+        #         else:
+        #             daily_return = (
+        #                 group[f'{n}日后总涨跌幅（未来函数）'].mean() + 1)*(1-m)-1  # 计算平均收益率
+        #         # 更新资金余额并记录每日资金余额
+        #         cash_balance *= (1 + daily_return)
+        #         daily_cash_balance[date] = cash_balance
+        #         result.append({'日期': date, f'{i}份资金收益率': cash_balance})
+        #     result_df = pd.concat([result_df, pd.DataFrame(result)])
         # 新建涨跌分布文件夹在上级菜单下，并保存结果
         parent_path = os.path.abspath('.')
         dir_name = '资产变动'
         dir_path = os.path.join(parent_path, dir_name)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        result_df.to_csv(f'{dir_path}/{name}资产变动.csv')
+        # result_df.to_csv(f'{dir_path}/{name}_{i}份资金收益率.csv', index=False)
+        result_df.to_csv(f'{dir_path}/{name}份资金收益率.csv', index=False)
         print('任务已经完成！')
     except Exception as e:
         print(f"发生bug: {e}")
