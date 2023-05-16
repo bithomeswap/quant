@@ -35,7 +35,7 @@ client = Client(api_key, api_secret, testnet=True, base_endpoint='https://testne
 dbclient = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = dbclient["wth000"]
 name = "COIN"
-collection_write = db[f'{name}期货order']
+collection_write = db[f'期货order{name}']
 # 获取计划交易的标的
 symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 symbol_dict = client.futures_exchange_info()

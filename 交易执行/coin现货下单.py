@@ -48,7 +48,7 @@ client = Client(api_key, api_secret, testnet=True)
 dbclient = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = dbclient["wth000"]
 name = "COIN"
-collection_write = db[f'{name}order']
+collection_write = db[f'order{name}']
 # 获取计划交易的标的
 symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 
