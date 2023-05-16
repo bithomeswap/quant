@@ -35,21 +35,15 @@ data = data[data['timestamp'] >= one_year_ago]
 print(data)
 
 if name == "ETF":
+    codelist = list(ak.stock_board_industry_name_ths()['name'])
+    codelist = str(codelist).replace(
+        "'", "").replace('"', '').replace(",", "|")
+    print(codelist)
+    # 获取 A 股所有 ETF 基金代码
     df = ak.fund_etf_spot_em()
-if '证' in name.lower():
-    # 从akshare获取A股主板股票的代码和名称
-    df = ak.stock_zh_a_spot_em()
-    # 过滤掉ST股票
-    df = df[~df['名称'].str.contains('ST')]
-    # 过滤掉退市股票
-    df = df[~df['名称'].str.contains('退')]
-    if '深证' in name.lower():
-        df = df[df['代码'].str.startswith(('000', '001'))][[
-            '代码', '名称']]  # 获取上证的前复权日k数据
-    if '上证' in name.lower():
-        df = df[df['代码'].str.startswith(('600', '601'))][[
-            '代码', '名称']]  # 获取深证的前复权日k数据
-
+    df = df[~df['名称'].str.contains('港|纳|H|恒生|标普|黄金|货币|中概')]
+    df = df[df['名称'].str.contains(f'{codelist}')]
+    df = df[df['总市值'] >= 1000000000]
 n = 0
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
@@ -77,18 +71,18 @@ for code in df['代码']:
         break
 df = df.drop(f'指数开盘', axis=1)
 
-# # 绘图
-# # 设置中文字体和短横线符号
-# plt.rcParams['font.family'] = ['Microsoft YaHei']
-# plt.rcParams['axes.unicode_minus'] = False
-# plt.figure(figsize=(16, 8))
-# plt.plot(df.set_index('日期'))
-# plt.legend(df.columns.drop('日期'))
-# plt.xlabel('日期')
-# plt.ylabel('指数偏离度')
-# plt.title(f'{n}种{name}指数对比')
-# plt.ylim(0)
-# plt.show()
+# 绘图
+# 设置中文字体和短横线符号
+plt.rcParams['font.family'] = ['Microsoft YaHei']
+plt.rcParams['axes.unicode_minus'] = False
+plt.figure(figsize=(16, 8))
+plt.plot(df.set_index('日期'))
+plt.legend(df.columns.drop('日期'))
+plt.xlabel('日期')
+plt.ylabel('指数偏离度')
+plt.title(f'{n}种{name}指数对比')
+plt.ylim(0)
+plt.show()
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

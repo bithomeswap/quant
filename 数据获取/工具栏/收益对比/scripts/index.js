@@ -63,7 +63,7 @@ function csvToData(obj) {
         let fullName = file.name;   // 全名
         let filename = fullName.substring(0, fullName.lastIndexOf("."));    // 文件名
         let fixName = fullName.substring(fullName.lastIndexOf("."), fullName.length);   // 后缀名
-        // 处理excel表格
+        // 处理csv
         if (fixName == ".csv") {
             reader.onload = function (ev) {
                 let data = ev.target.result;
@@ -106,7 +106,6 @@ function getLineChartFromJson(sheetJson, filename) {
     if (sheetJson.length) {
         // 获取所有列名
         let keys = getColName(sheetJson);
-
         // 处理一下作为x轴的列名和数据
         let xZhou = {};
         xZhou.name = keys.splice(0, 1);
@@ -135,15 +134,34 @@ function getLineChartFromJson(sheetJson, filename) {
 }
 
 
+function choseRgb() {
+
+  // Math.random是生成0-1之间的随机数 *256 的范围就变成0.xx-255.7
+  // Math.floor 向下取整就变成 0-255
+  let r = Math.floor(Math.random() * 256);
+
+  let g = Math.floor(Math.random() * 256);
+
+  let b = Math.floor(Math.random() * 256);
+
+  // 拼接返回
+  return `rgb(${r},${g},${b})`;
+
+}
+
+
 // 线图数据展现
 function dataToLineChart(title, keys, xZhou, datas) {
-    // 发现每次执行init的时候会在给的div标签中加入一个_echarts_instance_的属性，后面再init的话就不行了
-    // 所以每次先看下有没有这个属性，删掉他
-    // console.log(document.getElementById('ECharts_main').getAttribute("_echarts_instance_"))
-    document.getElementById('ECharts_main').innerHTML = "";
-    document.getElementById('ECharts_main').removeAttribute('_echarts_instance_');
-    // document.getElementById('ECharts_main').removeAttribute("document.getElementById('_echarts_instance_')");
-
+	let dic = {};
+	let result_list = [];
+	for (let i in keys) {
+		dic["name"] = keys[i];
+		dic["type"] = 'line';
+		dic["data"] = datas[i];
+		dic['itemStyle'] = {color: choseRgb()};
+		result_list.push(dic);
+		dic = {};
+	}
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('ECharts_main'));
 
@@ -156,7 +174,11 @@ function dataToLineChart(title, keys, xZhou, datas) {
             trigger: 'axis'
         },
         legend: {
-            data: keys
+			type: 'scroll',
+			// left: "10%",
+			padding: [20, 160],
+            data: keys,
+			selector: ['all', 'inverse']
         },
         grid: {
             left: '1%',
@@ -193,43 +215,7 @@ function dataToLineChart(title, keys, xZhou, datas) {
                 end: 0
             }
         ],
-        series: [
-            {
-                name: keys[0],
-                type: 'line',
-                data: datas[0]
-            },
-            {
-                name: keys[1],
-                type: 'line',
-                data: datas[1]
-            },
-            {
-                name: keys[2],
-                type: 'line',
-                data: datas[2]
-            },
-            {
-                name: keys[3],
-                type: 'line',
-                data: datas[3]
-            },
-            {
-                name: keys[4],
-                type: 'line',
-                data: datas[4]
-            },
-            {
-                name: keys[5],
-                type: 'line',
-                data: datas[5]
-            },
-            {
-                name: keys[6],
-                type: 'line',
-                data: datas[6]
-            }
-        ]
+        series: result_list
     };
 
     // 使用刚指定的配置项和数据显示图表。
