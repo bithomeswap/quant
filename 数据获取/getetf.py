@@ -77,8 +77,7 @@ for code in df['代码']:
                     bulk_insert.append(doc)
                 if doc["timestamp"] == float(latest_timestamp):
                     try:
-                        collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {
-                            "$set": doc}, upsert=True)
+                        collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {"$set": doc}, upsert=True)
                     except Exception as e:
                         pass
             # 执行批量插入操作
