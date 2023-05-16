@@ -14,7 +14,16 @@ db = client["wth000"]
 name = "指数"
 collection = db[f"{name}"]
 data = pd.DataFrame(list(collection.find({"代码": float('000002')})))
-name = "ETF"
+# name = "ETF"
+
+name = "指数"
+df = pd.DataFrame(
+    {'代码': ['000002',
+            # 上证等权指数
+            #   '000070', '000071', '000072', '000073', '000074', '000075', '000076', '000077', '000078', '000079'
+            # 中证行业指数
+            '000986', '000987', '000988', '000989', '000990', '000991', '000992', '000993', '000994', '000995'
+            ]})
 
 # name = "COIN"
 # collection = db[f"{name}"]
@@ -44,6 +53,7 @@ if name == "ETF":
     df = df[~df['名称'].str.contains('港|纳|H|恒生|标普|黄金|货币|中概')]
     df = df[df['名称'].str.contains(f'{codelist}')]
     df = df[df['总市值'] >= 2000000000]
+
 n = 0
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
@@ -51,6 +61,9 @@ for code in df['代码']:
         n += 1
         if name == 'COIN':
             etf = pd.DataFrame(list(collection.find(({"代码": code}))))
+            etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
+        elif name == '指数':
+            etf = pd.DataFrame(list(collection.find(({"代码": float(code)}))))
             etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
         else:
             etf = pd.DataFrame(list(collection.find(({"代码": float(code)}))))
@@ -62,7 +75,9 @@ for code in df['代码']:
             df[f'指数偏离'] = df['指数开盘'] / (df["指数开盘"].iloc[0])
         if n > 1:
             df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
-        df[f'{code}指数偏离'] = df[f'{code}'] / (df[f'{code}'].copy().iloc[0])-df[f'指数偏离']
+        df[f'{code}指数偏离'] = (
+            df[f'{code}'] / (df[f'{code}'].copy().iloc[0]))-df[f'指数偏离']
+        df = df.drop(f'{code}', axis=1)
         df = df.dropna(axis=1)  # 删除所有含有空值的列
         # 删除数据出现问题了，到时候改改
         print(df)

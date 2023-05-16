@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import datetime
 import os
-names = ['000','001','002','600','601','603','605','指数','ETF','COIN']
-
+# 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
+names = ['000', '002', '600',  '603', ('001', '601', '605'), '指数', 'ETF', 'COIN']
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
