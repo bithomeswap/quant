@@ -29,12 +29,10 @@ from pymongo import MongoClient
 api_key = "266950dec031270d32fed06a552c2698cf662f0e32c4788acf25646bba7ef2c6"
 api_secret = "1a2b9793419db20e99a307be8ac04fec7a43bd77d46b71b161456105161b164d"
 # 创建Binance客户端
-client = Client(api_key, api_secret, testnet=True,
-                base_endpoint='https://testnet.binancefuture.com/fapi')
+client = Client(api_key, api_secret, testnet=True, base_endpoint='https://testnet.binancefuture.com/fapi')
 
 # 连接MongoDB数据库
-dbclient = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+dbclient = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = dbclient["wth000"]
 name = "COIN"
 collection_write = db[f'{name}期货order']
