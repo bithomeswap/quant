@@ -17,11 +17,13 @@ api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
+
 # 设置参数
-# name = '分钟上证'
-# name = '分钟深证'
-# name = '分钟指数'
-name = '分钟COIN'
+# name ='指数'
+# name ='指数分钟'
+# name ='COIN'
+name ='COIN分钟'
+# name = 'ETF'
 
 collection = db[f'{name}']
 
@@ -97,7 +99,7 @@ for ticker_price in usdt_ticker_prices:
 
 print('任务已经完成')
 # time.sleep(60)
-limit = 300000
+limit = 600000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

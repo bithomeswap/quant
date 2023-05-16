@@ -10,12 +10,11 @@ client = MongoClient(
 db = client["wth000"]
 
 # 设置参数
-# name = '上证'
-# name = '深证'
 name ='指数'
-# name = 'COIN'
+# name ='指数分钟'
+# name ='COIN'
+# name ='COIN分钟'
 # name = 'ETF'
-# name = 'TEST'
 
 collection = db[f"{name}"]
 # 获取当前日期
@@ -90,7 +89,7 @@ for code in df:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
 # time.sleep(60)
-limit = 300000
+limit = 600000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)

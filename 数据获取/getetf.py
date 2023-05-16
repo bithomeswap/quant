@@ -11,12 +11,11 @@ client = MongoClient(
 db = client['wth000']
 
 # 设置参数
-# name = '上证'
-# name = '深证'
-# name ='指数'
-# name = 'COIN'
+# name = '指数'
+# name ='指数分钟'
+# name ='COIN'
+# name ='COIN分钟'
 name = 'ETF'
-# name = 'TEST'
 
 collection = db[f"{name}"]
 # 获取当前日期
