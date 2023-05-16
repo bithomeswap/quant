@@ -28,9 +28,9 @@ name = "ETF"
 collection = db[f"{name}"]
 # 计算一年前的日期
 now = datetime.datetime.now()
-one_year_ago = int((now - datetime.timedelta(days=365)).timestamp())
+ago = int((now - datetime.timedelta(days=1000)).timestamp())
 data[['日期', '指数开盘']] = data[["日期", "开盘"]]
-data = data[data['timestamp'] >= one_year_ago]
+data = data[data['timestamp'] >= ago]
 # 输出结果
 print(data)
 
@@ -43,7 +43,7 @@ if name == "ETF":
     df = ak.fund_etf_spot_em()
     df = df[~df['名称'].str.contains('港|纳|H|恒生|标普|黄金|货币|中概')]
     df = df[df['名称'].str.contains(f'{codelist}')]
-    df = df[df['总市值'] >= 1000000000]
+    df = df[df['总市值'] >= 2000000000]
 n = 0
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
@@ -55,15 +55,16 @@ for code in df['代码']:
         else:
             etf = pd.DataFrame(list(collection.find(({"代码": float(code)}))))
             etf[['日期', f'{code}']] = etf[["日期", "真实价格"]]
+        etf = etf[etf['timestamp'] >= ago]
         if n == 1:
             df = pd.merge(data[['日期', '指数开盘']],
                           etf[['日期', f'{code}']], on='日期', how='left')
-            df[f'指数偏离'] = df['指数开盘'] / df["指数开盘"].dropna().iloc[-1]
+            df[f'指数偏离'] = df['指数开盘'] / (df["指数开盘"].iloc[0])
         if n > 1:
             df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
-        df[f'{code}指数偏离'] = (
-            df[f'{code}'] / df[f'{code}'].dropna().iloc[-1])/df[f'指数偏离']
-        df = df.drop(f'{code}', axis=1)
+        df[f'{code}指数偏离'] = df[f'{code}'] / (df[f'{code}'].copy().iloc[0])-df[f'指数偏离']
+        df = df.dropna(axis=1)  # 删除所有含有空值的列
+        # 删除数据出现问题了，到时候改改
         print(df)
     except Exception as e:
         print(f"发生bug: {e}")
@@ -81,7 +82,7 @@ plt.legend(df.columns.drop('日期'))
 plt.xlabel('日期')
 plt.ylabel('指数偏离度')
 plt.title(f'{n}种{name}指数对比')
-plt.ylim(0)
+# plt.ylim(0)
 plt.show()
 
 # 获取当前.py文件的绝对路径

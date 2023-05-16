@@ -102,8 +102,9 @@ names = list(db.list_collection_names())
 print(names)
 for name in names:
     if '指标' not in name.lower():
-        print(f'当前计算{name}')
-        try:
-            tradelist(name)
-        except Exception as e:
-            print(f"发生bug: {e}")
+        if '分钟' not in name.lower():
+            print(f'当前计算{name}')
+            try:
+                tradelist(name)
+            except Exception as e:
+                print(f"发生bug: {e}")
