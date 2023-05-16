@@ -72,7 +72,7 @@ for file in files:
                         m = 0.0000  # 设置手续费
                         n = 6  # 设置持仓周期
                     print(len(df), name)
-                if ('证' in name.lower()) or ('test' in name.lower()):
+                if ('00' in name.lower()) or ('60' in name.lower()):
                     if ('分钟' not in name.lower()):
                         df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
                         # 开盘收盘幅过滤涨停无法买入股票

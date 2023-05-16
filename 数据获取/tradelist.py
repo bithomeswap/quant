@@ -46,21 +46,17 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 
 
 def tradelist(name):
-    # 连接MongoDB数据库
-    client = MongoClient(
-        'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
-    db = client['wth000']
     collection = db[f'{name}']
     # 获取数据并转换为DataFrame格式
     data = pd.DataFrame(list(collection.find()))
     print(f'{name}数据读取成功')
     # 按照“代码”列进行分组并计算技术指标
-    df = data.groupby('代码', group_keys=False).apply(technology)
+    data = data.groupby('代码', group_keys=False).apply(technology)
     # 分组并计算指标排名
-    df = df.groupby(['日期'], group_keys=False).apply(rank)
+    data = data.groupby(['日期'], group_keys=False).apply(rank)
     try:
         # 今日筛选股票推送(多头)
-        df = df.sort_values(by='日期')
+        df = data.sort_values(by='日期')
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
@@ -98,7 +94,7 @@ def tradelist(name):
                 m = 0.0000  # 设置手续费
                 n = 6  # 设置持仓周期
             print(len(df), name)
-        if ('证' in name.lower()) or ('test' in name.lower()):
+        if ('00' in name.lower()) or ('60' in name.lower()):
             if ('分钟' not in name.lower()):
                 df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
                 # 开盘收盘幅过滤涨停无法买入股票
@@ -141,19 +137,22 @@ def tradelist(name):
     dir_path = os.path.dirname(os.path.dirname(dir_path))
     # 保存数据到指定目录
     file_path = os.path.join(dir_path, f'{name}指标.csv')
-    df.to_csv(file_path, index=False)
+    data.to_csv(file_path, index=False)
     print(f'{name}准备插入数据')
-    # 将数据分批插入
-    batch_size = 20000  # 批量插入的大小
-    num_batches = len(df) // batch_size + 1
-    for i in range(num_batches):
-        start_idx = i * batch_size
-        end_idx = (i + 1) * batch_size
-        data_slice = df[start_idx:end_idx]
-        new_collection.insert_many(data_slice.to_dict('records'))
+    new_collection.insert_many(data.to_dict('records'))
     print(f'{name}数据插入结束')
 
 
-names = ['000', '001', '002', '600', '601', '603', '605', '指数', 'ETF', 'COIN']
+# 连接MongoDB数据库
+client = MongoClient(
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+# 获取当前数据库中的所有集合名称
+names = list(db.list_collection_names())
+print(names)
 for name in names:
-    tradelist(name)
+    print(f'当前计算{name}')
+    try:
+        tradelist(name)
+    except Exception as e:
+        print(f"发生bug: {e}")

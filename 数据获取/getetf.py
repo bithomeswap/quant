@@ -21,19 +21,19 @@ collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
 # 读取数据时长
-date_ago = current_date - datetime.timedelta(days=400)
-# date_ago= current_date - datetime.timedelta(days=10)
-
+date_ago = current_date - datetime.timedelta(days=1000)
 start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 end_date = current_date.strftime('%Y%m%d')
-
+codelist = list(ak.stock_board_industry_name_ths()['name'])
+codelist = str(codelist).replace("'", "").replace('"', '').replace(",", "|")
+print(codelist)
 # 获取 A 股所有 ETF 基金代码
 df = ak.fund_etf_spot_em()
 df = df[~df['名称'].str.contains('港|纳|H|恒生|标普|黄金|货币|中概')]
-df = df[df['名称'].str.contains('上证|深证|科创|农业|军工|医药|钢铁|有色|煤炭|地产|电池|能源|医药|钢铁|有色')]
-df = df[df['总市值'] >= 100000000]
+df = df[df['名称'].str.contains(f'{codelist}')]
+df = df[df['总市值'] >= 1000000000]
+# 实盘的时候五亿规模即可，大概四百多个标的，目前十亿不到两百个标的
 print(df)
-df.to_csv('ETF', index=False)
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
     # print(code)
