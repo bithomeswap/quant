@@ -9,9 +9,9 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
-names = ['000', '002', '600',  '603', ('001', '601', '605')]
-start_date = str(20140101)  # 要求格式"19700101"
-end_date = str(20170101)
+names = [('000', '001'), '002', '600', ('601', '603', '605')]
+start_date = "20140101"  # 要求格式"19700101"
+end_date = "20170101"
 # 从akshare获取A股主板股票的代码和名称
 codes = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
@@ -22,8 +22,7 @@ for name in names:
     try:
         collection = db[f"股票历史{name}"]
         df = pd.DataFrame()
-        df = codes[codes['代码'].str.startswith(
-            (f'{name}'))][['代码', '名称']].copy()
+        df = codes[codes['代码'].str.startswith(name)][['代码', '名称']].copy()
         # 遍历目标指数代码，获取其分钟K线数据
         for code in df['代码']:
             # print(code)

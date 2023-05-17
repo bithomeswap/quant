@@ -3,7 +3,7 @@ import numpy as np
 import datetime
 import os
 # 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
-names = ['000', '002', '600',  '603', ('001', '601', '605'), '指数', 'ETF', 'COIN']
+names = ['股票', '指数', 'ETF', 'COIN']
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -39,8 +39,7 @@ for file in files:
                         df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
                         m = 0.0000  # 设置手续费
                         n = 6  # 设置持仓周期
-
-                if ('00' in name.lower()) or ('60' in name.lower()):
+                if ('股票' in name.lower()):
                     n = 6  # 设置持仓周期
                     if ('分钟' not in name.lower()):
                         df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票

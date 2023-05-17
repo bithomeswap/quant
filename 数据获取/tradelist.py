@@ -31,7 +31,7 @@ def technology(df):  # 定义计算技术指标的函数
         for n in range(2, 10):
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
-        for n in range(1, 20):
+        for n in range(1, 16):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n)/df['收盘']) - 1
             df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
     except Exception as e:
@@ -101,8 +101,10 @@ db = client['wth000']
 names = list(db.list_collection_names())
 print(names)
 for name in names:
-    if '指标' not in name.lower():
-        if '分钟' not in name.lower():
+    if ('指标' not in name.lower()) & ('股票' in name.lower()):
+        # if('分钟' not in name.lower())&('历史' not in name.lower()):
+        if ('分钟' not in name.lower()) & ('历史' in name.lower()):
+
             print(f'当前计算{name}')
             try:
                 tradelist(name)
