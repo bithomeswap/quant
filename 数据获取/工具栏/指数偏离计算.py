@@ -84,17 +84,27 @@ for code in df['代码']:
             df = df.drop(f'指数开盘', axis=1)
         if n > 1:
             df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
+
+        # # 起点对齐
+        # df[f'{code}指数偏离'] = (
+        #     df[f'{code}']/(df[f'{code}'].copy().iloc[0]))-df[f'指数偏离']
+
+        # 终点对齐
         df[f'{code}指数偏离'] = (
-            df[f'{code}']/(df[f'{code}'].copy().iloc[0]))-df[f'指数偏离']
-        df[f'{code}指数偏离差分'] = df[f'{code}指数偏离']-df[f'{code}指数偏离'].copy().shift(1)
+            df[f'{code}']/(df[f'{code}'].copy().iloc[-1]))-df[f'指数偏离']
+        df[f'{code}指数偏离差分'] = df[f'{code}指数偏离'] - \
+            df[f'{code}指数偏离'].copy().shift(1)
         df = df.drop(f'{code}指数偏离', axis=1)
+
         df = df.drop(f'{code}', axis=1)
         print(df.loc[:0])
     except Exception as e:
         print(f"发生bug: {e}")
     if n == 300:
         break
-df = df.dropna(axis=1)  # 删除所有含有空值的列
+# df = df.dropna(axis=1)  # 删除所有含有空值的列
+df = df.fillna(0)
+
 df = df.drop(f'指数偏离', axis=1)
 
 # 绘图

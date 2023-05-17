@@ -99,12 +99,14 @@ client = MongoClient(
 db = client['wth000']
 # 获取当前数据库中的所有集合名称
 names = list(db.list_collection_names())
-print(names)
+# print(names)
 for name in names:
-    if ('指标' not in name.lower()) & ('股票' in name.lower()):
-        # if('分钟' not in name.lower())&('历史' not in name.lower()):
-        if ('分钟' not in name.lower()) & ('历史' in name.lower()):
+    # if ('指标' not in name.lower()) & ('coin' in name.lower()):
+    #     if ('分钟' not in name.lower()):
 
+    if ('指标' not in name.lower()) & ('股票' in name.lower()):
+        if ('分钟' not in name.lower()) & ('历史' in name.lower()):
+        # if ('分钟' not in name.lower()) & ('历史' not in name.lower()):
             print(f'当前计算{name}')
             try:
                 tradelist(name)

@@ -9,7 +9,7 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
-names = [('000','001'),'002','600',('601','603','605')]
+names = [('000', '001'), '002', '600', ('601', '603', '605')]
 # 获取当前日期
 current_date = datetime.datetime.now()
 # 读取数据时长
@@ -29,7 +29,7 @@ for name in names:
         df = codes[codes['代码'].str.startswith(name)][['代码', '名称']].copy()
         # 遍历目标指数代码，获取其分钟K线数据
         for code in df['代码']:
-            print(code)
+            # print(code)
             latest = list(collection.find({"代码": float(code)}, {
                 "timestamp": 1}).sort("timestamp", -1).limit(1))
             # print(latest)
