@@ -98,12 +98,12 @@ print(names)
 for name in names:
     if ('指标' not in name.lower()) & ('order' not in name.lower()) & ('js' not in name.lower()):
     # if ('行业' in name.lower()) | ('指数' in name.lower()):
-        # if ('股票' in name.lower()):
+        if ('股票' in name.lower()):
         # if ('COIN' in name.lower()):
         # if ('分钟' not in name.lower()) & ('历史' in name.lower()):
         # if ('分钟' not in name.lower()) & ('历史' not in name.lower()):
-        print(f'当前计算{name}')
-        try:
-            tradelist(name)
-        except Exception as e:
-            print(f"发生bug: {e}")
+            print(f'当前计算{name}')
+            try:
+                tradelist(name)
+            except Exception as e:
+                print(f"发生bug: {e}")

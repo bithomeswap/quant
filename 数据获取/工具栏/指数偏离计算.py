@@ -15,10 +15,8 @@ name = "指数"
 collection = db[f"{name}"]
 data = pd.DataFrame(list(collection.find({"代码": float('000002')})))
 
-
 name = "行业"
 df = pd.DataFrame({"代码": ak.stock_board_industry_name_em()['板块名称']})
-
 
 # name = "ETF"
 # codelist = list(ak.stock_board_industry_name_ths()['name'])
@@ -64,13 +62,13 @@ n = 0
 for code in df['代码']:
     try:
         n += 1
-        if name == 'COIN':
+        if ('coin' in name.lower()):
             etf = pd.DataFrame(list(collection.find(({"代码": str(code)}))))
             etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
-        elif name == '指数':
+        if ('指数' in name.lower()):
             etf = pd.DataFrame(list(collection.find(({"代码": float(code)}))))
             etf[['日期', f'{code}']] = etf[["日期", "开盘"]]
-        elif name == '行业':
+        if ('行业' in name.lower()):
             etf = pd.DataFrame(list(collection.find(({"代码": str(code)}))))
             etf[['日期', f'{code}']] = etf[["日期", "真实价格"]]
         else:
