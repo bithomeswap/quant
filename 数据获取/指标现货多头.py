@@ -14,23 +14,18 @@ dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上两级目录的路径
 dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
-
-
 for file in files:
     for filename in names:
-        if filename in file:
+        if (filename in file) & ('指标' in file) & ('排名' not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f'{name}.csv')
                 df = pd.read_csv(path)
                 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-                code = df['代码'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
                 dates = df['日期'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
                 df = df.groupby(['代码'], group_keys=False).apply(
                     choose.technology)
-                print(name, '数量', len(code))
-
                 m = 0.001  # 设置手续费
                 n = 6  # 设置持仓周期
                 df, m, n = choose.choose('交易', name, df)
@@ -80,7 +75,7 @@ for file in files:
                         daily_cash_balance = {}  # 用于记录每日的资金余额
                         result = []
                         # 每份资金的收益率
-                        for date, group in daydf.groupby('日期'):
+                        for date, group in daydf.groupby(['日期']):
                             if group.empty:  # 如果当日没有入选标的，则收益率为0
                                 daily_return = 0
                             else:

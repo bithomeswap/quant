@@ -8,8 +8,7 @@ import pytz
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-# 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
-names = [('000', '001'), '002', '600', ('601', '603', '605')]
+names = [('000', '001', '002'),('600', '601', '603', '605')]
 # 获取当前日期
 start_date = "20190101"
 current_date = datetime.datetime.now()
@@ -78,14 +77,12 @@ for name in names:
             except Exception as e:
                 print(e, f'因为{code}停牌')
         print('任务已经完成')
-        # time.sleep(60)
-        limit = 600000
-        if collection.count_documents({}) >= limit:
-            oldest_data = collection.find().sort([('日期', 1)]).limit(
-                collection.count_documents({})-limit)
-            ids_to_delete = [data['_id'] for data in oldest_data]
-            collection.delete_many({'_id': {'$in': ids_to_delete}})
-            # 往外读取数据的时候再更改索引吧
-        print('数据清理成功')
+        # limit = 600000
+        # if collection.count_documents({}) >= limit:
+        #     oldest_data = collection.find().sort([('日期', 1)]).limit(
+        #         collection.count_documents({})-limit)
+        #     ids_to_delete = [data['_id'] for data in oldest_data]
+        #     collection.delete_many({'_id': {'$in': ids_to_delete}})
+        # print('数据清理成功')
     except Exception as e:
         print(e)

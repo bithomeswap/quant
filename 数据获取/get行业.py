@@ -81,14 +81,12 @@ try:
         except Exception as e:
             print(e, f'因为{code}停牌')
     print('任务已经完成')
-    # time.sleep(60)
-    limit = 600000
-    if collection.count_documents({}) >= limit:
-        oldest_data = collection.find().sort([('日期', 1)]).limit(
-            collection.count_documents({})-limit)
-        ids_to_delete = [data['_id'] for data in oldest_data]
-        collection.delete_many({'_id': {'$in': ids_to_delete}})
-        # 往外读取数据的时候再更改索引吧
-    print('数据清理成功')
+    # limit = 600000
+    # if collection.count_documents({}) >= limit:
+    #     oldest_data = collection.find().sort([('日期', 1)]).limit(
+    #         collection.count_documents({})-limit)
+    #     ids_to_delete = [data['_id'] for data in oldest_data]
+    #     collection.delete_many({'_id': {'$in': ids_to_delete}})
+    # print('数据清理成功')
 except Exception as e:
     print(e)

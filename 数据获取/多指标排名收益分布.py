@@ -12,7 +12,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if filename in file:
+        if (filename in file)&('指标' in file)&('排名' not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
@@ -25,7 +25,7 @@ for file in files:
                 df, m, n = choose.choose('分布',name, df)
                 print(name,n)
                 # 将数据划分成a个等长度的区间
-                a = 50
+                a = 10
                 ranges = []
                 left = 0
                 right = 1

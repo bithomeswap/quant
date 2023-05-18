@@ -23,14 +23,10 @@ start_date = "20230401"
 end_date = current_date.strftime('%Y%m%d')
 
 # 获取A股指数代码列表
-df =                   ['000002',
-                    # 中证行业指数
-                    '000986', '000987', '000988', '000989', '000990', '000991', '000992', '000993', '000994', '000995',
-                    # 深证行业指数
-                    '399613', '399614', '399615', '399616', '399617', '399618', '399619', '399620', '399621', '399622',
-                    # 上证等权指数
-                    '000070', '000071', '000072', '000073', '000074', '000075', '000076', '000077', '000078', '000079',
-                    ]
+df =['000002',
+    # 中证行业指数
+    '000986', '000987', '000988', '000989', '000990', '000991', '000992', '000993', '000994', '000995',
+    ]
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df:
     # print(code)
@@ -89,12 +85,10 @@ for code in df:
     except Exception as e:
         print(e, f'因为{code}停牌')
 print('任务已经完成')
-# time.sleep(60)
 limit = 600000
 if collection.count_documents({}) >= limit:
     oldest_data = collection.find().sort([('日期', 1)]).limit(
         collection.count_documents({})-limit)
     ids_to_delete = [data['_id'] for data in oldest_data]
     collection.delete_many({'_id': {'$in': ids_to_delete}})
-    # 往外读取数据的时候再更改索引吧
 print('数据清理成功')

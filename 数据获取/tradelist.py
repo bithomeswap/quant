@@ -58,8 +58,8 @@ def tradelist(name):
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
-        df= df[df[f'日期'] == last_day].copy()
-        df,m,n = choose.choose('交易', name, df)
+        df = df[df[f'日期'] == last_day].copy()
+        df, m, n = choose.choose('交易', name, df)
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
@@ -97,7 +97,7 @@ names = list(db.list_collection_names())
 print(names)
 for name in names:
     if ('指标' not in name.lower()) & ('order' not in name.lower()) & ('js' not in name.lower()):
-    # if ('行业' in name.lower()):
+    # if ('行业' in name.lower()) | ('指数' in name.lower()):
         # if ('股票' in name.lower()):
         # if ('COIN' in name.lower()):
         # if ('分钟' not in name.lower()) & ('历史' in name.lower()):
