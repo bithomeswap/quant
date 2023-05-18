@@ -45,17 +45,24 @@ for code in df['代码']:
         df[f'{code}指数偏离'] = df[f'{code}']-df[f'指数']
         df = df.drop(str(code), axis=1)
         # print(df.loc[:0])
-        print(df)
     except Exception as e:
         print(f"发生bug: {e}")
     if n == 300:
         break
-    df.loc[df[f'{code}指数偏离'] >= 0.00, f'{code}buysell'] = 0
-    df.loc[df[f'{code}指数偏离'] >= 0.01, f'{code}buysell'] = 1
-    df.loc[df[f'{code}指数偏离'] >= 0.02, f'{code}buysell'] = 2
-    df.loc[df[f'{code}指数偏离'] >= 0.03, f'{code}buysell'] = 3
-    df.loc[df[f'{code}指数偏离'] >= 0.04, f'{code}buysell'] = 4
-    df.loc[df[f'{code}指数偏离'] >= 0.05, f'{code}buysell'] = 5
+    df.loc[df[f'{code}指数偏离'] < 0, f'{code}buysell'] = -1
+    for a in (0, 6):
+        df.loc[df[f'{code}指数偏离'] >= float(a/100), f'{code}buysell'] = a
+
+    df[f'{code}{0}金叉'] = df[df[f'{code}buysell'].diff() > 1][f'{code}buysell']
+
+    df[f'{code}{1}金叉'] = df[df[f'{code}buysell'].diff() > 1][f'{code}buysell']
+    df[f'{code}{2}金叉'] = df[df[f'{code}buysell'].diff() > 2][f'{code}buysell']
+    df[f'{code}{3}金叉'] = df[df[f'{code}buysell'].diff() > 3][f'{code}buysell']
+    df[f'{code}{4}金叉'] = df[df[f'{code}buysell'].diff() > 4][f'{code}buysell']
+    df[f'{code}{5}金叉'] = df[df[f'{code}buysell'].diff() > 5][f'{code}buysell']
+
+    gold_cross_idx = df.index[df['MACD交叉状态'] == 1]
+    print(df)
 # df = df.dropna(axis=1)  # 删除所有含有空值的列
 df = df.fillna(0)
 
