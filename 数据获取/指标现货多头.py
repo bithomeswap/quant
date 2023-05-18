@@ -42,8 +42,7 @@ for file in files:
                         daydf = df.loc[df['日期'].isin(days)]
                         daydf = daydf.fillna(1)
                         daydf = daydf.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-                        daydates = daydf['日期'].copy(
-                        ).drop_duplicates().tolist()  # 获取所有不重复日期
+                        daydates = daydf['日期'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
                         daily_ret = 0
                         m = m/n  # 一天手续费均摊到n天就是
                         if daydates:

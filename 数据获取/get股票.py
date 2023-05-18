@@ -9,6 +9,7 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 names = [('000', '001', '002'),('600', '601', '603', '605')]
+# names = [('000', '001'), '002', '600', ('601', '603', '605')]
 # 获取当前日期
 start_date = "20190101"
 current_date = datetime.datetime.now()

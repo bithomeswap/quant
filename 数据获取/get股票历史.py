@@ -8,7 +8,8 @@ import pytz
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
-names = [('000', '001', '002'),('600', '601', '603', '605')]
+names = [('000', '001', '002'), ('600', '601', '603', '605')]
+# names = [('000', '001'), '002', '600', ('601', '603', '605')]
 start_date = "20140101"
 end_date = "20170101"
 # 从akshare获取A股主板股票的代码和名称
