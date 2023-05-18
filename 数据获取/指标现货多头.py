@@ -1,24 +1,11 @@
 import choose
 import pandas as pd
 import os
-# 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
-names = ['股票', '指数', 'ETF', 'COIN']
+# names = ['COIN','股票','指数','行业','ETF']
+names = ['COIN', '股票']
+
 updown = '盘中波动'  # 计算当日理论上的盘中每日回撤
 # updown = '资产收益'  # 计算每份资金的资产收益率
-
-
-def get_indicators(df):  # 定义计算技术指标的函数
-    try:
-        # 删除最高价和最低价为负值的数据
-        df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
-        df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
-        for n in range(1, 20):
-            df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
-            df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
-    except Exception as e:
-        print(f"发生bug: {e}")
-    return df
-
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -27,6 +14,8 @@ dir_path = os.path.dirname(file_path)
 # 获取当前.py文件所在目录的上两级目录的路径
 dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
+
+
 for file in files:
     for filename in names:
         if filename in file:
@@ -37,13 +26,14 @@ for file in files:
                 df = pd.read_csv(path)
                 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
                 code = df['代码'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                print('标的数量', len(code))
                 dates = df['日期'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                # 按照“代码”列进行分组并计算技术指标
-                df = df.groupby('代码', group_keys=False).apply(get_indicators)
+                df = df.groupby(['代码'], group_keys=False).apply(
+                    choose.technology)
+                print(name, '数量', len(code))
+
                 m = 0.001  # 设置手续费
                 n = 6  # 设置持仓周期
-                df=choose.choose(name, df)
+                df, m, n = choose.choose('交易', name, df)
                 df.to_csv(f'{name}交易细节.csv', index=False)  # 输出交易细节
                 if updown == '盘中波动':
                     result_df = pd.DataFrame({})

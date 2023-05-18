@@ -26,14 +26,9 @@ def technology(df):  # 定义计算技术指标的函数
         df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
-        # 计算昨日资金贡献
-        df['昨日资金成本'] = df['昨日涨跌'] * df['昨日成交额']
-        for n in range(2, 10):
+        for n in range(1, 10):
             df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
             df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
-        for n in range(1, 16):
-            df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n)/df['收盘']) - 1
-            df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
@@ -42,7 +37,7 @@ def technology(df):  # 定义计算技术指标的函数
 def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
     # 计算每个指标的排名
     for column in df.columns:
-        if '未来函数' not in str(column):
+        if ('未来函数' not in str(column)):
             df = pd.concat([df, (df[str(column)].rank(
                 method='max', ascending=False) / len(df)).rename(f'{str(column)}_rank')], axis=1)
     return df
@@ -54,7 +49,7 @@ def tradelist(name):
     data = pd.DataFrame(list(collection.find()))
     print(f'{name}数据读取成功')
     # 按照“代码”列进行分组并计算技术指标
-    data = data.groupby('代码', group_keys=False).apply(technology)
+    data = data.groupby(['代码'], group_keys=False).apply(technology)
     # 分组并计算指标排名
     data = data.groupby(['日期'], group_keys=False).apply(rank)
     try:
@@ -63,8 +58,8 @@ def tradelist(name):
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
-        df = df[df[f'日期'] == last_day].copy()
-        df = choose.choose(name, df)
+        df= df[df[f'日期'] == last_day].copy()
+        df,m,n = choose.choose('交易', name, df)
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
@@ -99,16 +94,16 @@ client = MongoClient(
 db = client['wth000']
 # 获取当前数据库中的所有集合名称
 names = list(db.list_collection_names())
-# print(names)
+print(names)
 for name in names:
-    # if ('指标' not in name.lower()) & ('coin' in name.lower()):
-    #     if ('分钟' not in name.lower()):
-
-    if ('指标' not in name.lower()) & ('股票' in name.lower()):
-        if ('分钟' not in name.lower()) & ('历史' in name.lower()):
+    if ('指标' not in name.lower()) & ('order' not in name.lower()) & ('js' not in name.lower()):
+    # if ('行业' in name.lower()):
+        # if ('股票' in name.lower()):
+        # if ('COIN' in name.lower()):
+        # if ('分钟' not in name.lower()) & ('历史' in name.lower()):
         # if ('分钟' not in name.lower()) & ('历史' not in name.lower()):
-            print(f'当前计算{name}')
-            try:
-                tradelist(name)
-            except Exception as e:
-                print(f"发生bug: {e}")
+        print(f'当前计算{name}')
+        try:
+            tradelist(name)
+        except Exception as e:
+            print(f"发生bug: {e}")

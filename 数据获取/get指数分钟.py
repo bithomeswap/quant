@@ -19,9 +19,7 @@ name ='指数分钟'
 collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
-# 读取180天内的数据，这里面还得排除掉节假日,初始数据建议220,实际更新的时候更新15天就行
-date_ago = current_date - datetime.timedelta(days=1000)
-start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
+start_date = "20230401"
 end_date = current_date.strftime('%Y%m%d')
 
 # 获取A股指数代码列表

@@ -11,10 +11,8 @@ db = client['wth000']
 # 设置参数# 000（深证核心）、002（深证中小）、600（上证核心）、603（上证创新）、001（深证创新）、601（上证改革）、605（上证中小）
 names = [('000', '001'), '002', '600', ('601', '603', '605')]
 # 获取当前日期
+start_date = "20190101"
 current_date = datetime.datetime.now()
-# 读取数据时长
-date_ago = current_date - datetime.timedelta(days=1000)
-start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 end_date = current_date.strftime('%Y%m%d')
 # 从akshare获取A股主板股票的代码和名称
 codes = ak.stock_zh_a_spot_em()

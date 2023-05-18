@@ -14,17 +14,18 @@ name = '行业'
 
 collection = db[f"{name}"]
 # 获取当前日期
+start_date = "20190101"
 current_date = datetime.datetime.now()
-# 读取180天内的数据，这里面还得排除掉节假日,初始数据建议220,实际更新的时候更新15天就行
-date_ago = current_date - datetime.timedelta(days=1000)
-start_date = date_ago.strftime('%Y%m%d')  # 要求格式"19700101"
 end_date = current_date.strftime('%Y%m%d')
 codes = ak.stock_board_industry_name_em()['板块名称']
 try:
     # 遍历目标指数代码，获取其分钟K线数据
     for code in codes:
+        # code = codes[codes['板块名称'] == name]['板块代码']
+
         # print(code)
-        latest = list(collection.find({"代码": str(code)}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
+        latest = list(collection.find({"代码": str(code)}, {
+                      "timestamp": 1}).sort("timestamp", -1).limit(1))
         # print(latest)
         if len(latest) == 0:
             upsert_docs = True

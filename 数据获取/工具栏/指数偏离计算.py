@@ -85,16 +85,16 @@ for code in df['代码']:
         if n > 1:
             df = pd.merge(df, etf[['日期', f'{code}']], on='日期', how='left')
 
-        # # 起点对齐
-        # df[f'{code}指数偏离'] = (
-        #     df[f'{code}']/(df[f'{code}'].copy().iloc[0]))-df[f'指数偏离']
-
-        # 终点对齐
         df[f'{code}指数偏离'] = (
-            df[f'{code}']/(df[f'{code}'].copy().iloc[-1]))-df[f'指数偏离']
-        df[f'{code}指数偏离差分'] = df[f'{code}指数偏离'] - \
-            df[f'{code}指数偏离'].copy().shift(1)
-        df = df.drop(f'{code}指数偏离', axis=1)
+            df[f'{code}']/(df[f'{code}'].copy().iloc[0]))-df[f'指数偏离']
+        # 起点对齐
+
+        # df[f'{code}指数偏离'] = (
+        #     df[f'{code}']/(df[f'{code}'].copy().iloc[-1]))-df[f'指数偏离']
+        # df[f'{code}指数偏离差分'] = df[f'{code}指数偏离'] - \
+        #     df[f'{code}指数偏离'].copy().shift(1)
+        # df = df.drop(f'{code}指数偏离', axis=1)
+        # # 终点对齐
 
         df = df.drop(f'{code}', axis=1)
         print(df.loc[:0])

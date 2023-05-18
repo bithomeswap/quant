@@ -1,11 +1,12 @@
-import time
+import choose
 from pymongo import MongoClient
 import pandas as pd
 import numpy as np
 import datetime
 import os
 # 设置参数
-name = 'ETF'
+names = ['COIN', '股票', '指数', '行业', 'ETF']
+name = '行业'
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -14,47 +15,16 @@ dir_path = os.path.dirname(file_path)
 dir_path = os.path.dirname(os.path.dirname(dir_path))
 file_path = os.path.join(dir_path, f'{name}指标.csv')
 df = pd.read_csv(file_path)
-
+df = df.groupby(['代码'], group_keys=False).apply(choose.technology)
 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
 for n in range(1, 9):
     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
 
 df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')  # 转换日期格式
 
-mubiao = f'昨日涨跌'
-m = 0.001  # 设置手续费
-n = 6  # 设置持仓周期
-if ('etf' in name.lower()):
-    if ('分钟' not in name.lower()):
-        df = df[df[f'真实价格'] >= 0.8].copy()  # 开盘价过滤高滑点股票
-        m = 0.003  # 设置手续费
-        n = 6  # 设置持仓周期
-if ('coin' in name.lower()):
-    if ('分钟' not in name.lower()):
-        df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
-        df = df[df[f'昨日成交额'] >= 1000000].copy()  # 昨日成交额过滤劣质股票
-        m = 0.003  # 设置手续费
-        n = 6  # 设置持仓周期
-    if ('分钟' in name.lower()):
-        df = df[df[f'开盘'] >= 0.00001000].copy()  # 开盘价过滤高滑点股票
-        m = 0.0000  # 设置手续费
-        n = 6  # 设置持仓周期
-
-if ('00' in name.lower()) or ('60' in name.lower()):
-    n = 6  # 设置持仓周期
-    if ('分钟' not in name.lower()):
-        df = df[(df['开盘收盘幅'] <= 0.01)].copy()  # 开盘收盘幅过滤涨停无法买入股票
-        df = df[(df['真实价格'] >= 4)].copy()  # 真实价格过滤劣质股票
-        m = 0.005  # 设置手续费
-        n = 15  # 设置持仓周期
-    if ('分钟' in name.lower()):
-        df = df[(df['开盘'] >= 4)].copy()  # 真实价格过滤劣质股票
-        m = 0.0000  # 设置手续费
-        n = 15  # 设置持仓周期
-
-df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]  # 仅保留从2020-01-01之后的数据
-
-print('任务已经开始')
+mubiao = f'昨日资金贡献'
+df, m, n = choose.choose('分布', name, df)
+print(name, n)
 # df = df.dropna(subset=[mubiao])
 df = df.dropna()
 df.to_csv(f"实际统计数据{name}_{mubiao}.csv")
@@ -62,7 +32,7 @@ df.to_csv(f"实际统计数据{name}_{mubiao}.csv")
 sorted_data = np.sort(df[f'{mubiao}'])
 
 # 将数据划分成n个等距离的区间
-a = 10
+a = 100
 indices = np.linspace(0, len(df[f'{mubiao}']),
                       num=a+1, endpoint=True, dtype=int)
 # 得到每一个区间的上界，并作为该部分对应的区间范围
