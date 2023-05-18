@@ -29,29 +29,33 @@ print(data)
 n = 0
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df['代码']:
-    print(type(code))
     try:
         n += 1
         if ('行业' in name.lower()):
             etf = pd.DataFrame(list(collection.find(({"代码": str(code)}))))
             etf[['日期', f'{code}', f'{code}真实价格']
                 ] = etf[["日期", f"过去{m}日总涨跌", '真实价格']]
+            print(etf)
         if n == 1:
             df = pd.merge(
-                data[['日期', '指数']], etf[['日期', f'{code}', f'{code}真实价格']], on='日期', how='left')
+                data[['日期', '指数']], etf, on='日期', how='left')
         if n > 1:
             df = pd.merge(
-                df, etf[['日期', f'{code}', f'{code}真实价格']], on='日期', how='left')
+                df, etf, on='日期', how='left')
         df[f'{code}指数偏离'] = df[f'{code}']-df[f'指数']
         df = df.drop(str(code), axis=1)
-        print(df.loc[:0])
+        # print(df.loc[:0])
+        print(df)
     except Exception as e:
         print(f"发生bug: {e}")
     if n == 300:
         break
-    df.loc[df[f'{code}指数偏离'] >= 0.05, f'{code}buysell'] = 1
-    df.loc[df[f'{code}指数偏离'] <= -0.05, f'{code}buysell'] = -1
-    df.loc[(df[f'{code}指数偏离'] >= -0.05) &(df[f'{code}指数偏离'] <= 0.05), f'{code}buysell'] = 0
+    df.loc[df[f'{code}指数偏离'] >= 0.00, f'{code}buysell'] = 0
+    df.loc[df[f'{code}指数偏离'] >= 0.01, f'{code}buysell'] = 1
+    df.loc[df[f'{code}指数偏离'] >= 0.02, f'{code}buysell'] = 2
+    df.loc[df[f'{code}指数偏离'] >= 0.03, f'{code}buysell'] = 3
+    df.loc[df[f'{code}指数偏离'] >= 0.04, f'{code}buysell'] = 4
+    df.loc[df[f'{code}指数偏离'] >= 0.05, f'{code}buysell'] = 5
 # df = df.dropna(axis=1)  # 删除所有含有空值的列
 df = df.fillna(0)
 

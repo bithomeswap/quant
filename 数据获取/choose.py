@@ -13,7 +13,8 @@ def technology(df):  # 定义计算技术指标的函数
 
 def choose(choosename, name, df):
     if choosename == '交易':
-        code = df['代码'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
+        # 获取所有不重复日期，理论上应该是计算当日的数据，这里为了统计方便使用的未来函数
+        code = df['代码'].copy().drop_duplicates().tolist()
         rank = math.ceil(len(code)/100)
         print(name, '数量', len(code), '拟选择标的数量', rank)
         if ('coin' in name.lower()):
