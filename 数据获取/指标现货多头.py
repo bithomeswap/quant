@@ -2,7 +2,7 @@ import choose
 import pandas as pd
 import os
 # names = ['COIN','股票','指数','行业','ETF']
-names = ['COIN','股票']
+names = ['行业']
 
 updown = '盘中波动'  # 计算当日理论上的盘中每日回撤
 # updown = '资产收益'  # 计算每份资金的资产收益率

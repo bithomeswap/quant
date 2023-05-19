@@ -26,9 +26,10 @@ def technology(df):  # 定义计算技术指标的函数
         df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
-        for n in range(1, 10):
-            df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
-            df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
+        if ('分钟' in name) | ('指数' in name) | ('行业' in name):
+            for n in range(1, 10):
+                df[f'过去{n}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n))
+                df[f'过去{n*5}日总涨跌'] = df['开盘']/(df['开盘'].copy().shift(n*5))
     except Exception as e:
         print(f"发生bug: {e}")
     return df
@@ -99,7 +100,7 @@ for name in names:
     if ('指标' not in name.lower()) & ('order' not in name.lower()) & ('js' not in name.lower()):
         # if ('行业' in name.lower()) | ('指数' in name.lower()):
         # if ('股票' in name.lower()):
-        if ('coin' in name.lower()):
+            # if ('coin' in name.lower()):
             # if ('分钟' not in name.lower()) & ('历史' in name.lower()):
             # if ('分钟' not in name.lower()) & ('历史' not in name.lower()):
             print(f'当前计算{name}')

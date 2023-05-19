@@ -5,9 +5,11 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-names = ['COIN', '股票', '指数', '行业', 'ETF']
-mubiao = f'昨日资金波动'
-a = 20  # 将数据划分成a个等距离的区间
+# names = ['COIN', '股票', '指数', '行业', 'ETF']
+names = ['指数']
+
+mubiao = f'开盘收盘幅'
+a = 100  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径

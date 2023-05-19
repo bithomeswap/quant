@@ -23,7 +23,6 @@ for file in files:
                 for n in range(1, 9):
                     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
                 df, m, n = choose.choose('分布',name, df)
-                print(name,n)
                 # 将数据划分成a个等长度的区间
                 a = 10
                 ranges = []
