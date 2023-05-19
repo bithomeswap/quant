@@ -45,7 +45,8 @@ client = Client(api_key, api_secret, testnet=True)
 # client = Client(api_key, api_secret, testnet=True,base_endpoint='https://testnet.binancefuture.com/fapi')
 
 # 连接MongoDB数据库
-dbclient = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+dbclient = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = dbclient["wth000"]
 name = "COIN"
 collection_write = db[f'order{name}']
@@ -96,18 +97,19 @@ def buy(symbols):
             print(f"{symbol}数量步长: {stepSize}")
             # 实时获取当前卖一和卖二价格
             depth = client.get_order_book(symbol=symbol, limit=5)
-            ask_price_1 = float(depth['asks'][0][0])
-            bid_price_1 = float(depth['bids'][0][0])
+            buy_ask_price_1 = float(depth['asks'][0][0])
+            buy_bid_price_1 = float(depth['bids'][0][0])
             print(depth)
             # 计算买卖均价
-            target_price = round((ask_price_1+bid_price_1)/2, price_precision)
+            target_price = round(
+                (buy_ask_price_1+buy_bid_price_1)/2, price_precision)
             buy_limit_price = round(
-                ask_price_1 - pow(0.1, price_precision), price_precision)
+                buy_ask_price_1 - pow(0.1, price_precision), price_precision)
             sell_limit_price = round(
-                bid_price_1 + pow(0.1, price_precision), price_precision)
+                buy_bid_price_1 + pow(0.1, price_precision), price_precision)
             print('最优卖价', sell_limit_price, '最优买价', buy_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
-            if 1-bid_price_1/target_price >= 0.001 or ask_price_1/target_price-1 <= 0.001:
+            if 1-buy_bid_price_1/target_price >= 0.001 or buy_ask_price_1/target_price-1 <= 0.001:
                 # 下单
                 symbol = symbol
                 quantity = round(
@@ -228,18 +230,19 @@ def sell(symbols):
             print(f"{symbol}数量步长: {stepSize}")
             # 实时获取当前卖一和卖二价格
             depth = client.get_order_book(symbol=symbol, limit=5)
-            ask_price_1 = float(depth['asks'][0][0])
-            bid_price_1 = float(depth['bids'][0][0])
+            sell_ask_price_1 = float(depth['asks'][0][0])
+            sell_bid_price_1 = float(depth['bids'][0][0])
             print(depth)
             # 计算买卖均价
-            target_price = round((ask_price_1+bid_price_1)/2, price_precision)
+            target_price = round(
+                (sell_ask_price_1+sell_bid_price_1)/2, price_precision)
             buy_limit_price = round(
-                ask_price_1 - pow(0.1, price_precision), price_precision)
+                sell_ask_price_1 - pow(0.1, price_precision), price_precision)
             sell_limit_price = round(
-                bid_price_1 + pow(0.1, price_precision), price_precision)
+                sell_bid_price_1 + pow(0.1, price_precision), price_precision)
             print('最优卖价', sell_limit_price, '最优买价', buy_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
-            if 1-bid_price_1/target_price >= 0.001 or ask_price_1/target_price-1 <= 0.001:
+            if 1-sell_bid_price_1/target_price >= 0.001 or sell_ask_price_1/target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
                 if (order['status'] != 'end') & (order['buy_quantity'] != 0) & (order['buy_quantity'] != order['sell_quantity']):
                     # 计算卖出时间
@@ -253,7 +256,7 @@ def sell(symbols):
                             side=Client.SIDE_SELL,
                             type=Client.ORDER_TYPE_LIMIT,
                             quantity=float(order['buy_quantity']),
-                            price=bid_price_1,
+                            price=sell_bid_price_1,
                             timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                         )
                         print("卖出信息：", sell_order)
@@ -264,8 +267,8 @@ def sell(symbols):
                             {'orderId': order_id},
                             {'$set': {
                                 'status': 'end',
-                                'sell_quantity': float(order['buy_quantity']),
-                                'sell_price': bid_price_1,
+                                'sell_quantity': float(sell_order['price']),
+                                'sell_price': float(sell_order['price']),
                             }}
                         )
                     else:
