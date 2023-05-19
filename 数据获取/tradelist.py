@@ -20,10 +20,10 @@ def technology(df):  # 定义计算技术指标的函数
             1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
-        # 计算昨日涨跌
-        df['昨日涨跌'] = df['涨跌幅'].copy().shift(1)+1
+        # 计算昨日涨跌幅
+        df['昨日涨跌幅'] = df['涨跌幅'].copy().shift(1)
         # 计算昨日资金贡献
-        df['昨日资金贡献'] = df['昨日涨跌'] / df['昨日成交额']
+        df['昨日资金贡献'] = df['昨日涨跌幅'] / df['昨日成交额']
         # 计算昨日资金波动
         df['昨日资金波动'] = df['昨日振幅'] / df['昨日成交额']
         for n in range(1, 10):
@@ -99,7 +99,7 @@ for name in names:
     if ('指标' not in name.lower()) & ('order' not in name.lower()) & ('js' not in name.lower()):
     # if ('行业' in name.lower()) | ('指数' in name.lower()):
         if ('股票' in name.lower()):
-        # if ('COIN' in name.lower()):
+        # if ('coin' in name.lower()):
         # if ('分钟' not in name.lower()) & ('历史' in name.lower()):
         # if ('分钟' not in name.lower()) & ('历史' not in name.lower()):
             print(f'当前计算{name}')

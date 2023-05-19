@@ -16,15 +16,18 @@ def choose(choosename, name, df):
         # 获取所有不重复日期，理论上应该是计算当日的数据，这里为了统计方便使用的未来函数
         code = df['代码'].copy().drop_duplicates().tolist()
         rank = math.ceil(len(code)/100)
-        print(name, '数量', len(code), '拟选择标的数量', rank)
+        # value=math.sqrt(len(code))
+        value=math.log10(len(code))
+        print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
         if ('coin' in name.lower()):
             if ('分钟' not in name.lower()):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
                 df = df[df[f'昨日成交额'] >= 1000000].copy()  # 过滤小盘股
                 df = df[(df['昨日资金波动_rank'] <= 0.6/rank)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= 1.8/rank)].copy()
+                df['rank'] = df['昨日涨跌幅']*df['昨日资金波动']
                 df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nsmallest(rank, '昨日资金波动_rank')).reset_index(drop=True)
+                    lambda x: x.nlargest(rank, 'rank')).reset_index(drop=True)
                 m = 0.003  # 设置手续费
                 n = 6  # 设置持仓周期
             if ('分钟' in name.lower()):
@@ -39,10 +42,14 @@ def choose(choosename, name, df):
                 df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
                 df = df[(df['开盘收盘幅'] <= 0.08) & (
                     df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+
+                # 尽量使用导数等比较好的标准化方法进行阈值的计算,市场的级别有多少位整数是一个条件,市场的第二位数是大是小作为另一个条件,
+                # 另外,大盘股的话(市值大)波动小,这个阈值是越小越好,可以提高区分程度,小盘股(市值小)波动大,这个阈值是越大越好,避免极端数据干扰;
                 df = df[(df['昨日资金波动_rank'] <= 0.12/rank)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= 0.36/rank)].copy()
+                df['rank'] = df['昨日涨跌幅']*df['昨日资金波动']
                 df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nsmallest(rank, '昨日资金波动_rank')).reset_index(drop=True)
+                    lambda x: x.nlargest(5, 'rank')).reset_index(drop=True)
                 m = 0.005  # 设置手续费
                 n = 15  # 设置持仓周期
             if ('分钟' in name.lower()):
