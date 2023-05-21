@@ -52,7 +52,9 @@ name = "COIN"
 collection_write = db[f'order{name}']
 # 获取计划交易的标的
 symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
-
+# 每一批的下单金额
+money = 100
+funds = 5
 # def sell_all():  # 市价卖出所有代币
 #     # 获取账户余额
 #     balances = client.get_account()['balances']
@@ -116,35 +118,37 @@ def buy(symbols):
                 quantity = round(
                     round(12/buy_bid_limit_price/buy_stepSize) * buy_stepSize, buy_precision)
                 # buy_order = client.order_market_buy(symbol=buy_symbol,quantity=quantity)# 市价成交
-                buy_order = client.create_order(
-                    symbol=buy_symbol,
-                    side=Client.SIDE_BUY,
-                    type=Client.ORDER_TYPE_LIMIT,
-                    quantity=float(quantity),
-                    price=float(buy_bid_limit_price),
-                    timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-                )  # 限价成交
-                print("下单信息buy：", buy_order)
-                collection_write.insert_one({
-                    'orderId': int(buy_order['orderId']),
-                    'symbol': buy_symbol,
-                    'time': int(time.time()),
-                    'quantity': float(buy_order['origQty']),
-                    'buy_quantity': None,
-                    'buy_price': float(buy_order['price']),
-                    'buy_precision': int(buy_precision),
-                    'buy_price_precision': int(buy_price_precision),
-                    'buy_tickSize': float(buy_tickSize),
-                    'buy_tickSize': float(buy_stepSize),
-                    'sell_time': None,
-                    'sell_quantity': None,
-                    'sell_price': None,
-                    'sell_precision': None,
-                    'sell_price_precision': None,
-                    'sell_tickSize': None,
-                    'sell_tickSize': None,
-                    'status': 'pending',
-                })
+                for n in range(1,math.ceil(money/funds)):
+                    print(f"{name}，总{math.ceil(money/funds)}笔下单,第{n}笔下单")
+                    buy_order = client.create_order(
+                        symbol=buy_symbol,
+                        side=Client.SIDE_BUY,
+                        type=Client.ORDER_TYPE_LIMIT,
+                        quantity=float(quantity),
+                        price=float(buy_bid_limit_price),
+                        timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                    )  # 限价成交
+                    print("下单信息buy：", buy_order)
+                    collection_write.insert_one({
+                        'orderId': int(buy_order['orderId']),
+                        'symbol': buy_symbol,
+                        'time': int(time.time()),
+                        'quantity': float(buy_order['origQty']),
+                        'buy_quantity': None,
+                        'buy_price': float(buy_order['price']),
+                        'buy_precision': int(buy_precision),
+                        'buy_price_precision': int(buy_price_precision),
+                        'buy_tickSize': float(buy_tickSize),
+                        'buy_tickSize': float(buy_stepSize),
+                        'sell_time': None,
+                        'sell_quantity': None,
+                        'sell_price': None,
+                        'sell_precision': None,
+                        'sell_price_precision': None,
+                        'sell_tickSize': None,
+                        'sell_tickSize': None,
+                        'status': 'pending',
+                    })
         except Exception as e:
             # 错误次数加1，并输出错误信息
             error_count += 1
@@ -176,7 +180,8 @@ def sell(symbols):
             all_symbol_info = client.get_symbol_info(all_symbol)
             print(all_symbol_info)
             # 获取当前已完成的订单（1小时内）
-            start_time = int((datetime.datetime.now() -datetime.timedelta(hours=1)).timestamp() * 1000)
+            start_time = int((datetime.datetime.now() -
+                             datetime.timedelta(hours=1)).timestamp() * 1000)
             all_orders = client.get_all_orders(
                 symbol=all_symbol, startTime=start_time)
             # 遍历已完成的订单
@@ -234,7 +239,7 @@ def sell(symbols):
             if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
                 if (sell_order['status'] != 'end') & (sell_order['buy_quantity'] != 0) & (sell_order['buy_quantity'] != sell_order['sell_quantity']):
-                    
+
                     # 计算卖出时间
                     # sell_time = sell_order['time'] + 86400
                     sell_time = sell_order['time'] + 10
