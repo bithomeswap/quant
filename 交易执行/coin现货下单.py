@@ -88,14 +88,14 @@ def buy(symbols):
             buy_price_precision = buy_symbol_info['filters'][0]['minPrice']
             buy_price_precision = abs(
                 int(math.log10(float(buy_price_precision))))
-            print(f"{buy_symbol}价格精度: {buy_price_precision}")
+            print(f"{buy_symbol}价格精度buy: {buy_price_precision}")
             buy_precision = buy_symbol_info['filters'][1]['minQty']
             buy_precision = abs(int(math.log10(float(buy_precision))))
-            print(f"{buy_symbol}数量精度: {buy_precision}")
+            print(f"{buy_symbol}数量精度buy: {buy_precision}")
             buy_tickSize = float(buy_symbol_info['filters'][0]['tickSize'])
-            print(f"{buy_symbol}价格步长: {buy_tickSize}")
+            print(f"{buy_symbol}价格步长buy: {buy_tickSize}")
             buy_stepSize = float(buy_symbol_info['filters'][1]['minQty'])
-            print(f"{buy_symbol}数量步长: {buy_stepSize}")
+            print(f"{buy_symbol}数量步长buy: {buy_stepSize}")
             # 实时获取当前卖一和卖二价格
             buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
             buy_ask_price_1 = float(buy_depth['asks'][0][0])
@@ -108,7 +108,8 @@ def buy(symbols):
                 buy_ask_price_1 - pow(0.1, buy_price_precision), buy_price_precision)
             buy_ask_limit_price = round(
                 buy_bid_price_1 + pow(0.1, buy_price_precision), buy_price_precision)
-            print('最优卖价', buy_ask_limit_price, '最优买价', buy_bid_limit_price)
+            print('最优卖价buy', buy_ask_limit_price,
+                  '最优买价buy', buy_bid_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-buy_bid_price_1/buy_target_price >= 0.001 or buy_ask_price_1/buy_target_price-1 <= 0.001:
                 # 下单
@@ -123,7 +124,7 @@ def buy(symbols):
                     price=float(buy_bid_limit_price),
                     timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                 )  # 限价成交
-                print("下单信息：", buy_order)
+                print("下单信息buy：", buy_order)
                 collection_write.insert_one({
                     'orderId': int(buy_order['orderId']),
                     'symbol': buy_symbol,
@@ -143,7 +144,7 @@ def buy(symbols):
         except Exception as e:
             # 错误次数加1，并输出错误信息
             error_count += 1
-            print(f"发生bug: {e}")
+            print(f"buy发生bug: {e}")
             continue
     # 输出异常次数
     print(f"共出现{error_count}次异常")
@@ -157,9 +158,9 @@ def buy(symbols):
             # 撤销订单
             result = client.cancel_order(
                 symbol=cancel_symbol, orderId=cancel_order_id)
-            print(f'撤销订单{cancel_order_id}成功:{result}')
+            print(f'撤销订单{cancel_order_id}成功buy:{result}')
         except Exception as e:
-            print(f'撤销订单{cancel_order_id}失败{e}')
+            print(f'撤销订单{cancel_order_id}失败buy{e}')
     # 暂停1秒，等待撤单
     time.sleep(1)
 
@@ -167,30 +168,14 @@ def buy(symbols):
 def sell(symbols):
     # 首先更新订单状态
     try:
-        for open_symbol in symbols:
-            open_symbol_info = client.get_symbol_info(open_symbol)
-            print(open_symbol_info)
-            # 获取当前未完成的订单
-            open_orders = client.get_open_orders(symbol=open_symbol)
-            # 遍历未完成的订单
-            for open_order in open_orders:
-                open_order_id = open_order['orderId']
-                open_all_price = float(open_order['price'])
-                open_all_quantity = float(open_order['executedQty'])
-                # 已成交订单
-                collection_write.update_one(
-                    {'orderId': open_order_id},
-                    {'$set': {
-                        'status': open_order['status'],
-                        'buy_price': float(open_all_price),
-                        'buy_quantity': float(open_all_quantity)
-                    }}
-                )
-                print('历史成交订单更新', open_order)
+        for all_symbol in symbols:
+            all_symbol_info = client.get_symbol_info(all_symbol)
+            print(all_symbol_info)
             # 获取当前已完成的订单（1小时内）
             start_time = int((datetime.datetime.now() -
                              datetime.timedelta(hours=1)).timestamp() * 1000)
-            all_orders = client.get_all_orders(symbol=open_symbol, startTime=start_time)
+            all_orders = client.get_all_orders(
+                symbol=all_symbol, startTime=start_time)
             # 遍历已完成的订单
             for all_order in all_orders:
                 all_order_id = all_order['orderId']
@@ -205,7 +190,7 @@ def sell(symbols):
                         'buy_quantity': float(all_quantity)
                     }}
                 )
-                print('历史成交订单更新', all_order)
+                print('历史成交订单更新sell', all_order)
     except Exception as e:
         print(f"发生异常：{e}")
     print('订单卖出')
@@ -218,15 +203,16 @@ def sell(symbols):
             print(sell_symbol_info)
             # 针对现货市场的精度设置
             sell_price_precision = sell_symbol_info['filters'][0]['minPrice']
-            sell_price_precision = abs(int(math.log10(float(sell_price_precision))))
-            print(f"{sell_symbol}价格精度: {sell_price_precision}")
+            sell_price_precision = abs(
+                int(math.log10(float(sell_price_precision))))
+            print(f"{sell_symbol}价格精度sell: {sell_price_precision}")
             sell_precision = sell_symbol_info['filters'][1]['minQty']
             sell_precision = abs(int(math.log10(float(sell_precision))))
-            print(f"{sell_symbol}数量精度: {sell_precision}")
+            print(f"{sell_symbol}数量精度sell: {sell_precision}")
             sell_tickSize = float(sell_symbol_info['filters'][0]['tickSize'])
-            print(f"{sell_symbol}价格步长: {sell_tickSize}")
+            print(f"{sell_symbol}价格步长sell: {sell_tickSize}")
             sell_stepSize = float(sell_symbol_info['filters'][1]['minQty'])
-            print(f"{sell_symbol}数量步长: {sell_stepSize}")
+            print(f"{sell_symbol}数量步长sell: {sell_stepSize}")
             # 实时获取当前卖一和卖二价格
             sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
             sell_ask_price_1 = float(sell_depth['asks'][0][0])
@@ -239,14 +225,15 @@ def sell(symbols):
                 sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
             sell_ask_limit_price = round(
                 sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-            print('最优卖价', sell_ask_limit_price, '最优买价', sell_bid_limit_price)
+            print('最优卖价sell', sell_ask_limit_price,
+                  '最优买价sell', sell_bid_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
                 if (sell_order['status'] != 'end') & (sell_order['buy_quantity'] != 0) & (sell_order['buy_quantity'] != sell_order['sell_quantity']):
                     # 计算卖出时间
                     # sell_time = sell_order['time'] + 86400
-                    sell_time = sell_order['time']
+                    sell_time = sell_order['time'] + 1
                     # 如果卖出时间已经到了，就执行卖出操作
                     if int(time.time()) >= sell_time:
                         # 卖出订单
@@ -258,7 +245,7 @@ def sell(symbols):
                             price=sell_bid_price_1,
                             timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                         )
-                        print("卖出信息：", sell_order)
+                        print("卖出信息sell：", sell_order)
                     # 如果卖出成功，就更新数据集合的状态为已平仓
                     if sell_order['status'] == 'FILLED':
                         print(sell_order, '卖出成功')
@@ -271,7 +258,7 @@ def sell(symbols):
                             }}
                         )
                     else:
-                        print(sell_order, '卖出失败')
+                        print(sell_order, '卖出失败sell')
     except Exception as e:
         print(f"发生异常：{e}")
 
@@ -288,8 +275,8 @@ def clearn():
 
 while True:
     buy(symbols)
-    time.sleep(60)
+    time.sleep(1)
     sell(symbols)
-    time.sleep(60)
+    time.sleep(1)
     clearn()
     time.sleep(3600)
