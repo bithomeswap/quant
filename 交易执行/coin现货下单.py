@@ -132,14 +132,18 @@ def buy(symbols):
                     'quantity': float(buy_order['origQty']),
                     'buy_quantity': None,
                     'buy_price': float(buy_order['price']),
+                    'buy_precision': int(buy_precision),
+                    'buy_price_precision': int(buy_price_precision),
+                    'buy_tickSize': float(buy_tickSize),
+                    'buy_tickSize': float(buy_stepSize),
                     'sell_time': None,
                     'sell_quantity': None,
                     'sell_price': None,
+                    'sell_precision': None,
+                    'sell_price_precision': None,
+                    'sell_tickSize': None,
+                    'sell_tickSize': None,
                     'status': 'pending',
-                    'precision': int(buy_precision),
-                    'price_precision': int(buy_price_precision),
-                    'tickSize': float(buy_tickSize),
-                    'stepSize': float(buy_stepSize),
                 })
         except Exception as e:
             # 错误次数加1，并输出错误信息
@@ -184,9 +188,9 @@ def sell(symbols):
                 collection_write.update_one(
                     {'orderId': all_order_id},
                     {'$set': {
-                        'status': all_order['status'],
                         'buy_price': float(all_price),
-                        'buy_quantity': float(all_quantity)
+                        'buy_quantity': float(all_quantity),
+                        'status': all_order['status'],
                     }}
                 )
                 print('历史成交订单更新sell', all_order)
@@ -253,9 +257,13 @@ def sell(symbols):
                         collection_write.update_one(
                             {'orderId': sell_order['orderId']},
                             {'$set': {
-                                'status': 'end',
                                 'sell_quantity': float(sell_order['price']),
                                 'sell_price': float(sell_order['price']),
+                                'sell_precision': int(sell_precision),
+                                'sell_price_precision': int(sell_price_precision),
+                                'sell_tickSize': float(sell_tickSize),
+                                'sell_tickSize': float(sell_stepSize),
+                                'status': 'end',
                             }}
                         )
                     else:
