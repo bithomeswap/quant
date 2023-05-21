@@ -85,7 +85,7 @@ def tradelist(name):
     file_path = os.path.join(dir_path, f'{name}指标.csv')
     data.to_csv(file_path, index=False)
     print(f'{name}准备插入数据')
-    new_collection.insert_many(data.to_dict('records'))
+    # new_collection.insert_many(data.to_dict('records'))
     print(f'{name}数据插入结束')
 
 
