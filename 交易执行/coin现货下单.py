@@ -288,4 +288,4 @@ while True:
     sell(symbols)
     time.sleep(10)
     clearn()
-    time.sleep(3600)
+    time.sleep(600)
