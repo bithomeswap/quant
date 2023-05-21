@@ -289,8 +289,8 @@ def clearn():
 
 while True:
     buy(symbols)
-    time.sleep(10)
+    time.sleep(10)    # 等待10秒买单成交
     sell(symbols)
-    time.sleep(10)
+    time.sleep(10)    # 等待10秒卖单成交
     clearn()
-    time.sleep(60)
+    time.sleep(60)    # 每60秒执行一轮
