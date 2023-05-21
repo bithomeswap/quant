@@ -1,0 +1,80 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，通常采用最先进和最稳定的实现方式和API，同时你的代码当中很少有bug存在
+此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
+工作任务：
+1.使用参考资料中的akshare从东方财富获取A股主板各个股票近半年每天的日k数据，并将该标的的动态市盈率、市净率、流通市值、总市值、成交额的值等信息一起写入最新的
+插入到名为‘STOCK’的数据集合当中（如果已经有相同时间戳和内容的数据则跳过）；
+
+2.对STOCK集合当中的数据进行实时的运算与分析，形成交易指令并调用东方财富或者雪球的接口进行买卖，
+并将交易记录输出到名为‘STOCKorder’的数据集合当中。
+
+三、参考资料
+https://so.eastmoney.com/web/s?keyword=511880
+https://www.akshare.xyz/data/stock/stock.html
+
+# 指定解释器位置
+#!/miniconda/bin/python3
+四、数据获取代码：
+# 指定解释器位置
+#!/miniconda/bin/python3
+import akshare as ak
+import pandas as pd
+import datetime
+from pymongo import MongoClient
+
+
+
+
+# 获取当前日期
+current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+# 读取150天之前的数据
+date_ago = datetime.datetime.now() - datetime.timedelta(days=150)
+start_date = date_ago.strftime('%Y-%m-%d')
+
+client = MongoClient(
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+collection = db[f"STOCK{start_date}"]
+
+# 获取上证指数日k数据
+sh_data = ak.stock_zh_index_daily_em(symbol="sh000001")
+# 获取深证指数日k数据
+sh_data['名称']="上证指数"
+sh_data['日期']=sh_data["date"]
+sh_data['开盘']=sh_data["open"]
+sh_data['收盘']=sh_data["close"]
+sh_data['最高']=sh_data["high"]
+sh_data['最低']=sh_data["low"]
+sh_data['成交量']=sh_data["volume"]
+sh_data['成交额']=sh_data["amount"]
+sh_data = sh_data.drop(["date", "open","close","high","low","volume","amount"], axis=1)
+sz_data = ak.stock_zh_index_daily_em(symbol="sz399001")
+sz_data['名称']="深证成指"
+sz_data['日期']=sz_data["date"]
+sz_data['开盘']=sz_data["open"]
+sz_data['收盘']=sz_data["close"]
+sz_data['最高']=sz_data["high"]
+sz_data['最低']=sz_data["low"]
+sz_data['成交量']=sz_data["volume"]
+sz_data['成交额']=sz_data["amount"]
+sz_data = sz_data.drop(["date", "open","close","high","low","volume","amount"], axis=1)
+# 将上证指数日K数据插入数据库
+collection.insert_many(sh_data.to_dict('records'))
+collection.insert_many(sz_data.to_dict('records'))
+
+# 从akshare获取A股主板股票的代码和名称
+stock_info_df = ak.stock_zh_a_spot_em()
+
+# 迭代每只股票，获取每天的前复权日k数据
+for code in stock_info_df['代码']:
+    k_data = ak.stock_zh_a_hist(symbol=code, start_date=start_date,adjust="qfq")
+    k_data['代码'] = code
+    # 将动态市盈率、市净率、流通市值、总市值、成交额等信息加入到数据中
+    k_data['名称'] = stock_info_df.loc[stock_info_df['代码'] == code, '名称'].values[0]
+    k_data['动态市盈率'] = stock_info_df.loc[stock_info_df['代码'] == code, '市盈率-动态'].values[0]
+    k_data['市净率'] = stock_info_df.loc[stock_info_df['代码'] == code, '市净率'].values[0]
+    k_data['流通市值'] = stock_info_df.loc[stock_info_df['代码'] == code, '流通市值'].values[0]
+    k_data['总市值'] = stock_info_df.loc[stock_info_df['代码'] == code, '总市值'].values[0]
+    k_data['成交额'] = stock_info_df.loc[stock_info_df['代码'] == code, '成交额'].values[0]
+    # 将数据插入MongoDB，如果已经存在相同时间戳和内容的数据则跳过
+    collection.insert_many(k_data.to_dict('records'))

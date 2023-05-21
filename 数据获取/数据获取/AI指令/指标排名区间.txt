@@ -1,0 +1,71 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，通常采用最先进和最稳定的实现方式和API，同时你的代码当中很少有bug存在
+此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
+
+工作任务:
+1 从本地CSV文件读取数据集合
+name = 'COIN'
+df = pd.read_csv(f'{name}指标.csv')
+2 分别对[0,1]划分四十个等长度区间，并分别对不同指标取值在这个区间的所有样本进行n日后涨跌幅的均值的计算，并输出为csv
+3 要求csv的列名为指标名，行名为取值区间，值为n日后涨跌幅（未来函数）的均值
+
+参考代码：
+import pandas as pd
+import numpy as np
+import datetime
+import os
+
+# 设置参数
+# name = 'COIN'
+# name = 'STOCK'
+name = 'BTC'
+# name = '指数'
+
+n = 9
+mubiao = f'{n}日后总涨跌幅（未来函数）'
+
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上三级目录的路径
+dir_path = os.path.dirname(os.path.dirname(
+    os.path.dirname(dir_path)))
+file_path = os.path.join(dir_path, f'{name}指标排名.csv')
+df = pd.read_csv(file_path)
+
+# 日期格式转换
+df['日期'] = pd.to_datetime(df['日期'], format='%Y-%m-%d')
+
+# 过滤符合条件的数据
+if 'stock' in name.lower():
+    df = df[df['真实价格'] >= 4]
+    df = df[df['开盘收盘幅'] <= 8]
+if 'coin' in name.lower():
+    df = df[df['昨日成交额'] >= 1000000]
+df = df[df['日期'] >= datetime.datetime(2022, 6, 1)]
+
+# 将数据划分成a个等长度的区间
+a = 40
+ranges = []
+left = 0
+right = 1
+step = (right - left) / a
+for i in range(a):
+    ranges.append((left + i * step, left + (i + 1) * step))
+
+# 筛选出列名中包含 'rank' 的列
+rank_cols = df.filter(like='rank').columns
+result_dicts = []
+
+sub_df_list = []
+
+for rank_range in ranges:
+    for col_name in rank_cols:
+
+
+# 转化为dataframe格式
+result_df = pd.DataFrame(result_dicts)
+# 保存结果
+result_df.to_csv(f'{name}_{n}日后指标排名区间涨跌幅分布.csv', index=False)
+print('任务已经完成！')

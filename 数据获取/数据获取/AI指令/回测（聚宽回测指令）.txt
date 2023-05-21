@@ -1,0 +1,99 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，熟练使用聚宽API进行量化交易及回测
+同时你的代码当中很少有bug存在。此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
+
+注意事项：
+只使用聚宽API文件当中提供的函数，不要使用其他任何方法，初始资金设置为一百万
+
+工作任务:
+1.在聚宽平台上进行回测（代码运行在聚宽回测平台上即可）；
+2.回测标的为所有沪深300股票；
+3.在数据初始化的时候计算每只股票的10、20、30、40、50、60、70、80日的开盘价简单移动平均线，如果当日开盘价除以这个移动平均线的值均大于0.99则列入当日的股票观察池；
+4.每天选取观察池中开盘价最低的5只股票；
+5.如果这5只股票当中，有当日开盘低于昨日收盘的或者开盘即涨停的则不购买；
+6.以上指标都满足要求后，才买入股票，否则当天不买入股票；
+7.股票以当日开盘买入，持有十二天后卖出
+
+特别提醒：
+聚宽运算过慢，建议在初始化的时候把数据统计计算好，执行的时候直接调用数据就好
+
+聚宽API：
+https://www.joinquant.com/help/api/help#name:api
+
+参考资料:
+# 初始化回测函数，在此处添加打印语句
+
+def initialize(context):
+    print('任务已经开始')
+    # 设定沪深300作为基准
+    set_benchmark('000300.XSHG')
+    # 开启动态复权模式(真实价格)
+    set_option('use_real_price', True)
+    # 开启避免未来函数模式
+    set_option("avoid_future_data", True)
+    # 输出内容到日志 log.info()
+    log.info('初始函数开始运行且全局只运行一次')
+    # 过滤掉order系列API产生的比error级别低的log
+    log.set_level('order', 'error')
+    # # 股票类每笔交易时的手续费是：买入时佣金万分之三，卖出时佣金万分之三加千分之一印花税, 每笔交易佣金最低扣5块钱
+    set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0001, close_commission=0.0001, min_commission=5), type='stock')
+    
+
+def handle_data(context, data):
+    today = context.current_dt.date()
+    yestoday=context.previous_date
+    # 获取股票池中的股票
+    stocks = get_index_stocks('000300.XSHG', date=today)
+    # 计算每只股票的10、20、30、40、50、60、70、80日的开盘价简单移动平均线
+    ma_dict = {}
+    for stock in stocks:
+        price = get_price(stock, start_date=(today - datetime.timedelta(days=80)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"), frequency='daily', fields=['open'])
+        ma_dict[stock] = {}
+        for day in [10, 20, 30, 40, 50, 60, 70, 80]:
+            ma_dict[stock][day] = price.iloc[-day:, :].mean()[0]
+    # 筛选出当日股票观察池
+    observation_list = []
+    for stock in stocks:
+        if all([price/ma_dict[stock][day] > 0.99 for day, price in ma_dict[stock].items()]):
+            observation_list.append(stock)
+    # 选取当日开盘价最低的5只股票
+    observation_df = get_price(observation_list, start_date=today, end_date=today, frequency='daily', fields=['open']).to_frame()
+    # observation_df = observation_df.sort_values(('minor', 'open')).head(5)
+    # print(observation_df)
+
+    # 如果股票满足以下条件则进入交易池
+    buy_list = []
+    for stock in lowest_open:
+        # 获取股票的当前价格和前一天的价格
+        price = attribute_history(stock, 2, '1d', ['open'], df=False)['open']
+        # 判断股票是否在停牌状态，昨天或今天的开盘价为0
+        if price[0] == 0 or price[1] == 0:
+            continue
+        # 判断是否涨跌停
+        close_price = attribute_history(stock, 2, '1d', ['close'], df=False)['close']
+        if close_price[0] > price[1] :
+            continue
+        if close_price[0]*1.08 <= price[1] :
+            continue
+        # 如果符合条件，则将股票加入买入列表中
+        buy_list.append(stock)
+    print(buy_list)
+    
+    # 卖出持仓超过6个交易日且当天开盘涨幅未超过百分之8的股票
+    for stock in context.portfolio.positions:
+        held_days = (today - context.portfolio.positions[stock].init_time.date()).days
+        price = attribute_history(stock, 2, '1d', ['open', 'close'], df=False)
+        increase = (price['open'][0] - price['close'][1]) / price['close'][1]
+        if held_days >= 6 and increase <= 0.08:
+            order_target_value(stock, 0)
+            log.info("Selling %s", stock)
+            
+    # 如果有符合条件的股票，则平均买入
+    if len(buy_list) > 0:
+        target_value = context.portfolio.portfolio_value * 0.98
+        value_per_stock = target_value / len(buy_list)/6
+        for stock in buy_list:
+            order_target_value(stock, value_per_stock)
+            log.info("Buying %s", stock)
+            
+
