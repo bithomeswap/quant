@@ -19,11 +19,9 @@ client = MongoClient(
 db = client['wth000']
 
 # 设置参数
-# name ='指数'
-# name ='指数分钟'
-name ='COIN'
+name = 'COIN'
+# name ='COIN8h'
 # name ='COIN分钟'
-# name = 'ETF'
 
 collection = db[f'{name}']
 

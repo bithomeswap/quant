@@ -1,4 +1,4 @@
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # 指定解释器位置
 #!/root/miniconda3/bin/python
 # nohup /root/miniconda3/bin/python /root/binance_trade_tool_vpn/quant/数据获取/getbtc指标.py
@@ -20,8 +20,8 @@ db = client['wth000']
 
 # 设置参数
 # name ='COIN'
-# name ='COIN8h'
-name ='COIN分钟'
+name ='COIN8h'
+# name ='COIN分钟'
 
 collection = db[f'{name}']
 
@@ -44,7 +44,7 @@ for ticker_price in usdt_ticker_prices:
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
     klines = client.get_klines(
         symbol=symbol,
-        interval=Client.KLINE_INTERVAL_1MINUTE,
+        interval=Client.KLINE_INTERVAL_1DAY,
         limit=1000
     )
     # 实际上实盘的时候，这里应该改成八小时

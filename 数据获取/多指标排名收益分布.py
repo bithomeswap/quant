@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import choose
 import os
-names = ['COIN','股票','指数','行业','ETF']
+names = ['COIN','股票','指数','行业']
+
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -12,17 +13,19 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file)&('指标' in file)&('排名' not in file):
+        if (filename in file) & ('指标' in file) & ('排名' not in file)& ('细节' not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f'{name}.csv')
+                print(name)
                 df = pd.read_csv(path)
-                df = df.groupby(['代码'], group_keys=False).apply(choose.technology)
+                df = df.groupby(['代码'], group_keys=False).apply(
+                    choose.technology)
                 # 去掉噪音数据
                 for n in range(1, 9):
                     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
-                df, m, n = choose.choose('分布',name, df)
+                df, m, n = choose.choose('分布', name, df)
                 # 将数据划分成a个等长度的区间
                 a = 10
                 ranges = []

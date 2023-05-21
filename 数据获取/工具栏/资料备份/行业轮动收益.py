@@ -25,13 +25,14 @@ def se(choosename, name, df):
 
 for file in files:
     for filename in names:
-        if (filename in file) & ('行业' in file) & ('排名' not in file) & ('分钟' not in file):
+        if (filename in file) & ('行业' in file) & ('排名' not in file)& ('细节' not in file):
             for b in (5, 20):
                 for a in range(-5, 6):
                     try:
                         # 获取文件名和扩展名
                         name, extension = os.path.splitext(file)
                         path = os.path.join(dir_path, f'{name}.csv')
+                        print(name)
                         df = pd.read_csv(path)
                         df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
                         dates = df['日期'].copy().drop_duplicates(

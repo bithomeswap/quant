@@ -97,12 +97,13 @@ db = client['wth000']
 names = list(db.list_collection_names())
 print(names)
 for name in names:
-    if ('指标' not in name.lower()) & ('order' not in name.lower()) & ('js' not in name.lower()):
-        # if ('行业' in name.lower()) | ('指数' in name.lower()):
-        # if ('股票' in name.lower()):
-            # if ('coin' in name.lower()):
-            # if ('分钟' not in name.lower()) & ('历史' in name.lower()):
-            # if ('分钟' not in name.lower()) & ('历史' not in name.lower()):
+    if ('指标' not in name) & ('order' not in name) & ('js' not in name):
+        if ('分钟' not in name):
+            # if ('行业' in name) | ('指数' in name):
+            # if ('股票' in name):
+            # if ('COIN' in name):
+            # if ('历史' in name):
+            # if ('分钟' not in name) & ('历史' not in name):
             print(f'当前计算{name}')
             try:
                 tradelist(name)

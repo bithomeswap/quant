@@ -12,9 +12,6 @@ db = client["wth000"]
 # 设置参数
 name = '指数'
 # name ='指数分钟'
-# name ='COIN'
-# name ='COIN分钟'
-# name = 'ETF'
 
 collection = db[f"{name}"]
 # 获取当前日期
