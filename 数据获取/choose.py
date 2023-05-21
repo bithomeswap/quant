@@ -54,8 +54,8 @@ def choose(choosename, name, df):
                 df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
                 df = df[(df['开盘收盘幅'] <= 0.08) & (
                     df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= 0.2*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 0.6*value/rank)].copy()
+                df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
                 m = 0.005  # 设置手续费
@@ -78,12 +78,7 @@ def choose(choosename, name, df):
             n = 6  # 设置持仓周期
         if ('COIN' in name):
             if ('分钟' not in name):
-                if ('1h' in name):
-                    df = df[df[f'昨日成交额'] >= 50000].copy()  # 过滤小盘股
-                if ('8h' in name):
-                    df = df[df[f'昨日成交额'] >= 400000].copy()  # 过滤小盘股
-                elif ('1h' not in name) & ('8h' not in name):
-                    df = df[df[f'昨日成交额'] >= 1200000].copy()  # 过滤小盘股
+                df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
                 m = 0.003  # 设置手续费
                 n = 6  # 设置持仓周期
