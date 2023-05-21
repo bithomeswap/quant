@@ -28,16 +28,16 @@ def choose(choosename, name, df):
             if ('分钟' not in name):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
                 if ('8h' in name):
-                    df = df[df[f'昨日成交额'] >= 400000].copy()  # 过滤小盘股
+                    df = df[df[f'昨日成交额'] >= 200000].copy()  # 过滤小盘股
                 elif ('1h' not in name) & ('8h' not in name):
-                    df = df[df[f'昨日成交额'] >= 1200000].copy()  # 过滤小盘股
+                    df = df[df[f'昨日成交额'] >= 600000].copy()  # 过滤小盘股
 
                 # df = df[(df['昨日资金波动_rank'] <= 0.6/rank)].copy()
                 # df = df[(df['昨日资金贡献_rank'] <= 1.8/rank)].copy()
                 df = df[(df['昨日资金波动_rank'] <= value/(rank*2))].copy()
                 df = df[(df['昨日资金贡献_rank'] <= value/(rank*2/3))].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
+                    lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
                 m = 0.003  # 设置手续费
                 n = 6  # 设置持仓周期
             if ('分钟' in name):

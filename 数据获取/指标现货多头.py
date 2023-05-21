@@ -24,8 +24,7 @@ for file in files:
                 df = pd.read_csv(path)
                 df = df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
                 dates = df['日期'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby(['代码'], group_keys=False).apply(
-                    choose.technology)
+                df = df.groupby(['代码'], group_keys=False).apply(choose.technology)
                 # 去掉噪音数据
                 for n in range(1, 9):
                     df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
@@ -51,8 +50,7 @@ for file in files:
                         m = m/n  # 一天手续费均摊到n天就是
                         if daydates:
                             for i in range(0, len(daydates)-1):
-                                ret = daydf[daydf['日期'] == daydates[i]
-                                            ][f'{i+1}日后当日涨跌（未来函数）'].mean()*(1-m)-1
+                                ret = daydf[daydf['日期'] == daydates[i]][f'{i+1}日后当日涨跌（未来函数）'].mean()*(1-m)-1
                                 daily_ret += ret/n
                         cash_balance *= (1 + daily_ret)
                         daily_cash_balance[date] = cash_balance
