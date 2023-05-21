@@ -20,7 +20,8 @@ db = client['wth000']
 
 # 设置参数
 # name ='COIN'
-name ='COIN8h'
+# name ='COIN1h'
+name = 'COIN8h'
 # name ='COIN分钟'
 
 collection = db[f'{name}']
@@ -44,7 +45,7 @@ for ticker_price in usdt_ticker_prices:
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
     klines = client.get_klines(
         symbol=symbol,
-        interval=Client.KLINE_INTERVAL_1DAY,
+        interval=Client.KLINE_INTERVAL_8HOUR,
         limit=1000
     )
     # 实际上实盘的时候，这里应该改成八小时
