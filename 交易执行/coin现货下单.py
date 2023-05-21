@@ -172,8 +172,7 @@ def sell(symbols):
             all_symbol_info = client.get_symbol_info(all_symbol)
             print(all_symbol_info)
             # 获取当前已完成的订单（1小时内）
-            start_time = int((datetime.datetime.now() -
-                             datetime.timedelta(hours=1)).timestamp() * 1000)
+            start_time = int((datetime.datetime.now() -datetime.timedelta(hours=1)).timestamp() * 1000)
             all_orders = client.get_all_orders(
                 symbol=all_symbol, startTime=start_time)
             # 遍历已完成的订单
@@ -231,9 +230,11 @@ def sell(symbols):
             if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
                 if (sell_order['status'] != 'end') & (sell_order['buy_quantity'] != 0) & (sell_order['buy_quantity'] != sell_order['sell_quantity']):
+                    
                     # 计算卖出时间
                     # sell_time = sell_order['time'] + 86400
-                    sell_time = sell_order['time'] + 1
+                    sell_time = sell_order['time'] + 10
+
                     # 如果卖出时间已经到了，就执行卖出操作
                     if int(time.time()) >= sell_time:
                         # 卖出订单
@@ -275,8 +276,8 @@ def clearn():
 
 while True:
     buy(symbols)
-    time.sleep(1)
+    time.sleep(10)
     sell(symbols)
-    time.sleep(1)
+    time.sleep(10)
     clearn()
     time.sleep(3600)
