@@ -83,43 +83,43 @@ def buy(symbols):
     # 添加异常计数器
     error_count = 0
     for buy_symbol in symbols:
-        try:
-            buy_symbol_info = client.get_symbol_info(buy_symbol)
-            print(buy_symbol_info)
-            # 针对现货市场的精度设置
-            buy_price_precision = buy_symbol_info['filters'][0]['minPrice']
-            buy_price_precision = abs(
-                int(math.log10(float(buy_price_precision))))
-            print(f"{buy_symbol}价格精度buy: {buy_price_precision}")
-            buy_precision = buy_symbol_info['filters'][1]['minQty']
-            buy_precision = abs(int(math.log10(float(buy_precision))))
-            print(f"{buy_symbol}数量精度buy: {buy_precision}")
-            buy_tickSize = float(buy_symbol_info['filters'][0]['tickSize'])
-            print(f"{buy_symbol}价格步长buy: {buy_tickSize}")
-            buy_stepSize = float(buy_symbol_info['filters'][1]['minQty'])
-            print(f"{buy_symbol}数量步长buy: {buy_stepSize}")
-            # 实时获取当前卖一和卖二价格
-            buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
-            buy_ask_price_1 = float(buy_depth['asks'][0][0])
-            buy_bid_price_1 = float(buy_depth['bids'][0][0])
-            print(buy_depth)
-            # 计算买卖均价
-            buy_target_price = round(
-                (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
-            buy_bid_limit_price = round(
-                buy_ask_price_1 - pow(0.1, buy_price_precision), buy_price_precision)
-            buy_ask_limit_price = round(
-                buy_bid_price_1 + pow(0.1, buy_price_precision), buy_price_precision)
-            print('最优卖价buy', buy_ask_limit_price,
-                  '最优买价buy', buy_bid_limit_price)
-            # 判断当前卖一不高于预定价格，卖二卖一差距较小
-            if 1-buy_bid_price_1/buy_target_price >= 0.001 or buy_ask_price_1/buy_target_price-1 <= 0.001:
-                # 下单
-                quantity = round(
-                    round(12/buy_bid_limit_price/buy_stepSize) * buy_stepSize, buy_precision)
-                # buy_order = client.order_market_buy(symbol=buy_symbol,quantity=quantity)# 市价成交
-                for n in range(1,math.ceil(money/funds)):
-                    time.sleep(1)  # 下单间隔时间为1秒
+        for n in range(1, math.ceil(money/funds)):
+            time.sleep(1)  # 下单间隔时间为1秒
+            try:
+                buy_symbol_info = client.get_symbol_info(buy_symbol)
+                print(buy_symbol_info)
+                # 针对现货市场的精度设置
+                buy_price_precision = buy_symbol_info['filters'][0]['minPrice']
+                buy_price_precision = abs(
+                    int(math.log10(float(buy_price_precision))))
+                print(f"{buy_symbol}价格精度buy: {buy_price_precision}")
+                buy_precision = buy_symbol_info['filters'][1]['minQty']
+                buy_precision = abs(int(math.log10(float(buy_precision))))
+                print(f"{buy_symbol}数量精度buy: {buy_precision}")
+                buy_tickSize = float(buy_symbol_info['filters'][0]['tickSize'])
+                print(f"{buy_symbol}价格步长buy: {buy_tickSize}")
+                buy_stepSize = float(buy_symbol_info['filters'][1]['minQty'])
+                print(f"{buy_symbol}数量步长buy: {buy_stepSize}")
+                # 实时获取当前卖一和卖二价格
+                buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
+                buy_ask_price_1 = float(buy_depth['asks'][0][0])
+                buy_bid_price_1 = float(buy_depth['bids'][0][0])
+                print(buy_depth)
+                # 计算买卖均价
+                buy_target_price = round(
+                    (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
+                buy_bid_limit_price = round(
+                    buy_ask_price_1 - pow(0.1, buy_price_precision), buy_price_precision)
+                buy_ask_limit_price = round(
+                    buy_bid_price_1 + pow(0.1, buy_price_precision), buy_price_precision)
+                print('最优卖价buy', buy_ask_limit_price,
+                      '最优买价buy', buy_bid_limit_price)
+                # 判断当前卖一不高于预定价格，卖二卖一差距较小
+                if 1-buy_bid_price_1/buy_target_price >= 0.001 or buy_ask_price_1/buy_target_price-1 <= 0.001:
+                    # 下单
+                    quantity = round(
+                        round(12/buy_bid_limit_price/buy_stepSize) * buy_stepSize, buy_precision)
+                    # buy_order = client.order_market_buy(symbol=buy_symbol,quantity=quantity)# 市价成交
                     print(f"{name}，总{math.ceil(money/funds)}笔下单,第{n}笔下单")
                     buy_order = client.create_order(
                         symbol=buy_symbol,
@@ -150,11 +150,11 @@ def buy(symbols):
                         'sell_tickSize': None,
                         'status': 'pending',
                     })
-        except Exception as e:
-            # 错误次数加1，并输出错误信息
-            error_count += 1
-            print(f"buy发生bug: {e}")
-            continue
+            except Exception as e:
+                # 错误次数加1，并输出错误信息
+                error_count += 1
+                print(f"buy发生bug: {e}")
+                continue
     # 输出异常次数
     print(f"共出现{error_count}次异常")
     # 暂停1秒，等待成交
@@ -229,12 +229,14 @@ def sell(symbols):
             sell_bid_price_1 = float(sell_depth['bids'][0][0])
             print(sell_depth)
             # 计算买卖均价
-            sell_target_price = round((sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
+            sell_target_price = round(
+                (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
             sell_bid_limit_price = round(
                 sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
             sell_ask_limit_price = round(
                 sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-            print('最优卖价sell', sell_ask_limit_price,'最优买价sell', sell_bid_limit_price)
+            print('最优卖价sell', sell_ask_limit_price,
+                  '最优买价sell', sell_bid_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
