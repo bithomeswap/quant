@@ -25,10 +25,10 @@ def choose(choosename, name, df):
                 df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
             m = 0.001  # 设置手续费
             n = 6  # 设置持仓周期
-        if ('指数' in name) | ('行业' in name):
+        if ('指数' in name) | ('行业' in name):  # 板块反向选择（保留三个板块）
             df = df[(df['开盘收盘幅'] >= 0.005)].copy()  # 过滤可能产生大回撤的股票
             df = df.groupby(['日期'], group_keys=True).apply(
-                lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
+                lambda x: x.nlargest(5*rank, '昨日资金波动')).reset_index(drop=True)
             m = 0.005  # 设置手续费
             n = 6  # 设置持仓周期
         if ('COIN' in name):
@@ -36,7 +36,7 @@ def choose(choosename, name, df):
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
                 df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
                 df = df[(df['昨日资金波动_rank'] <= 0.8*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 2.4*value/rank)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 3.2*value/rank)].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
                 m = 0.003  # 设置手续费
@@ -51,9 +51,10 @@ def choose(choosename, name, df):
         if ('股票' in name):
             if ('分钟' not in name):
                 df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-                df = df[(df['开盘收盘幅'] <= 0.08) & (df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
+                df = df[(df['开盘收盘幅'] <= 0.08) & (
+                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+                df = df[(df['昨日资金波动_rank'] <= 0.04*value/rank)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.16*value/rank)].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
                 m = 0.005  # 设置手续费
