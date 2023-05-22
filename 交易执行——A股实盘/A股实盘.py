@@ -118,6 +118,7 @@ for name in names:
     try:
         codes = codes[codes['代码'].str.startswith(name)]
         codes['开盘'] = codes['今开']
+        codes['真实价格'] = codes['开盘']
         codes['收盘'] = codes['最新价']
         collection = db[f"股票实盘{name}"]
         latest = list(collection.find({"timestamp": timestamp}, {
