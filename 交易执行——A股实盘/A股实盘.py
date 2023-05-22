@@ -98,22 +98,6 @@ def tradelist(name):
                 'title': f'{name}', 'text': message}})
     except Exception as e:
         print(f"发生bug: {e}")
-    # 连接MongoDB数据库并创建新集合
-    new_collection = db[f'{name}指标']
-    new_collection.drop()  # 清空集合中的所有文档
-    # 获取当前.py文件的绝对路径
-    file_path = os.path.abspath(__file__)
-    # 获取当前.py文件所在目录的路径
-    dir_path = os.path.dirname(file_path)
-    # 获取当前.py文件所在目录的上两级目录的路径
-    dir_path = os.path.dirname(os.path.dirname(dir_path))
-    # 保存数据到指定目录
-    file_path = os.path.join(dir_path, f'{name}指标.csv')
-    data.to_csv(file_path, index=False)
-    print(f'{name}准备插入数据')
-    # new_collection.insert_many(data.to_dict('records'))
-    print(f'{name}数据插入结束')
-
 
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
