@@ -119,6 +119,7 @@ def buy(symbols):
                     round(12/buy_bid_limit_price/buy_stepSize) * buy_stepSize, buy_precision)
                 # buy_order = client.order_market_buy(symbol=buy_symbol,quantity=quantity)# 市价成交
                 for n in range(1,math.ceil(money/funds)):
+                    time.sleep(1)  # 下单间隔时间为1秒
                     print(f"{name}，总{math.ceil(money/funds)}笔下单,第{n}笔下单")
                     buy_order = client.create_order(
                         symbol=buy_symbol,
@@ -206,6 +207,7 @@ def sell(symbols):
         # 查询已下单且未卖出的订单
         sell_orders = list(collection_write.find())
         for sell_order in sell_orders:
+            time.sleep(1)  # 下单间隔时间为1秒
             sell_symbol = sell_order['symbol']
             sell_symbol_info = client.get_symbol_info(sell_symbol)
             print(sell_symbol_info)
@@ -227,14 +229,12 @@ def sell(symbols):
             sell_bid_price_1 = float(sell_depth['bids'][0][0])
             print(sell_depth)
             # 计算买卖均价
-            sell_target_price = round(
-                (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
+            sell_target_price = round((sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
             sell_bid_limit_price = round(
                 sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
             sell_ask_limit_price = round(
                 sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-            print('最优卖价sell', sell_ask_limit_price,
-                  '最优买价sell', sell_bid_limit_price)
+            print('最优卖价sell', sell_ask_limit_price,'最优买价sell', sell_bid_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                 # 如果订单尚未完全成交，则尝试卖出
