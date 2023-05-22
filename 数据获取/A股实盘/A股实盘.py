@@ -70,7 +70,7 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 
 
 def tradelist(name):
-    collection = db[f'{name}']
+    collection = db[f"股票实盘{name}"]
     # 获取数据并转换为DataFrame格式
     data = pd.DataFrame(list(collection.find()))
     print(f'{name}数据读取成功')
@@ -113,6 +113,7 @@ def tradelist(name):
     # new_collection.insert_many(data.to_dict('records'))
     print(f'{name}数据插入结束')
 
+
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
@@ -147,6 +148,7 @@ for name in names:
                 latest_timestamp).strftime('%Y-%m-%d')
         try:
             codes['timestamp'] = timestamp
+            codes['日期'] = start_date
             codes['代码'] = codes['代码'].apply(lambda x: float(x))
             codes["成交量"] = codes["成交量"].apply(lambda x: float(x))
             codes = codes.to_dict('records')
