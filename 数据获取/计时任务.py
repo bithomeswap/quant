@@ -14,7 +14,7 @@ def task():
 
 # 计算执行时间
 now = time.time()
-target_time = now + 3600  # 一小时后，3600秒
+target_time = now + 3000  # 一小时后，3600秒
 # 安排任务
 schedule.enterabs(target_time, 1, task, [])
 # 运行scheduler
