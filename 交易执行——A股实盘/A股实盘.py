@@ -9,7 +9,6 @@ import os
 import time
 import math
 
-
 def choose(name, df):
     code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
     rank = math.ceil(len(code)/100)
@@ -20,15 +19,12 @@ def choose(name, df):
     if ('股票' in name):
         if ('分钟' not in name):
             df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-            df = df[(df['开盘收盘幅'] <= 0.08) & (
-                df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+            df = df[(df['开盘收盘幅'] <= 0.08) & (df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
             df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
             df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
-            df = df.groupby(['日期'], group_keys=True).apply(
-                lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
+            df = df.groupby(['日期'], group_keys=True).apply(lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
         print(len(df), name)
     return df
-
 
 def technology(df):  # 定义计算技术指标的函数
     try:
@@ -85,7 +81,7 @@ def tradelist(name):
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
         df = df[df[f'日期'] == last_day].copy()
-        df = choose('交易', name, df)
+        df= choose('交易', name, df)
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
@@ -112,6 +108,7 @@ def tradelist(name):
     print(f'{name}准备插入数据')
     # new_collection.insert_many(data.to_dict('records'))
     print(f'{name}数据插入结束')
+
 
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
