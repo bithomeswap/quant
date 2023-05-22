@@ -10,23 +10,24 @@ import time
 import math
 
 
-def choose(name, df):
-    code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
-    rank = math.ceil(len(code)/100)
-    value = math.log(len(code))
-    print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
-    if rank < 5:
-        print(name, "标的数量过少,不适合大模型策略")
-    if ('股票' in name):
-        if ('分钟' not in name):
-            df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-            df = df[(df['开盘收盘幅'] <= 0.08) & (
-                df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-            df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
-            df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
-            df = df.groupby(['日期'], group_keys=True).apply(
-                lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
-        print(len(df), name)
+def choose(choosename, name, df):
+    if choosename == '交易':
+        code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
+        rank = math.ceil(len(code)/100)
+        value = math.log(len(code))
+        print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
+        if rank < 5:
+            print(name, "标的数量过少,不适合大模型策略")
+        if ('股票' in name):
+            if ('分钟' not in name):
+                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
+                df = df[(df['开盘收盘幅'] <= 0.08) & (
+                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+                df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
+                df = df.groupby(['日期'], group_keys=True).apply(
+                    lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
+            print(len(df), name)
     return df
 
 
