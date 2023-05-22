@@ -1,6 +1,3 @@
-import os
-import pandas as pd
-import choose
 工作场景：
 你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，同时你的代码当中很少有bug存在
 
@@ -13,212 +10,61 @@ import choose
 1.可以但是不限制于使用梯度下降方法，寻找'df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= 2w*value/rank)].copy()'的最优值
 2.给我能进行参数调优，并且观察到不同参数下收益情况的代码
+3.希望将每一次的结果都保存为单独的csv方便我查询
+零、参考链接
+https://github.com/bithomeswap/quant/tree/master/
+下数据获取文件夹中的choose.py、指标现货多头.py两个文件，代码逻辑借鉴这两个文件中的逻辑，访问的数据库也不变
 一、参考代码
-import math
-
-
-def technology(df):  # 定义计算技术指标的函数
-    try:
-        for n in range(1, 16):
-            df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
-            df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
-    except Exception as e:
-        print(f"发生bug: {e}")
-    return df
-
-
-def choose(choosename, name, df):
-    if choosename == '交易':
-        code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
-        rank = math.ceil(len(code)/100)
-        value = math.log(len(code))
-        print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
-        if rank < 5:
-            print(name, "标的数量过少,不适合大模型策略")
-        if ('股票' not in name) & ('COIN' not in name) & ('指数' not in name) & ('行业' not in name):
-            for n in (2, 9):
-                df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
-            m = 0.001  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('指数' in name) | ('行业' in name):
-            df = df[(df['开盘收盘幅'] >= 0.005)].copy()  # 过滤可能产生大回撤的股票
-            df = df.groupby(['日期'], group_keys=True).apply(lambda x: x.nlargest(rank, '昨日资金波动_rank')).reset_index(drop=True)
-            m = 0.005  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('COIN' in name):
-            if ('分钟' not in name):
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
-                df = df[(df['昨日资金波动_rank'] <= 0.8*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 3.2*value/rank)].copy()
-                df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
-                m = 0.003  # 设置手续费
+数据读取代码如下，其中for循环之后cash_balance的最终值越大，越符合我们的要求
+# 获取当前.py文件的绝对路径
+file_path = os.path.abspath(__file__)
+# 获取当前.py文件所在目录的路径
+dir_path = os.path.dirname(file_path)
+# 获取当前.py文件所在目录的上两级目录的路径
+dir_path = os.path.dirname(os.path.dirname(dir_path))
+files = os.listdir(dir_path)
+for file in files:
+    for filename in names:
+        if (filename in file) & ('指标' in file) & ('排名' not in file) & ('细节' not in file) & ('分钟' not in file):
+            try:
+                # 获取文件名和扩展名
+                name, extension = os.path.splitext(file)
+                path = os.path.join(dir_path, f'{name}.csv')
+                print(name)
+                df = pd.read_csv(path)
+                df = df.sort_values(by='日期')  # 以日期列为索引,避免计算错误
+                dates = df['日期'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
+                df = df.groupby(['代码'], group_keys=False).apply(
+                    choose.technology)
+                # 去掉噪音数据
+                for n in range(1, 9):
+                    df = df[df[f'{n}日后总涨跌幅（未来函数）'] <= 3*(1+n*0.2)]
+                m = 0.001  # 设置手续费
                 n = 6  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
-                m = 0.0000  # 设置手续费
-                n = 6  # 设置持仓周期
-        if ('股票' in name):
-            if ('分钟' not in name):
-                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-                df = df[(df['开盘收盘幅'] <= 0.08) & (
-                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= 0.04*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 0.16*value/rank)].copy()
-                df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
-                m = 0.005  # 设置手续费
-                n = 15  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
-                for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
-                m = 0.0000  # 设置手续费
-                n = 15  # 设置持仓周期
-        print(len(df), name)
-    if choosename == '分布':
-        if ('股票' not in name) & ('COIN' not in name) & ('指数' not in name) & ('行业' not in name):
-            m = 0.001  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('指数' in name) | ('行业' in name):
-            df = df[(df['开盘收盘幅'] >= 0.005)].copy()  # 过滤可能产生大回撤的股票
-            m = 0.005  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('COIN' in name):
-            if ('分钟' not in name):
-                df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                m = 0.003  # 设置手续费
-                n = 6  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                m = 0.0000  # 设置手续费
-                n = 6  # 设置持仓周期
-        if ('股票' in name):
-            n = 6  # 设置持仓周期
-            if ('分钟' not in name):
-                df = df[(df['开盘收盘幅'] <= 0.08) & (
-                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-                m = 0.005  # 设置手续费
-                n = 15  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
-                m = 0.0000  # 设置手续费
-                n = 15  # 设置持仓周期
-        print(name, n)
-        # 对目标列进行手续费扣除
-        df[f'{n}日后总涨跌幅（未来函数）'] = (df[f'{n}日后总涨跌幅（未来函数）']+1)*(1-m)-1
-    return df, m, n
-
-import math
-
-
-def technology(df):  # 定义计算技术指标的函数
-    try:
-        for n in range(1, 16):
-            df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
-            df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
-    except Exception as e:
-        print(f"发生bug: {e}")
-    return df
-
-
-def choose(choosename, name, df):
-    if choosename == '交易':
-        code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
-        rank = math.ceil(len(code)/100)
-        value = math.log(len(code))
-        print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
-        if rank < 5:
-            print(name, "标的数量过少,不适合大模型策略")
-        if ('股票' not in name) & ('COIN' not in name) & ('指数' not in name) & ('行业' not in name):
-            for n in (2, 9):
-                df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
-            m = 0.001  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('指数' in name) | ('行业' in name):
-            df = df[(df['开盘收盘幅'] >= 0.005)].copy()  # 过滤可能产生大回撤的股票
-            df = df.groupby(['日期'], group_keys=True).apply(
-                lambda x: x.nlargest(rank, '昨日资金波动_rank')).reset_index(drop=True)
-            m = 0.005  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('COIN' in name):
-            if ('分钟' not in name):
-                w = 0.8  # 权重系数
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
-                df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 4*w*value/rank)].copy()
-                df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
-                m = 0.003  # 设置手续费
-                n = 6  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
-                m = 0.0000  # 设置手续费
-                n = 6  # 设置持仓周期
-        if ('股票' in name):
-            if ('分钟' not in name):
-                w=0.04
-                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-                df = df[(df['开盘收盘幅'] <= 0.08) & (
-                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 4*w*value/rank)].copy()
-                df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
-                m = 0.005  # 设置手续费
-                n = 15  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
-                for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
-                m = 0.0000  # 设置手续费
-                n = 15  # 设置持仓周期
-        print(len(df), name)
-    if choosename == '分布':
-        if ('股票' not in name) & ('COIN' not in name) & ('指数' not in name) & ('行业' not in name):
-            m = 0.001  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('指数' in name) | ('行业' in name):
-            df = df[(df['开盘收盘幅'] >= 0.005)].copy()  # 过滤可能产生大回撤的股票
-            m = 0.005  # 设置手续费
-            n = 6  # 设置持仓周期
-        if ('COIN' in name):
-            if ('分钟' not in name):
-                df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                m = 0.003  # 设置手续费
-                n = 6  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
-                m = 0.0000  # 设置手续费
-                n = 6  # 设置持仓周期
-        if ('股票' in name):
-            n = 6  # 设置持仓周期
-            if ('分钟' not in name):
-                df = df[(df['开盘收盘幅'] <= 0.08) & (
-                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-                m = 0.005  # 设置手续费
-                n = 15  # 设置持仓周期
-            if ('分钟' in name):
-                df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
-                m = 0.0000  # 设置手续费
-                n = 15  # 设置持仓周期
-        print(name, n)
-        # 对目标列进行手续费扣除
-        df[f'{n}日后总涨跌幅（未来函数）'] = (df[f'{n}日后总涨跌幅（未来函数）']+1)*(1-m)-1
-    return df, m, n
+                df, m, n = choose.choose('交易', name, df)
+                df.to_csv(f'{name}交易细节.csv', index=False)  # 输出交易细节
+                if updown == '盘中波动':
+                    result_df = pd.DataFrame({})
+                    cash_balance = 1  # 初始资金设置为1元
+                    daily_cash_balance = {}  # 用于记录每日的资金余额
+                    result = []
+                    for date in dates:
+                        day = dates.index(date)
+                        days = dates[day-n:day]
+                        # 取从n天前到当天的数据
+                        daydf = df.loc[df['日期'].isin(days)]
+                        daydf = daydf.fillna(1)
+                        daydf = daydf.sort_values(by='日期')    # 以日期列为索引,避免计算错误
+                        daydates = daydf['日期'].copy(
+                        ).drop_duplicates().tolist()  # 获取所有不重复日期
+                        daily_ret = 0
+                        m = m/n  # 一天手续费均摊到n天就是
+                        if daydates:
+                            for i in range(0, len(daydates)-1):
+                                ret = daydf[daydf['日期'] == daydates[i]
+                                            ][f'{i+1}日后当日涨跌（未来函数）'].mean()*(1-m)-1
+                                daily_ret += ret/n
+                        cash_balance *= (1 + daily_ret)
+                        daily_cash_balance[date] = cash_balance
+                        result.append({'日期': date, f'盘中波动': cash_balance})
+                    result_df = pd.concat([result_df, pd.DataFrame(result)])
