@@ -9,22 +9,27 @@ import os
 import time
 import math
 
-def choose(name, df):
-    code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
-    rank = math.ceil(len(code)/100)
-    value = math.log(len(code))
-    print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
-    if rank < 5:
-        print(name, "标的数量过少,不适合大模型策略")
-    if ('股票' in name):
-        if ('分钟' not in name):
-            df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-            df = df[(df['开盘收盘幅'] <= 0.08) & (df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-            df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
-            df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
-            df = df.groupby(['日期'], group_keys=True).apply(lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
-        print(len(df), name)
+
+def choose(choosename, name, df):
+    if choosename == '交易':
+        code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
+        rank = math.ceil(len(code)/100)
+        value = math.log(len(code))
+        print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
+        if rank < 5:
+            print(name, "标的数量过少,不适合大模型策略")
+        if ('股票' in name):
+            if ('分钟' not in name):
+                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
+                df = df[(df['开盘收盘幅'] <= 0.08) & (
+                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+                df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
+                df = df.groupby(['日期'], group_keys=True).apply(
+                    lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
+            print(len(df), name)
     return df
+
 
 def technology(df):  # 定义计算技术指标的函数
     try:
@@ -66,7 +71,7 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 
 
 def tradelist(name):
-    collection = db[f'{name}']
+    collection = db[f"股票实盘{name}"]
     # 获取数据并转换为DataFrame格式
     data = pd.DataFrame(list(collection.find()))
     print(f'{name}数据读取成功')
@@ -81,7 +86,7 @@ def tradelist(name):
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
         df = df[df[f'日期'] == last_day].copy()
-        df= choose('交易', name, df)
+        df = choose('交易', name, df)
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
@@ -144,6 +149,7 @@ for name in names:
                 latest_timestamp).strftime('%Y-%m-%d')
         try:
             codes['timestamp'] = timestamp
+            codes['日期'] = start_date
             codes['代码'] = codes['代码'].apply(lambda x: float(x))
             codes["成交量"] = codes["成交量"].apply(lambda x: float(x))
             codes = codes.to_dict('records')
