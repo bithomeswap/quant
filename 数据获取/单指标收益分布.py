@@ -5,7 +5,7 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-names = ['COIN','股票','指数','行业']
+names = ['COIN', '股票', '指数', '行业']
 
 mubiao = f'开盘收盘幅'
 a = 10  # 将数据划分成a个等距离的区间
@@ -18,7 +18,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ('指标' in file) & ('排名' not in file)& ('细节' not in file):
+        if (filename in file) & ('指标' in file) & ('排名' not in file) & ('细节' not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)

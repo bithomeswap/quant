@@ -108,3 +108,4 @@ for name in names:
             tradelist(name)
         except Exception as e:
             print(f"发生bug: {e}")
+

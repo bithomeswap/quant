@@ -83,10 +83,11 @@ def handle_data(context, data):
         # 如果符合条件，则将股票加入买入列表中
         buy_list.append(stock)
     print(buy_list)
-    # 卖出持仓超过15个交易日的股票
+    # 卖出持仓超过15个交易日
     for stock in context.portfolio.positions:
         held_days = (today - context.portfolio.positions[stock].init_time.date()).days
         price = attribute_history(stock, 2, '1d', ['open', 'close'], df=False)
+        increase = (price['open'][0] - price['close'][1]) / price['close'][1]
         if held_days >= 15:
             order_target_value(stock, 0)
             log.info("Selling %s", stock)
