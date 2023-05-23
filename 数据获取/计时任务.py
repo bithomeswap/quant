@@ -9,7 +9,7 @@ schedule = sched.scheduler(time.time, time.sleep)
 def task():
     print("延迟执行的任务")
     # 任务执行结束后，调用另一个Python文件中的程序
-    subprocess.call(['python', "数据获取\\tradelist.py"])
+    subprocess.call(['python', "数据获取\\现货指标计算.py"])
 
 
 # 计算执行时间
