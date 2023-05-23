@@ -3,19 +3,24 @@
 同时你的代码当中很少有bug存在。此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
 
 注意事项：
-只使用聚宽API文件当中提供的函数，不要使用其他任何方法，初始资金设置为一百万
+只使用聚宽API文件当中提供的函数，不要使用其他任何方法，初始资金设置为一百万，给我完整版的聚宽代码
 
 工作任务:
 1.在聚宽平台上进行回测（代码运行在聚宽回测平台上即可）；
-2.回测标的为所有沪深300股票；
-3.在数据初始化的时候计算每只股票的10、20、30、40、50、60、70、80日的开盘价简单移动平均线，如果当日开盘价除以这个移动平均线的值均大于0.99则列入当日的股票观察池；
-4.每天选取观察池中开盘价最低的5只股票；
-5.如果这5只股票当中，有当日开盘低于昨日收盘的或者开盘即涨停的则不购买；
-6.以上指标都满足要求后，才买入股票，否则当天不买入股票；
-7.股票以当日开盘买入，持有十二天后卖出
-
-特别提醒：
-聚宽运算过慢，建议在初始化的时候把数据统计计算好，执行的时候直接调用数据就好
+2.回测标的为所有A股股票（即以000、001、002、600、601、603、605开头的股票）；
+3.在数据初始化的时候获取每只股票昨日涨跌幅、昨日振幅、昨日成交额，并计算其昨日资金贡献=昨日涨跌幅/昨日成交额，昨日资金波动=昨日振幅/昨日成交额，这两个指标必须保留至少18位小数以免精度丢失。
+4.每日获取当天可以交易的股票数量len(code)，并定义因变量rank = math.ceil(len(code)/100)，value = math.log(len(code))；
+5.分别对昨日资金贡献和昨日资金波动从大到小排名，且将排名位次除以当日总标的数量获得昨日资金贡献_rank、昨日资金波动_rank
+w = 0.04
+v = 0.16
+df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
+df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
+保留昨日资金贡献_rank、昨日资金波动_rank符合以上数据的股票。
+6.过滤掉当日交易价格低于4元的股票，过滤掉今天开盘价除以昨日收盘价低于0.99的股票和今天开盘价除以昨日收盘价高于1.08的股票
+6.过滤掉当日流通市值占总市值比例低于百分之九十五的股票，过滤掉当天市净率低于3的股票。
+8.取符合条件的股票当中，昨日资金波动_rank最小的股票（也就是昨日资金波动最大的股票）
+7.以上指标都满足要求后，才在买入股票，否则当天不买入股票；
+8.股票以当日开盘买入，持有十五天后卖出
 
 聚宽API：
 https://www.joinquant.com/help/api/help#name:api
@@ -78,16 +83,13 @@ def handle_data(context, data):
         # 如果符合条件，则将股票加入买入列表中
         buy_list.append(stock)
     print(buy_list)
-    
-    # 卖出持仓超过6个交易日且当天开盘涨幅未超过百分之8的股票
+    # 卖出持仓超过15个交易日的股票
     for stock in context.portfolio.positions:
         held_days = (today - context.portfolio.positions[stock].init_time.date()).days
         price = attribute_history(stock, 2, '1d', ['open', 'close'], df=False)
-        increase = (price['open'][0] - price['close'][1]) / price['close'][1]
-        if held_days >= 6 and increase <= 0.08:
+        if held_days >= 15:
             order_target_value(stock, 0)
             log.info("Selling %s", stock)
-            
     # 如果有符合条件的股票，则平均买入
     if len(buy_list) > 0:
         target_value = context.portfolio.portfolio_value * 0.98
@@ -95,5 +97,3 @@ def handle_data(context, data):
         for stock in buy_list:
             order_target_value(stock, value_per_stock)
             log.info("Buying %s", stock)
-            
-

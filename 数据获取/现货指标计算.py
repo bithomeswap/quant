@@ -54,7 +54,7 @@ def tradelist(name):
     # 分组并计算指标排名
     data = data.groupby(['日期'], group_keys=False).apply(rank)
     try:
-        # df = data.sort_values(by='日期')
+        df = data.sort_values(by='日期')
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量

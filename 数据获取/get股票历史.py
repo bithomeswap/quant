@@ -10,10 +10,10 @@ client = MongoClient(
 db = client['wth000']
 names = [('000', '001', '002', '600', '601', '603', '605')]
 # 获取两年的历史数据
-for n in range(2014, 2018):
+for n in range(2014, 2020):
     start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y%m%d")
     end_date = datetime.datetime(datetime.datetime.strptime(
-        start_date, "%Y%m%d").year + 2, int(1), int(1)).strftime("%Y%m%d")
+        start_date, "%Y%m%d").year + 1, int(1), int(1)).strftime("%Y%m%d")
     # 从akshare获取A股主板股票的代码和名称
     codes = ak.stock_zh_a_spot_em()
     # 过滤掉ST股票

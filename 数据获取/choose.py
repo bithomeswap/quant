@@ -13,6 +13,7 @@ def technology(df):  # 定义计算技术指标的函数
 
 def choose(choosename, name, df):
     if choosename == '交易':
+        # code = df['代码'].copy().drop_duplicates().tolist()  # 获取总标的数量，包含一定的未来函数
         code = df[df['日期'] == df['日期'].min()]['代码']  # 获取首日标的数量，杜绝未来函数
         rank = math.ceil(len(code)/100)
         value = math.log(len(code))
@@ -60,9 +61,9 @@ def choose(choosename, name, df):
                 df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
+                    lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
                 m = 0.005  # 设置手续费
-                n = 15  # 设置持仓周期
+                n = 10  # 设置持仓周期
             if ('分钟' in name):
                 df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
                 for n in (2, 9):

@@ -4,8 +4,8 @@ import os
 names = ['COIN', '股票', '指数', '行业']
 # names = ['指数', '行业']
 
-updown = '盘中波动'  # 计算当日理论上的盘中每日回撤
-# updown = '资产收益'  # 计算每份资金的资产收益率
+# updown = '盘中波动'  # 计算当日理论上的盘中每日回撤
+updown = '资产收益'  # 计算每份资金的资产收益率
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -79,7 +79,7 @@ for file in files:
                         daily_cash_balance = {}  # 用于记录每日的资金余额
                         result = []
                         # 每份资金的收益率
-                        for date, group in daydf.groupby(['日期']):
+                        for date, group in daydf.groupby('日期'):
                             if group.empty:  # 如果当日没有入选标的，则收益率为0
                                 daily_return = 0
                             else:
@@ -90,8 +90,8 @@ for file in files:
                             daily_cash_balance[date] = cash_balance
                             result.append(
                                 {'日期': date, f'第{i}份资金收益率': cash_balance})
-                        result_df = pd.concat(
-                            [result_df, pd.DataFrame(result)])
+                        result_df = pd.concat([result_df,  pd.DataFrame(result).fillna(1)])
+                        
                     # 新建涨跌分布文件夹在上级菜单下，并保存结果
                     parent_path = os.path.abspath('.')
                     dir_name = '资产变动'
