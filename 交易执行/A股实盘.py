@@ -12,19 +12,21 @@ import math
 
 def choose(choosename, name, df):
     if choosename == '交易':
-        code = df['代码'].copy().drop_duplicates().tolist()  # 获取标的数量
+        code = df[df['日期'] == df['日期'].min()]['代码']  # 获取首日标的数量，杜绝未来函数
         rank = math.ceil(len(code)/100)
         value = math.log(len(code))
-        print(name, '数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
+        print(name, '板块第一天的标的数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
         if rank < 5:
             print(name, "标的数量过少,不适合大模型策略")
         if ('股票' in name):
             if ('分钟' not in name):
+                w = 0.04
+                v = 0.16
                 df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
                 df = df[(df['开盘收盘幅'] <= 0.08) & (
                     df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= 0.1*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= 0.3*value/rank)].copy()
+                df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
             print(len(df), name)
@@ -42,7 +44,8 @@ def technology(df):  # 定义计算技术指标的函数
         # 计算涨跌幅
         df['涨跌幅'] = df['收盘']/df['开盘'].copy().shift(1) - 1
         # 计算昨日振幅
-        df['昨日振幅'] = (df['最高'].copy().shift(1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
+        df['昨日振幅'] = (df['最高'].copy().shift(
+            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
         # 计算昨日涨跌
@@ -79,7 +82,6 @@ def tradelist(name):
     # 分组并计算指标排名
     data = data.groupby(['日期'], group_keys=False).apply(rank)
     try:
-        # 今日筛选股票推送(多头)
         df = data.sort_values(by='日期')
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
@@ -99,6 +101,7 @@ def tradelist(name):
                 'title': f'{name}', 'text': message}})
     except Exception as e:
         print(f"发生bug: {e}")
+
 
 client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
