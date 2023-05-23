@@ -256,22 +256,22 @@ def sell(symbols):
                             timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                         )
                         print("卖出信息sell：", last_order)
-                    # 如果卖出成功，就更新数据集合的状态为已平仓
-                    if last_order['status'] == 'FILLED':
-                        print(sell_order, '卖出成功,卖出的orderid为：', last_order)
-                        collection_write.update_one(
-                            {'orderId': sell_order['orderId']},
-                            {'$set': {
-                                'sell_time': int(time.time()),
-                                'sell_quantity': float(last_order['price']),
-                                'sell_price': float(last_order['price']),
-                                'sell_precision': int(sell_precision),
-                                'sell_price_precision': int(sell_price_precision),
-                                'sell_tickSize': float(sell_tickSize),
-                                'sell_stepSize': float(sell_stepSize),
-                                'status': 'end',
-                            }}
-                        )
+                        # 如果卖出成功，就更新数据集合的状态为已平仓
+                        if last_order['status'] == 'FILLED':
+                            print(sell_order, '卖出成功,卖出的orderid为：', last_order)
+                            collection_write.update_one(
+                                {'orderId': sell_order['orderId']},
+                                {'$set': {
+                                    'sell_time': int(time.time()),
+                                    'sell_quantity': float(last_order['price']),
+                                    'sell_price': float(last_order['price']),
+                                    'sell_precision': int(sell_precision),
+                                    'sell_price_precision': int(sell_price_precision),
+                                    'sell_tickSize': float(sell_tickSize),
+                                    'sell_stepSize': float(sell_stepSize),
+                                    'status': 'end',
+                                }}
+                            )
                     else:
                         print(sell_order, '卖出失败sell')
     except Exception as e:
