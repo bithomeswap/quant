@@ -54,8 +54,7 @@ def tradelist(name):
     # 分组并计算指标排名
     data = data.groupby(['日期'], group_keys=False).apply(rank)
     try:
-        # 今日筛选股票推送(多头)
-        df = data.sort_values(by='日期')
+        # df = data.sort_values(by='日期')
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
@@ -100,12 +99,12 @@ for name in names:
     if ('指标' not in name) & ('order' not in name) & ('js' not in name):
         # if ('分钟' not in name):
         # if ('分钟' in name):
-            # if ('行业' in name) | ('指数' in name):
-            # if ('股票' in name):
-                # if ('COIN' in name):
-                # if ('历史' in name):
-                print(f'当前计算{name}')
-                try:
-                    tradelist(name)
-                except Exception as e:
-                    print(f"发生bug: {e}")
+        # if ('行业' in name) | ('指数' in name):
+        # if ('股票' in name):
+        # if ('COIN' in name):
+        # if ('历史' in name):
+        print(f'当前计算{name}')
+        try:
+            tradelist(name)
+        except Exception as e:
+            print(f"发生bug: {e}")
