@@ -140,14 +140,14 @@ def buy(symbols):
                         'buy_precision': int(buy_precision),
                         'buy_price_precision': int(buy_price_precision),
                         'buy_tickSize': float(buy_tickSize),
-                        'buy_tickSize': float(buy_stepSize),
+                        'buy_stepSize': float(buy_stepSize),
                         'sell_time': None,
                         'sell_quantity': None,
                         'sell_price': None,
                         'sell_precision': None,
                         'sell_price_precision': None,
                         'sell_tickSize': None,
-                        'sell_tickSize': None,
+                        'sell_stepSize': None,
                         'status': 'pending',
                     })
             except Exception as e:
@@ -247,27 +247,28 @@ def sell(symbols):
                     # 如果卖出时间已经到了，就执行卖出操作
                     if int(time.time()) >= sell_time:
                         # 卖出订单
-                        sell_order = client.create_order(
+                        last_order = client.create_order(
                             symbol=sell_symbol,
                             side=Client.SIDE_SELL,
                             type=Client.ORDER_TYPE_LIMIT,
                             quantity=float(sell_order['buy_quantity']),
                             price=sell_bid_price_1,
-                            timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                            timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                         )
-                        print("卖出信息sell：", sell_order)
+                        print("卖出信息sell：", last_order)
                     # 如果卖出成功，就更新数据集合的状态为已平仓
-                    if sell_order['status'] == 'FILLED':
-                        print(sell_order, '卖出成功')
+                    if last_order['status'] == 'FILLED':
+                        print(sell_order, '卖出成功,卖出的orderid为：', last_order)
                         collection_write.update_one(
                             {'orderId': sell_order['orderId']},
                             {'$set': {
-                                'sell_quantity': float(sell_order['price']),
-                                'sell_price': float(sell_order['price']),
+                                'sell_time': int(time.time()),
+                                'sell_quantity': float(last_order['price']),
+                                'sell_price': float(last_order['price']),
                                 'sell_precision': int(sell_precision),
                                 'sell_price_precision': int(sell_price_precision),
                                 'sell_tickSize': float(sell_tickSize),
-                                'sell_tickSize': float(sell_stepSize),
+                                'sell_stepSize': float(sell_stepSize),
                                 'status': 'end',
                             }}
                         )
