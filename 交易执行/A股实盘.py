@@ -87,6 +87,8 @@ def tradelist(name):
         # 计算总共统计的股票数量
         df = df[df[f'日期'] == last_day].copy()
         df = choose('交易', name, df)
+        print(df)
+
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
@@ -108,73 +110,73 @@ start_date = datetime.datetime.now().strftime('%Y-%m-%d')
 timestamp = datetime.datetime.strptime(
     start_date, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()
 # 从akshare获取A股主板股票的代码和名称
-codes = ak.stock_zh_a_spot_em()
-# 过滤掉ST股票
-codes = codes[~codes['名称'].str.contains('ST')]
-# 过滤掉退市股票
-codes = codes[~codes['名称'].str.contains('退')]
+# codes = ak.stock_zh_a_spot_em()
+# # 过滤掉ST股票
+# codes = codes[~codes['名称'].str.contains('ST')]
+# # 过滤掉退市股票
+# codes = codes[~codes['名称'].str.contains('退')]
 
-for name in names:
-    try:
-        codes = codes[codes['代码'].str.startswith(name)]
-        codes['开盘'] = codes['今开']
-        codes['真实价格'] = codes['开盘']
-        codes['收盘'] = codes['最新价']
-        collection = db[f"股票实盘{name}"]
-        latest = list(collection.find({"timestamp": timestamp}, {
-                      "timestamp": 1}).sort("timestamp", -1).limit(1))
-        if len(latest) == 0:
-            upsert_docs = True
-            start_date_query = start_date
-            print(latest)
-        else:
-            upsert_docs = False
-            latest_timestamp = latest[0]["timestamp"]
-            start_date_query = datetime.datetime.fromtimestamp(
-                latest_timestamp).strftime('%Y-%m-%d')
-        try:
-            codes['timestamp'] = timestamp
-            codes['日期'] = start_date
-            codes['代码'] = codes['代码'].apply(lambda x: float(x))
-            codes["成交量"] = codes["成交量"].apply(lambda x: float(x))
-            codes = codes.to_dict('records')
-            if upsert_docs:
-                print(f"新增数据")
-                try:
-                    collection.insert_many(codes)
-                except Exception as e:
-                    pass
-            else:
-                bulk_insert = []
-                for doc in codes:
-                    print(doc["代码"], '数据更新')
-                    if doc["timestamp"] > latest_timestamp:
-                        # 否则，加入插入列表
-                        bulk_insert.append(doc)
-                    if doc["timestamp"] == float(latest_timestamp):
-                        try:
-                            collection.update_many({"代码": doc["代码"], "timestamp": float(timestamp)}, {
-                                                   "$set": doc}, upsert=True)
-                        except Exception as e:
-                            pass
-                # 执行批量插入操作
-                if bulk_insert:
-                    try:
-                        collection.insert_many(bulk_insert)
-                    except Exception as e:
-                        pass
-        except Exception as e:
-            print(e)
-            print('任务已经完成')
-        limit = 50000
-        if collection.count_documents({}) >= limit:
-            oldest_data = collection.find().sort([('日期', 1)]).limit(
-                collection.count_documents({})-limit)
-            ids_to_delete = [data['_id'] for data in oldest_data]
-            collection.delete_many({'_id': {'$in': ids_to_delete}})
-        print('数据清理成功')
-    except Exception as e:
-        print(e)
+# for name in names:
+#     try:
+#         codes = codes[codes['代码'].str.startswith(name)]
+#         codes['开盘'] = codes['今开']
+#         codes['真实价格'] = codes['开盘']
+#         codes['收盘'] = codes['最新价']
+#         collection = db[f"股票实盘{name}"]
+#         latest = list(collection.find({"timestamp": timestamp}, {
+#                       "timestamp": 1}).sort("timestamp", -1).limit(1))
+#         if len(latest) == 0:
+#             upsert_docs = True
+#             start_date_query = start_date
+#             print(latest)
+#         else:
+#             upsert_docs = False
+#             latest_timestamp = latest[0]["timestamp"]
+#             start_date_query = datetime.datetime.fromtimestamp(
+#                 latest_timestamp).strftime('%Y-%m-%d')
+#         try:
+#             codes['timestamp'] = timestamp
+#             codes['日期'] = start_date
+#             codes['代码'] = codes['代码'].apply(lambda x: float(x))
+#             codes["成交量"] = codes["成交量"].apply(lambda x: float(x))
+#             codes = codes.to_dict('records')
+#             if upsert_docs:
+#                 print(f"新增数据")
+#                 try:
+#                     collection.insert_many(codes)
+#                 except Exception as e:
+#                     pass
+#             else:
+#                 bulk_insert = []
+#                 for doc in codes:
+#                     print(doc["代码"], '数据更新')
+#                     if doc["timestamp"] > latest_timestamp:
+#                         # 否则，加入插入列表
+#                         bulk_insert.append(doc)
+#                     if doc["timestamp"] == float(latest_timestamp):
+#                         try:
+#                             collection.update_many({"代码": doc["代码"], "timestamp": float(timestamp)}, {
+#                                                    "$set": doc}, upsert=True)
+#                         except Exception as e:
+#                             pass
+#                 # 执行批量插入操作
+#                 if bulk_insert:
+#                     try:
+#                         collection.insert_many(bulk_insert)
+#                     except Exception as e:
+#                         pass
+#         except Exception as e:
+#             print(e)
+#             print('任务已经完成')
+#         limit = 50000
+#         if collection.count_documents({}) >= limit:
+#             oldest_data = collection.find().sort([('日期', 1)]).limit(
+#                 collection.count_documents({})-limit)
+#             ids_to_delete = [data['_id'] for data in oldest_data]
+#             collection.delete_many({'_id': {'$in': ids_to_delete}})
+#         print('数据清理成功')
+#     except Exception as e:
+#         print(e)
 
 time.sleep(1)
 for name in names:
