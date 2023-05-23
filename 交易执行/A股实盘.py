@@ -42,7 +42,7 @@ def technology(df):  # 定义计算技术指标的函数
         # 定义开盘收盘幅
         df['开盘收盘幅'] = df['开盘']/df['收盘'].copy().shift(1) - 1
         # 计算涨跌幅
-        df['涨跌幅'] = df['收盘']/df['开盘'].copy().shift(1) - 1
+        df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
         # 计算昨日振幅
         df['昨日振幅'] = (df['最高'].copy().shift(
             1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
@@ -75,21 +75,20 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 def tradelist(name):
     collection = db[f"股票实盘{name}"]
     # 获取数据并转换为DataFrame格式
-    data = pd.DataFrame(list(collection.find()))
+    df = pd.DataFrame(list(collection.find()))
     print(f'{name}数据读取成功')
     # 按照“代码”列进行分组并计算技术指标
-    data = data.groupby(['代码'], group_keys=False).apply(technology)
+    df = df.groupby(['代码'], group_keys=False).apply(technology)
     # 分组并计算指标排名
-    data = data.groupby(['日期'], group_keys=False).apply(rank)
+    df = df.groupby(['日期'], group_keys=False).apply(rank)
     try:
-        df = data.sort_values(by='日期')
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
         df = df[df[f'日期'] == last_day].copy()
         df = choose('交易', name, df)
+        df.to_csv("1.csv")
         print(df)
-
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
