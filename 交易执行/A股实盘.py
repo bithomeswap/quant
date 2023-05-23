@@ -33,7 +33,7 @@ def choose(choosename, name, df):
 
 def technology(df):  # 定义计算技术指标的函数
     try:
-        df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+        # df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         # 删除最高价和最低价为负值的数据
         df.drop(df[(df['最高'] < 0) | (df['最低'] < 0)].index, inplace=True)
         df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
