@@ -188,14 +188,12 @@ def sell(symbols):
             # 遍历已完成的订单
             for all_order in all_orders:
                 all_order_id = all_order['orderId']
-                all_price = float(all_order['price'])
-                all_quantity = float(all_order['executedQty'])
                 # 已成交订单
                 collection_write.update_one(
                     {'orderId': all_order_id},
                     {'$set': {
-                        'buy_price': float(all_price),
-                        'buy_quantity': float(all_quantity),
+                        'buy_price': float(all_order['price']),
+                        'buy_quantity': float(all_order['executedQty']),
                         'status': all_order['status'],
                     }}
                 )
@@ -243,7 +241,7 @@ def sell(symbols):
                 if (sell_order['status'] != 'end') & (sell_order['buy_quantity'] != 0) & (sell_order['buy_quantity'] != sell_order['sell_quantity']):
                     # 计算卖出时间（+n,意思就是n秒之后卖出）
                     # sell_time = sell_order['time'] + 86400
-                    sell_time = sell_order['time'] + 3600
+                    sell_time = sell_order['time'] + 60
                     # 如果卖出时间已经到了，就执行卖出操作
                     if int(time.time()) >= sell_time:
                         # 卖出订单
@@ -263,7 +261,7 @@ def sell(symbols):
                                 {'orderId': sell_order['orderId']},
                                 {'$set': {
                                     'sell_time': int(time.time()),
-                                    'sell_quantity': float(last_order['price']),
+                                    'sell_quantity': float(last_order['executedQty']),
                                     'sell_price': float(last_order['price']),
                                     'sell_precision': int(sell_precision),
                                     'sell_price_precision': int(sell_price_precision),
@@ -272,8 +270,11 @@ def sell(symbols):
                                     'status': 'end',
                                 }}
                             )
+                        else:
+                            print(sell_order, '卖出失败sell')
                     else:
-                        print(sell_order, '卖出失败sell')
+                        print(sell_order, '未到达卖出时间sell')
+
     except Exception as e:
         print(f"发生异常：{e}")
 
