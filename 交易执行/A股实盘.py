@@ -82,6 +82,7 @@ def tradelist(name):
     # 分组并计算指标排名
     df = df.groupby(['日期'], group_keys=False).apply(rank)
     try:
+        df.sort_values(by='日期')    # 以日期列为索引,避免计算错误
         # 获取最后一天的数据
         last_day = df.iloc[-1]['日期']
         # 计算总共统计的股票数量
