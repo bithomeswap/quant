@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import choose
 import os
-names = ['COIN','股票','指数','行业']
+names = ['COIN', '股票', '指数', '行业']
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -13,7 +13,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ('指标' in file) & ('排名' not in file)& ('细节' not in file):
+        if (filename in file) & ('指标' in file) & ('排名' not in file) & ('细节' not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
@@ -54,12 +54,10 @@ for file in files:
                             [col_result_df, result_sub_df], axis=1)
                     result_df = pd.concat([result_df, col_result_df])
                 # 新建涨跌分布文件夹在上级菜单下，并保存结果
-                parent_path = os.path.abspath('.')
-                dir_name = '涨跌分布'
-                path = os.path.join(parent_path, dir_name)
+                path = os.path.join(os.path.abspath('.'), '资产多指标排名收益分布')
                 if not os.path.exists(path):
                     os.makedirs(path)
-                result_df.to_csv(f'{path}/{name}_{n}日指标排名平均收益.csv')
+                result_df.to_csv(f'{path}/{name}_{n}日多指标排名收益分布.csv')
                 print('任务已经完成！')
             except Exception as e:
                 print(f"发生bug: {e}")

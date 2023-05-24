@@ -65,7 +65,6 @@ for file in files:
                             f'未来{n}日上涨次数': len(future_returns[future_returns >= 0]),
                             f'未来{n}日平均涨跌幅': avg_return,
                         }
-                        # print(f'未来{n}日平均涨跌幅', f": {avg_return}")
                         result_dicts.append(result_dict)
                 # 将结果持久化
                 result_df = pd.DataFrame(result_dicts)
@@ -75,9 +74,10 @@ for file in files:
                     result_df[cols_to_shift] = result_df[cols_to_shift].shift(
                         -a*(n-1))
                 # result_df = result_df.dropna()  # 删除含有空值的行
-                result_df.round(decimals=6).to_csv(
-                    f'等样本涨幅分布{name}标的{mubiao}.csv', index=False
-                )
+                path = os.path.join(os.path.abspath('.'), '资产单指标平均收益分布')
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                result_df.round(decimals=6).to_csv(f'{path}/{name}平均收益分布.csv', index=False)
                 print(name, '已完成')
             except Exception as e:
                 print(f"发生bug: {e}")

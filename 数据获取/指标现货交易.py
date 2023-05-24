@@ -32,7 +32,12 @@ for file in files:
                 m = 0.001  # 设置手续费
                 n = 6  # 设置持仓周期
                 df, m, n = choose.choose('交易', name, df)
-                df.to_csv(f'{name}交易细节.csv', index=False)  # 输出交易细节
+                trade_path = os.path.join(os.path.abspath('.'), '资产交易细节')
+                if not os.path.exists(trade_path):
+                    os.makedirs(trade_path)
+                df.to_csv(f'{trade_path}/{name}周期{n}交易细节.csv', index=False)
+                print('交易细节已输出')
+
                 result_df = pd.DataFrame({})
                 for i in range(1, n+1):
                     # 持有n天则掉仓周期为n，实际上资金实盘当中是单独留一份备用金补给亏的多的日期以及资金周转
@@ -74,8 +79,8 @@ for file in files:
                                          == dayindex][f'第{i}份资金盘中资产收益']
                         for col, val in fill.items():
                             for x, (colnum, value) in enumerate(val.items()):
-                                if x <= n:
-                                    print(col, val, colnum, value)
+                                if x < n:
+                                    # print(col, val, colnum, value)
                                     result_df.at[col+x+1,
                                                  f'第{i}份资金周期资产收益'] = value
                                     result_df.at[col+x+1,
@@ -83,22 +88,21 @@ for file in files:
                                 if x == n:
                                     nextcash = value
                                     cash = nextcash
+                for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     result_df[f'第{i}份资金周期资产收益'] = result_df[f'第{i}份资金周期资产收益'].fillna(
                         1)
                     result_df[f'第{i}份资金累积资产收益'] = result_df[f'第{i}份资金累积资产收益'].fillna(
-                        method='ffill')
+                        method='ffill').fillna(method='bfill')
                 # 使用 filter() 方法选择所有包含指定子字符串的列
                 targetcols = result_df.filter(like='资金累积资产收益').columns
                 result_df['总资产收益'] = result_df[targetcols].mean(axis=1)
-
+                print('持仓周期',n)
                 # 新建涨跌分布文件夹在上级菜单下，并保存结果
-                parent_path = os.path.abspath('.')
-                dir_name = '资产变动'
-                path = os.path.join(parent_path, dir_name)
+                path = os.path.join(os.path.abspath('.'), '资产变动')
                 if not os.path.exists(path):
                     os.makedirs(path)
                 result_df.to_csv(
-                    f'{path}/{name}真实收益.csv', index=False)
+                    f'{path}/{name}周期{n}真实收益.csv', index=False)
                 print('任务已经完成！')
             except Exception as e:
                 print(f"发生bug: {e}")
