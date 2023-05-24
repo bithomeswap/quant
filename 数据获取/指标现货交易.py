@@ -84,25 +84,30 @@ for file in files:
                                     result_df.at[col+x+1,
                                                  f'第{i}份资金周期资产收益'] = value
                                     result_df.at[col+x+1,
-                                                 f'第{i}份资金累积资产收益'] = value*cash
+                                                 f'第{i}份资金累积资产收益复投'] = value*cash
+                                    result_df.at[col+x+1,
+                                                 f'第{i}份资金累积资产收益不复投'] = value+(cash-1)
                                 if x == n:
                                     nextcash = value
                                     cash = nextcash
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     result_df[f'第{i}份资金周期资产收益'] = result_df[f'第{i}份资金周期资产收益'].fillna(
                         1)
-                    result_df[f'第{i}份资金累积资产收益'] = result_df[f'第{i}份资金累积资产收益'].fillna(
-                        method='ffill').fillna(method='bfill')
+                    result_df[f'第{i}份资金累积资产收益复投'] = result_df[f'第{i}份资金累积资产收益复投'].fillna(
+                        method='ffill').fillna(1)
+                    result_df[f'第{i}份资金累积资产收益不复投'] = result_df[f'第{i}份资金累积资产收益不复投'].fillna(
+                        method='ffill').fillna(1)
                 # 使用 filter() 方法选择所有包含指定子字符串的列
-                targetcols = result_df.filter(like='资金累积资产收益').columns
-                result_df['总资产收益'] = result_df[targetcols].mean(axis=1)
-                print('持仓周期',n)
+                retrade = result_df.filter(like='资金累积资产收益复投').columns
+                result_df['总资产收益（复投）'] = result_df[retrade].mean(axis=1)
+                notretrade = result_df.filter(like='资金累积资产收益不复投').columns
+                result_df['总资产收益（不复投）'] = result_df[notretrade].mean(axis=1)
+                print('持仓周期', n)
                 # 新建涨跌分布文件夹在上级菜单下，并保存结果
                 path = os.path.join(os.path.abspath('.'), '资产变动')
                 if not os.path.exists(path):
                     os.makedirs(path)
-                result_df.to_csv(
-                    f'{path}/{name}周期{n}真实收益.csv', index=False)
+                result_df.to_csv(f'{path}/{name}周期{n}真实收益.csv', index=False)
                 print('任务已经完成！')
             except Exception as e:
                 print(f"发生bug: {e}")

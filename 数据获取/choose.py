@@ -3,7 +3,7 @@ import math
 
 def technology(df):  # 定义计算技术指标的函数
     try:
-        for n in range(1, 35):
+        for n in range(1, 31):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
     except Exception as e:
         print(f"发生bug: {e}")
@@ -12,7 +12,8 @@ def technology(df):  # 定义计算技术指标的函数
 
 def choose(choosename, name, df):
     if choosename == '交易':
-        # code = df['代码'].copy().drop_duplicates().tolist()  # 获取总标的数量，包含一定的未来函数
+        if ('COIN' in name):
+            df = df[df['日期'] >= "2021-01-01 00:00:00"]
         code = df[df['日期'] == df['日期'].min()]['代码']  # 获取首日标的数量，杜绝未来函数
         rank = math.ceil(len(code)/100)
         value = math.log(len(code))
@@ -33,12 +34,17 @@ def choose(choosename, name, df):
             n = 6  # 设置持仓周期
         if ('COIN' in name):
             if ('分钟' not in name):
-                w = 0.8  # 权重系数
-                v = 3.2
+                w = 0.8*value/rank  # 权重系数
+                v = 3.2*value/rank  # 权重系数
                 df = df[df[f'开盘'] >= 0.00001000].copy()  # 过滤低价股
                 df = df[df[f'昨日成交额'] >= 900000].copy()  # 过滤小盘股
-                df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
+                # 权重过滤
+                df = df[(df['昨日资金波动_rank'] <= w)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= v)].copy()
+                # 绝对过滤
+                df = df[(df['昨日资金波动_rank'] <= 0.12)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.36)].copy()
+
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
                 m = 0.003  # 设置手续费
@@ -52,15 +58,22 @@ def choose(choosename, name, df):
                 n = 6  # 设置持仓周期
         if ('股票' in name):
             if ('分钟' not in name):
-                w = 0.04
-                v = 0.16
+                w = 0.04*value/rank
+                v = 0.16*value/rank
                 df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
                 df = df[(df['开盘收盘幅'] <= 0.08) & (
                     df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
+                # 权重过滤
+                df = df[(df['昨日资金波动_rank'] <= w)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= v)].copy()
+                # 绝对过滤
+                df = df[(df['昨日资金波动_rank'] <= 0.06)].copy()
+                df = df[(df['昨日资金贡献_rank'] <= 0.18)].copy()
+
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
+                # df = df.groupby(['日期'], group_keys=True).apply(
+                #     lambda x: x.nlargest(rank, '昨日资金波动')).reset_index(drop=True)
                 m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ('分钟' in name):
@@ -96,11 +109,11 @@ def choose(choosename, name, df):
                     df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
                 df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
                 m = 0.005  # 设置手续费
-                n = 24  # 设置持仓周期
+                n = 30  # 设置持仓周期
             if ('分钟' in name):
                 df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
                 m = 0.0000  # 设置手续费
-                n = 24  # 设置持仓周期
+                n = 30  # 设置持仓周期
         print(name, n)
         # 对目标列进行手续费扣除
         df[f'{n}日后总涨跌幅（未来函数）'] = (df[f'{n}日后总涨跌幅（未来函数）']+1)*(1-m)-1
