@@ -148,6 +148,7 @@ def buy(symbols):
                         'sell_price_precision': None,
                         'sell_tickSize': None,
                         'sell_stepSize': None,
+                        'last_orderId': None,
                         'status': 'pending',
                     })
             except Exception as e:
@@ -181,8 +182,7 @@ def sell(symbols):
             all_symbol_info = client.get_symbol_info(all_symbol)
             print(all_symbol_info)
             # 获取当前已完成的订单（1小时内）
-            start_time = int((datetime.datetime.now() -
-                             datetime.timedelta(hours=1)).timestamp() * 1000)
+            start_time = int((datetime.datetime.now() -datetime.timedelta(days=1)).timestamp() * 1000)
             all_orders = client.get_all_orders(
                 symbol=all_symbol, startTime=start_time)
             # 遍历已完成的订单
@@ -267,6 +267,7 @@ def sell(symbols):
                                     'sell_price_precision': int(sell_price_precision),
                                     'sell_tickSize': float(sell_tickSize),
                                     'sell_stepSize': float(sell_stepSize),
+                                    'last_orderId': int(last_order['orderId']),
                                     'status': 'end',
                                 }}
                             )
