@@ -55,23 +55,27 @@ symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'TRXUSDT']
 # 每一批的下单金额
 money = 100
 funds = 5
-# def sell_all():  # 市价卖出所有代币
-#     # 获取账户余额
-#     balances = client.get_account()['balances']
-#     for balance in balances:
-#         asset = balance['asset']
-#         free_balance = float(balance['free'])
-#         locked_balance = float(balance['locked'])
-#         total_balance = free_balance + locked_balance
-#         if asset != 'USDT' and total_balance > 0:
-#             symbol = asset + 'USDT'
-#             # 执行市价卖单
-#             client.order_market_sell(
-#                 symbol=symbol,
-#                 quantity=total_balance
-#             )
-#             print(f"卖出{asset}成功！")
-# sell_all()
+
+
+def sell_all():  # 市价卖出所有代币
+    # 获取账户余额
+    balances = client.get_account()['balances']
+    for balance in balances:
+        asset = balance['asset']
+        free_balance = float(balance['free'])
+        locked_balance = float(balance['locked'])
+        total_balance = free_balance + locked_balance
+        if asset != 'USDT' and total_balance > 0:
+            symbol = asset + 'USDT'
+            # 执行市价卖单
+            client.order_market_sell(
+                symbol=symbol,
+                quantity=total_balance
+            )
+            print(f"卖出{asset}成功！")
+
+
+sell_all()
 
 
 def buy(symbols):
@@ -241,8 +245,8 @@ def sell(symbols):
                 # 如果订单尚未完全成交，则尝试卖出
                 if (sell_order['status'] != 'end') & (sell_order['buy_quantity'] != 0) & (sell_order['buy_quantity'] != sell_order['sell_quantity']):
                     # 计算卖出时间（+n,意思就是n秒之后卖出）
-                    # sell_time = sell_order['time'] + 86400
-                    sell_time = sell_order['time'] + 60
+                    sell_time = sell_order['time'] + 86400
+                    # sell_time = sell_order['time'] + 60
                     # 如果卖出时间已经到了，就执行卖出操作
                     if int(time.time()) >= sell_time:
                         # 卖出订单
@@ -298,4 +302,4 @@ while True:
     sell(symbols)
     time.sleep(60)    # 等待10秒卖单成交
     clearn()
-    time.sleep(60)    # 每60秒执行一轮
+    time.sleep(3600)    # 每60秒执行一轮
