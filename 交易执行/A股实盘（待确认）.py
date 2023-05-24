@@ -5,7 +5,6 @@ from pymongo import MongoClient
 import pytz
 import requests
 import pandas as pd
-import os
 import time
 import math
 
@@ -19,22 +18,13 @@ def choose(choosename, name, df):
         print(name, '板块第一天的标的数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
         if rank < 5:
             print(name, "标的数量过少,不适合大模型策略")
-        if ('股票' in name):
-            if ('分钟' not in name):
-                w = 0.04
-                v = 0.16
-                df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-                df = df[(df['开盘收盘幅'] <= 0.08) & (
-                    df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
-                df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
-                df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
-            if ('分钟' in name):
-                df = df[(df['开盘'] >= 4)].copy()  # 过滤低价股
-                for n in (2, 9):
-                    df = df[(df[f'过去{n}日总涨跌_rank'] >= 0.5)].copy()
-                    df = df[(df[f'过去{n*5}日总涨跌_rank'] >= 0.5)].copy()
+        w = 0.04
+        v = 0.16
+        df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
+        df = df[(df['开盘收盘幅'] <= 0.08) & (df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+        df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
+        df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
+        df = df.groupby(['日期'], group_keys=True).apply(lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
         print(len(df), name)
     return df
 
@@ -50,8 +40,7 @@ def technology(df):  # 定义计算技术指标的函数
         # 计算涨跌幅
         df['涨跌幅'] = df['收盘']/df['收盘'].copy().shift(1) - 1
         # 计算昨日振幅
-        df['昨日振幅'] = (df['最高'].copy().shift(
-            1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
+        df['昨日振幅'] = (df['最高'].copy().shift(1)-df['最低'].copy().shift(1))/df['开盘'].copy().shift(1)
         # 计算昨日成交额
         df['昨日成交额'] = df['成交额'].copy().shift(1)
         # 计算昨日涨跌
@@ -94,11 +83,10 @@ def tradelist(name):
         # 计算总共统计的股票数量
         df = df[df[f'日期'] == last_day].copy()
         df = choose('交易', name, df)
-        df.to_csv("test.csv")
         print(df)
         if len(df) < 200:
             # 发布到钉钉机器人
-            df['市场'] = name
+            df['市场'] = f'股票实盘{name}'
             print(df)
             message = df[['市场', '代码', '日期', '开盘']].to_markdown()
             print(type(message))
