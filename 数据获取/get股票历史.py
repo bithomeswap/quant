@@ -10,7 +10,7 @@ client = MongoClient(
 db = client['wth000']
 names = [('000', '001', '002', '600', '601', '603', '605')]
 # 获取两年的历史数据
-for n in range(2014, 2020):
+for n in range(2014, 2029):
     start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y%m%d")
     end_date = datetime.datetime(datetime.datetime.strptime(
         start_date, "%Y%m%d").year + 1, int(1), int(1)).strftime("%Y%m%d")

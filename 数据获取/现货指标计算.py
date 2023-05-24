@@ -48,6 +48,9 @@ def tradelist(name):
     collection = db[f'{name}']
     # 获取数据并转换为DataFrame格式
     data = pd.DataFrame(list(collection.find()))
+        # if "股票('000', '001', '002', '600', '601', '603', '605')" in name:  # 数据截取
+    #     data = data[(data['日期'] >= '2020-01-01') & (data['日期'] <= '2020-05-01')]
+    #     # data.to_csv('test.csv')
     print(f'{name}数据读取成功')
     # 按照“代码”列进行分组并计算技术指标
     data = data.groupby(['代码'], group_keys=False).apply(technology)

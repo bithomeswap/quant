@@ -5,7 +5,6 @@ def technology(df):  # 定义计算技术指标的函数
     try:
         for n in range(1, 25):
             df[f'{n}日后总涨跌幅（未来函数）'] = (df['收盘'].copy().shift(-n) / df['收盘']) - 1
-            df[f'{n}日后当日涨跌（未来函数）'] = df['涨跌幅'].copy().shift(-n)+1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
