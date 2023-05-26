@@ -115,7 +115,8 @@ def buy(buy_symbol, money):
                 buy_ask_price_1 - pow(0.1, buy_price_precision), buy_price_precision)
             buy_ask_limit_price = round(
                 buy_bid_price_1 + pow(0.1, buy_price_precision), buy_price_precision)
-            print(f"第{n}次下单","交易标的",buy_symbol,"最优卖价buy", buy_ask_limit_price,"最优买价buy", buy_bid_limit_price)
+            print(f"buy第{n}次下单", "交易标的", buy_symbol, "最优卖价buy",
+                  buy_ask_limit_price, "最优买价buy", buy_bid_limit_price)
             # 判断当前卖一不高于预定价格，卖二卖一差距较小
             if 1-buy_bid_price_1/buy_target_price >= 0.001 or buy_ask_price_1/buy_target_price-1 <= 0.001:
                 quantity = round(
@@ -169,7 +170,8 @@ def buy(buy_symbol, money):
                 # 每10秒更新一次订单状态
                 try:
                     # 获取当日已完成的订单
-                    start_time = int((datetime.datetime.now() - datetime.timedelta(days=1)).timestamp() * 1000)
+                    start_time = int(
+                        (datetime.datetime.now() - datetime.timedelta(days=1)).timestamp() * 1000)
                     all_orders = client.get_all_orders(
                         symbol=buy_symbol, startTime=start_time)
                     # 遍历已完成的订单
@@ -184,7 +186,8 @@ def buy(buy_symbol, money):
                                 "status": all_order["status"],
                             }}
                         )
-                        buymoney += float(all_order["price"]) * float(all_order["executedQty"])
+                        buymoney += float(all_order["price"]) * \
+                            float(all_order["executedQty"])
                         buyvalue += float(all_order["executedQty"])
                     print(f"待下单金额：{buymoney}", f"今日买入量：{buyvalue}",
                           "历史成交订单更新sell", all_order)
@@ -220,7 +223,8 @@ def sell(sell_symbol):
         # 列表索引不能是字符串
         print(balancevalue)
         # 查询已下单且未卖出的订单
-        sell_orders = list(collection.find({"symbol": sell_symbol, "日期": (datetime.datetime.now() - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
+        sell_orders = list(collection.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
+        ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
         sellmoney = 0
         sellvalue = 0
         for n in range(1, 86400):
@@ -249,7 +253,7 @@ def sell(sell_symbol):
                     sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
                 sell_ask_limit_price = round(
                     sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-                print(f"第{n}次下单","交易标的",sell_symbol,"最优卖价sell", sell_ask_limit_price,"最优买价sell", sell_bid_limit_price)
+                print(f"sell第{n}次下单", "交易标的", sell_symbol, "最优卖价sell",sell_ask_limit_price, "最优买价sell", sell_bid_limit_price)
                 # 判断当前卖一不高于预定价格，卖二卖一差距较小
                 if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                     # 如果订单尚未完全成交，则尝试卖出
