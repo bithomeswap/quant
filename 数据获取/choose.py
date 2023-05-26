@@ -63,14 +63,17 @@ def choose(choosename, name, df):
                 df = df[(df['昨日资金波动_rank'] <= w)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= v)].copy()
 
-                # 年化收益百分之266，净值3.66
+                # df = df.groupby(['日期'], group_keys=True).apply(
+                #     lambda x: x.nlargest(num, '昨日资金波动')).reset_index(drop=True)
+
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nsmallest(num, '总市值')).reset_index(drop=True)
                 df = df.groupby(['日期'], group_keys=True).apply(
                     lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
+                # 年化收益百分之266，净值3.66,比之前有提升，尤其是在2018年的回撤上面，市盈率的数据还没加上，到时候加上看一看
 
-                df = df[(df['市盈率(TTM)'] > 0) & (
-                    df['市盈率(TTM)'] <= 30)].copy()  # 过滤低价股
+                # df = df[(df['市盈率(TTM)'] > 0) & (
+                #     df['市盈率(TTM)'] <= 30)].copy()  # 过滤低价股
 
                 m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
