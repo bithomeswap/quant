@@ -37,19 +37,25 @@ for file in files:
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-                
+                df = df.groupby(["代码"], group_keys=False).apply(
+                    choose.technology)
+
                 m = 0.001  # 设置默认手续费
                 n = 6  # 设置默认持仓周期
                 df, m, n = choose.choose("交易", name, df)
-                # 去掉噪音数据
-                for i in range(1, n+1):
-                    df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 10*(1+n)]
-                # trade_path = os.path.join(os.path.abspath("."), "资产交易细节")
-                # if not os.path.exists(trade_path):
-                #     os.makedirs(trade_path)
-                # df.to_csv(f"{trade_path}/{name}周期{n}交易细节.csv", index=False)
-                # print("交易细节已输出")
+
+                if ("COIN" in name):
+                    for i in range(1, n+1):
+                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 10*n]
+                if ("股票" in name):
+                    for i in range(1, n+1):
+                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*n]
+
+                trade_path = os.path.join(os.path.abspath("."), "资产交易细节")
+                if not os.path.exists(trade_path):
+                    os.makedirs(trade_path)
+                df.to_csv(f"{trade_path}/{name}周期{n}交易细节.csv", index=False)
+                print("交易细节已输出")
 
                 result_df = pd.DataFrame({})
                 for i in range(1, n+1):
