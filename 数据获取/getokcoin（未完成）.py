@@ -20,19 +20,44 @@ marketData = MarketData.MarketAPI(flag=flag)
 # 获取日K线数据并输出到指定的数据库
 data = marketData.get_tickers(instType="SPOT")
 
-print(data)
+# print(data)
+# from okx.client import Client
+# from pymongo import MongoClient
 
-# records = [{
-#     "time": datetime.utcfromtimestamp(int(i[0])/1000).strftime("%Y-%m-%d %H:%M:%S"),
-#     "open": float(i[1]),
-#     "high": float(i[2]),
-#     "low": float(i[3]),
-#     "close": float(i[4]),
-#     "volume": float(i[5])
-# } for i in data]
+# def main():
+#     # 创建 OKEx 客户端
+#     client = Client(api_key, secret_key, passphrase, True)
 
-# with MongoClient(URI) as client:
-#     collection = client[DB_NAME][COLLECTION_NAME]
-#     collection.insert_many(records)
+#     # 获取现货交易对列表
+#     all_instruments = client.get_instruments()
+#     usdt_pairs = [instrument for instrument in all_instruments if instrument.currency_quote == 'USDT']
 
-# print("任务已经开始")
+#     # 获取日K线数据并批量插入到MongoDB
+#     for pair in usdt_pairs:
+#         print(f'开始获取{pair.instrument_id}的日K线数据')
+#         kline = client.get_kline(pair.instrument_id, 86400, 200)
+        
+#         # 处理数据
+#         data = []
+#         for item in kline:
+#             data.append({
+#                 'time': item[0],
+#                 'open': item[1],
+#                 'high': item[2],
+#                 'low': item[3],
+#                 'close': item[4],
+
+#                 # 数据中有些交易对没有成交量，因此需要做容错处理
+#                 'volume': item[5] if len(item) > 5 else 0,
+#             })
+
+#         # 批量插入数据到MongoDB
+#         if len(data) > 0:
+#             collection.insert_many(data)
+#             print(f'{pair.instrument_id}数据写入成功')
+#         else:
+#             print(f'{pair.instrument_id}没有可写入的数据')
+
+# if __name__ == '__main__':
+#     print('任务已经开始')
+#     main()

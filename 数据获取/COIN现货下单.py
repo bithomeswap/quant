@@ -32,9 +32,10 @@ from pymongo import MongoClient
 # 创建Binance客户端
 # client = Client(api_key, api_secret)
 
+
 # 币安的api配置(现货测试网)
-api_key = "ERqD8OaGhyPEhZciJs8XZgy7d83x1cyF7U3s2TYw0wZR2SCZMNmf8MzZ8TYzuIzT"
-api_secret = "CF2XpFnKKrasCiyZ38D3duMLqFseanJ6iRbmXmrDvqNFlIWJXZbhrlvha5kGxFjr"
+api_key = "I5To2CwMIp74EB6zkulpwo4eioWPrYyp4JwBDLBR6QFNHalQUnm595ZEy3Z3JWzK"
+api_secret = "37DJ4aGGfTTLuNtKHQC7p8IMRN3fx0kM5QY0iZGqFwZ9GDeBfi3YUF3FHCngInH3"
 # 创建Binance客户端
 client = Client(api_key, api_secret, testnet=True)
 
@@ -57,25 +58,23 @@ money = 100
 funds = 5
 
 
-def sell_all():  # 市价卖出所有代币
-    # 获取账户余额
-    balances = client.get_account()['balances']
-    for balance in balances:
-        asset = balance['asset']
-        free_balance = float(balance['free'])
-        locked_balance = float(balance['locked'])
-        total_balance = free_balance + locked_balance
-        if asset != 'USDT' and total_balance > 0:
-            symbol = asset + 'USDT'
-            # 执行市价卖单
-            client.order_market_sell(
-                symbol=symbol,
-                quantity=total_balance
-            )
-            print(f"卖出{asset}成功！")
-
-
-sell_all()
+# def sell_all():  # 市价卖出所有代币
+#     # 获取账户余额
+#     balances = client.get_account()['balances']
+#     for balance in balances:
+#         asset = balance['asset']
+#         free_balance = float(balance['free'])
+#         locked_balance = float(balance['locked'])
+#         total_balance = free_balance + locked_balance
+#         if asset != 'USDT' and total_balance > 0:
+#             symbol = asset + 'USDT'
+#             # 执行市价卖单
+#             client.order_market_sell(
+#                 symbol=symbol,
+#                 quantity=total_balance
+#             )
+#             print(f"卖出{asset}成功！")
+# sell_all()
 
 
 def buy(symbols):
