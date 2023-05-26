@@ -3,7 +3,7 @@ import pandas as pd
 from pymongo import MongoClient
 import datetime
 from okx.client import Client
-from okx import Account, MarketData
+from okx import Account, MarketData, PublicData
 # 配置API
 api_key = '0282115d-3c49-4fc5-8168-326d6259f120'
 secret_key = '5778C6071059A42452AE30F447DDD75F'
@@ -15,14 +15,11 @@ client = MongoClient(
 db = client['wth000']
 collection = db['OKCOIN']
 
-# 建立 OKEx 客户端
-client = Client(api_key, secret_key, passphrase,
-                use_server_time=False, flag='1')
-print(client)
-marketData = MarketData.MarketAPI()
-print(marketData)
+flag = "1"  # 使用1号链接
+marketData = MarketData.MarketAPI(flag=flag)
 # 获取日K线数据并输出到指定的数据库
-data = marketData.get_tickers("BTC-USDT-SPOT", "1day")
+data = marketData.get_tickers(instType="SPOT")
+
 print(data)
 
 # records = [{

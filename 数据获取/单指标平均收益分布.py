@@ -7,7 +7,7 @@ import os
 # 设置参数
 names = ['COIN', '股票', '指数', '行业']
 
-mubiao = f'开盘收盘幅'
+mubiao = f'昨日成交额'
 a = 10  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)

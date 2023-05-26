@@ -66,7 +66,6 @@ def tradelist(name):
         if len(df) < 200:
             # 发布到钉钉机器人
             df['市场'] = name
-            print(df)
             message = df[['市场', '代码', '日期', '开盘']].to_markdown()
             print(type(message))
             webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'

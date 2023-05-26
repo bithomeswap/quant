@@ -21,11 +21,10 @@ for file in files:
                 path = os.path.join(dir_path, f'{name}.csv')
                 df = pd.read_csv(path)
                 if ('COIN' in name):
-                    n = 2022
-                    start_date = datetime.datetime(
-                        n, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
+                    n = 2021
+                    start_date = datetime.datetime(n, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
                     end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, '%Y-%m-%d %H:%M:%S').year + 1, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
+                        start_date, '%Y-%m-%d %H:%M:%S').year + 3, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
                     df = df[df['日期'] >= start_date]
                     df = df[df['日期'] <= end_date]
                 # if "股票('000', '001', '002', '600', '601', '603', '605')" in name:  # 数据截取
@@ -47,8 +46,8 @@ for file in files:
                 trade_path = os.path.join(os.path.abspath('.'), '资产交易细节')
                 if not os.path.exists(trade_path):
                     os.makedirs(trade_path)
-                df.to_csv(f'{trade_path}/{name}周期{n}交易细节.csv', index=False)
-                print('交易细节已输出')
+                # df.to_csv(f'{trade_path}/{name}周期{n}交易细节.csv', index=False)
+                # print('交易细节已输出')
 
                 result_df = pd.DataFrame({})
                 for i in range(1, n+1):
@@ -119,10 +118,12 @@ for file in files:
                         method='ffill').fillna(1)
                 # 使用 filter() 方法选择所有包含指定子字符串的列
                 retrade = result_df.filter(like='资金累积资产收益复投').columns
-                result_df['总资产收益（复投）'] = result_df[retrade].mean(axis=1)
+                result_df['总资产收益率（复投）%'] = (
+                    result_df[retrade].mean(axis=1)-1)*100
                 notretrade = result_df.filter(like='资金累积资产收益不复投').columns
-                result_df['总资产收益（不复投）'] = result_df[notretrade].mean(axis=1)
-                print('持仓周期', n, '复投收益率', result_df['总资产收益（复投）'])
+                result_df['总资产收益率（不复投）%'] = (
+                    result_df[notretrade].mean(axis=1)-1)*100
+                print('持仓周期', n, '复投收益率', result_df['总资产收益率（复投）%'])
                 # 新建涨跌分布文件夹在上级菜单下，并保存结果
                 path = os.path.join(os.path.abspath('.'), '资产变动')
                 if not os.path.exists(path):
