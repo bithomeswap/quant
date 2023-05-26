@@ -1,0 +1,23 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯采用向量化计算的手段提高代码的运行效率，通常采用最先进和最稳定的实现方式和API，同时你的代码当中很少有bug存在
+此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
+工作任务：
+0、获取okx交易所每日的日k数据，并输出到指定的数据库，严格使用参考链接中的数据，并且借鉴参考资料中的代码格式；
+1、给我最终代码，辛苦您了，改天请你吃烧烤
+一、参考链接
+https://github.com/okxapi/python-okx
+https://www.okx.com/docs-v5/trick_zh/#21f1e88275
+
+二、参考基础配置
+# API配置
+api_key = '0282115d-3c49-4fc5-8168-326d6259f120'
+secret_key = '5778C6071059A42452AE30F447DDD75F'
+passphrase = 'wthWTH00.'
+# 需要写入的数据库配置
+client = MongoClient('mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+collection = db['OKCOIN']
+
+三、引用库
+from okx.client import Client
+from okx import Account, MarketData

@@ -1,6 +1,7 @@
 import choose
 import pandas as pd
 import os
+import datetime
 names = ['COIN', '股票', '指数', '行业']
 # names = ['指数', '行业']
 
@@ -19,9 +20,20 @@ for file in files:
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f'{name}.csv')
                 df = pd.read_csv(path)
+                if ('COIN' in name):
+                    n = 2022
+                    start_date = datetime.datetime(
+                        n, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, '%Y-%m-%d %H:%M:%S').year + 1, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
+                    df = df[df['日期'] >= start_date]
+                    df = df[df['日期'] <= end_date]
                 # if "股票('000', '001', '002', '600', '601', '603', '605')" in name:  # 数据截取
-                #     df = df[(df['日期'] >= '2020-01-01') & (df['日期'] <= '2020-05-01')]
-                #     # df.to_csv('test.csv')
+                    # n=2019
+                    # start_date = datetime.datetime(n, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
+                    # end_date = datetime.datetime(datetime.datetime.strptime(
+                    #     start_date, '%Y-%m-%d %H:%M:%S').year + 1, int(1), int(1)).strftime('%Y-%m-%d %H:%M:%S')
+                    # df = df[(df['日期'] >= start_date) & (df['日期'] <= end_date)]
                 df = df.sort_values(by='日期')  # 以日期列为索引,避免计算错误
                 dates = df['日期'].copy().drop_duplicates().tolist()  # 获取所有不重复日期
                 df = df.groupby(['代码'], group_keys=False).apply(
@@ -46,6 +58,7 @@ for file in files:
                     # daydf.to_csv(f'{name}_{i}份交易细节.csv', index=False)  # 输出每份资金的交易细节
                     result = []
                     cash_balance = 1  # 初始资金设置为1元
+                    twocash_balance = 1
                     # 每份资金的收益率
                     for date, group in daydf.groupby('日期'):
                         daily_cash_balance = {}  # 用于记录每日的资金余额
@@ -56,9 +69,12 @@ for file in files:
                                         (group[f'{x}日后总涨跌幅（未来函数）']).mean() + 1)  # 计算平均收益率
                                 if x == n:
                                     group_return = group_return*(1-m)
-                                    cash_balance *= group_return  # 累计收益率
+                                    cash_balance *= group_return  # 复投累计收益率
+                                    # 不复投累计收益率
+                                    twocash_balance += (group_return-1)
                                 daily_cash_balance[f'未来{x}日盘中资产收益'] = group_return
-                        daily_cash_balance[f'下周期余额'] = cash_balance
+                        daily_cash_balance[f'下周期余额复投'] = cash_balance
+                        daily_cash_balance[f'下周期余额不复投'] = twocash_balance
                         result.append(
                             {'日期': date, f'第{i}份资金盘中资产收益': daily_cash_balance})
                     result_df = pd.concat([result_df, pd.DataFrame(result)])
@@ -72,6 +88,7 @@ for file in files:
 
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     cash = 1
+                    twocash = 1
                     daysindex = result_df[result_df[f'第{i}份资金盘中资产收益'].notna()].copy()[
                         '日期']
                     for dayindex in daysindex:
@@ -86,10 +103,13 @@ for file in files:
                                     result_df.at[col+x+1,
                                                  f'第{i}份资金累积资产收益复投'] = value*cash
                                     result_df.at[col+x+1,
-                                                 f'第{i}份资金累积资产收益不复投'] = value+(cash-1)
+                                                 f'第{i}份资金累积资产收益不复投'] = value*twocash
                                 if x == n:
                                     nextcash = value
                                     cash = nextcash
+                                if x == n+1:
+                                    twonextcash = value
+                                    twocash = twonextcash
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     result_df[f'第{i}份资金周期资产收益'] = result_df[f'第{i}份资金周期资产收益'].fillna(
                         1)
@@ -102,7 +122,7 @@ for file in files:
                 result_df['总资产收益（复投）'] = result_df[retrade].mean(axis=1)
                 notretrade = result_df.filter(like='资金累积资产收益不复投').columns
                 result_df['总资产收益（不复投）'] = result_df[notretrade].mean(axis=1)
-                print('持仓周期', n)
+                print('持仓周期', n, '复投收益率', result_df['总资产收益（复投）'])
                 # 新建涨跌分布文件夹在上级菜单下，并保存结果
                 path = os.path.join(os.path.abspath('.'), '资产变动')
                 if not os.path.exists(path):

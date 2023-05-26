@@ -11,21 +11,23 @@ import math
 
 def choose(choosename, name, df):
     if choosename == '交易':
-        # code = df['代码'].copy().drop_duplicates().tolist()  # 获取总标的数量，包含一定的未来函数
         code = df[df['日期'] == df['日期'].min()]['代码']  # 获取首日标的数量，杜绝未来函数
         rank = math.ceil(len(code)/100)
         value = math.log(len(code))
-        print(name, '板块第一天的标的数量', len(code), '拟选择标的数量', rank, '阈值标准', value)
         if rank < 5:
             print(name, "标的数量过少,不适合大模型策略")
-        w = 0.04
-        v = 0.16
         df = df[(df['真实价格'] >= 4)].copy()  # 过滤低价股
-        df = df[(df['开盘收盘幅'] <= 0.08) & (df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-        df = df[(df['昨日资金波动_rank'] <= w*value/rank)].copy()
-        df = df[(df['昨日资金贡献_rank'] <= v*value/rank)].copy()
-        df = df.groupby(['日期'], group_keys=True).apply(lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
-        print(len(df), name)
+        df = df[(df['开盘收盘幅'] <= 0.08) & (
+            df['开盘收盘幅'] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+        m = 0.04
+        n = 0.16
+        w = m*value/rank  # 权重系数
+        v = n*value/rank  # 权重系数
+        num = rank  # 持仓数量
+        df = df[(df['昨日资金波动_rank'] <= w)].copy()
+        df = df[(df['昨日资金贡献_rank'] <= v)].copy()
+        df = df.groupby(['日期'], group_keys=True).apply(
+            lambda x: x.nlargest(num, '昨日资金波动')).reset_index(drop=True)
     return df
 
 
@@ -68,7 +70,7 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 
 
 def tradelist(name):
-    collection = db[f"股票实盘{name}"]
+    collection = db[f"实盘{name}"]
     # 获取数据并转换为DataFrame格式
     df = pd.DataFrame(list(collection.find()))
     print(f'{name}数据读取成功')
@@ -86,8 +88,7 @@ def tradelist(name):
         print(df)
         if len(df) < 200:
             # 发布到钉钉机器人
-            df['市场'] = f'股票实盘{name}'
-            print(df)
+            df['市场'] = f'实盘{name}'
             message = df[['市场', '代码', '日期', '开盘']].to_markdown()
             print(type(message))
             webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165'
@@ -119,7 +120,7 @@ for name in names:
         codes['开盘'] = codes['今开']
         codes['真实价格'] = codes['开盘']
         codes['收盘'] = codes['最新价']
-        collection = db[f"股票实盘{name}"]
+        collection = db[f"实盘{name}"]
         latest = list(collection.find({"timestamp": timestamp}, {
                       "timestamp": 1}).sort("timestamp", -1).limit(1))
         if len(latest) == 0:
