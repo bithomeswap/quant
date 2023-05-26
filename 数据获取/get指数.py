@@ -10,18 +10,18 @@ client = MongoClient(
 db = client["wth000"]
 
 # 设置参数
-name = '指数'
-# name ='指数分钟'
+name = "指数"
+# name ="指数分钟"
 
 collection = db[f"{name}"]
 # 获取当前日期
 start_date = "20190101"
 current_date = datetime.datetime.now()
-end_date = current_date.strftime('%Y%m%d')
+end_date = current_date.strftime("%Y%m%d")
 
 # 获取A股指数代码列表
-df = ['000001', '000002', '000003', '000004', '000005', '000006', '000007', '000008',
-      '399001', '399002',]
+df = ["000001", "000002", "000003", "000004", "000005", "000006", "000007", "000008",
+      "399001", "399002",]
 # 遍历目标指数代码，获取其分钟K线数据
 for code in df:
     # print(code)
@@ -35,23 +35,23 @@ for code in df:
         upsert_docs = False
         latest_timestamp = latest[0]["timestamp"]
         start_date_query = datetime.datetime.fromtimestamp(
-            latest_timestamp).strftime('%Y%m%d')
+            latest_timestamp).strftime("%Y%m%d")
 
     # 通过 akshare 获取目标指数的分钟K线数据
     k_data = ak.index_zh_a_hist(symbol=code, period="daily")
     k_data = k_data[k_data["开盘"] != 0]
 
     try:
-        k_data['代码'] = float(code)
+        k_data["代码"] = float(code)
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
 
-        # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-        #     datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
-        k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
-            datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
+        # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(
+        #     datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+        k_data["timestamp"] = k_data["日期"].apply(lambda x: float(
+            datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
 
         k_data = k_data.sort_values(by=["代码", "日期"])
-        docs_to_update = k_data.to_dict('records')
+        docs_to_update = k_data.to_dict("records")
         if upsert_docs:
             # print(f"{name}({code}) 新增数据")
             try:
@@ -77,12 +77,12 @@ for code in df:
                 except Exception as e:
                     pass
     except Exception as e:
-        print(e, f'因为{code}停牌')
-print('任务已经完成')
+        print(e, f"因为{code}停牌")
+print("任务已经完成")
 limit = 600000
 if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([('日期', 1)]).limit(
+    oldest_data = collection.find().sort([("日期", 1)]).limit(
         collection.count_documents({})-limit)
-    ids_to_delete = [data['_id'] for data in oldest_data]
-    collection.delete_many({'_id': {'$in': ids_to_delete}})
-print('数据清理成功')
+    ids_to_delete = [data["_id"] for data in oldest_data]
+    collection.delete_many({"_id": {"$in": ids_to_delete}})
+print("数据清理成功")
