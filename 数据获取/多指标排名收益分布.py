@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import choose
 import os
-names = ['COIN', '股票', '指数', '行业']
-
+# names = ['COIN', '股票', '指数', '行业']
+names = ['含基本面']
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径

@@ -11,7 +11,7 @@ db = client['wth000']
 names = [('000', '001', '002', '600', '601', '603', '605')]
 
 # 获取当前日期
-start_date = "20190101"
+start_date = "20170101"
 current_date = datetime.datetime.now()
 end_date = current_date.strftime('%Y%m%d')
 # 从akshare获取A股主板股票的代码和名称
@@ -29,7 +29,7 @@ for name in names:
         for code in df['代码']:
             # print(code)
             latest = list(collection.find({"代码": float(code)}, {
-                "timestamp": 1}).sort("timestamp", -1).limit(1))
+                          "timestamp": 1}).sort("timestamp", -1).limit(1))
             # print(latest)
             if len(latest) == 0:
                 upsert_docs = True
@@ -45,10 +45,25 @@ for name in names:
                 symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
             k_data_true = ak.stock_zh_a_hist(
                 symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
+
+            for typename in ["总市值", "市盈率(TTM)"]:
+                k_value = ak.stock_zh_valuation_baidu(
+                    symbol=code,  indicator=typename, period="全部")
+                k_value.rename(
+                    columns={'date': '日期', 'value': f'{typename}'}, inplace=True)
+                k_value['日期'] = k_value['日期'].apply(lambda x: str(x))
+                if typename == "总市值":
+                    k_valuedata = k_value
+                else:
+                    k_valuedata = pd.merge(
+                        k_valuedata, k_value, on='日期', how='left')
             try:
                 k_data_true = k_data_true[['日期', '开盘']].rename(
                     columns={'开盘': '真实价格'})
+
+                k_data = pd.merge(k_data, k_valuedata, on='日期', how='left')
                 k_data = pd.merge(k_data, k_data_true, on='日期', how='left')
+
                 k_data['代码'] = float(code)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
 

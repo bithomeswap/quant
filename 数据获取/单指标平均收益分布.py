@@ -5,10 +5,13 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-names = ['COIN', '股票', '指数', '行业']
+# names = ['COIN', '股票', '指数', '行业']
+names = ['含基本面']
 
-mubiao = f'昨日成交额'
-a = 10  # 将数据划分成a个等距离的区间
+# mubiao = f'市盈率(TTM)'
+mubiao = f'总市值'
+
+a = 50  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -20,6 +23,7 @@ for file in files:
     for filename in names:
         if (filename in file) & ('指标' in file) & ('排名' not in file) & ('细节' not in file):
             try:
+                print(f"{mubiao}")
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f'{name}.csv')
@@ -77,7 +81,8 @@ for file in files:
                 path = os.path.join(os.path.abspath('.'), '资产单指标平均收益分布')
                 if not os.path.exists(path):
                     os.makedirs(path)
-                result_df.round(decimals=6).to_csv(f'{path}/{name}平均收益分布.csv', index=False)
+                result_df.round(decimals=6).to_csv(
+                    f'{path}/{name}{mubiao}平均收益分布.csv', index=False)
                 print(name, '已完成')
             except Exception as e:
                 print(f"发生bug: {e}")

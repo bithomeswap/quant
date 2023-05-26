@@ -15,6 +15,7 @@ def choose(choosename, name, df):
         code = df[df['日期'] == df['日期'].min()]['代码']  # 获取首日标的数量，杜绝未来函数
         rank = math.ceil(len(code)/100)
         value = math.log(len(code))
+        num = rank  # 持仓数量，应该是根据len(code)是十的多少倍来确定
         print(name, '板块第一天的标的数量', len(code), '拟选择标的数量', rank, '阈值', value)
         if rank < 5:
             print(name, "标的数量过少,不适合大模型策略")
@@ -37,7 +38,6 @@ def choose(choosename, name, df):
                 n = 0.04
                 w = m*value/rank  # 权重系数
                 v = n*value/rank  # 权重系数
-                num = rank  # 持仓数量
                 df = df[(df['昨日资金波动_rank'] <= w)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= v)].copy()
                 df = df.groupby(['日期'], group_keys=True).apply(
@@ -60,11 +60,18 @@ def choose(choosename, name, df):
                 n = 0.16
                 w = m*value/rank  # 权重系数
                 v = n*value/rank  # 权重系数
-                num = rank  # 持仓数量
                 df = df[(df['昨日资金波动_rank'] <= w)].copy()
                 df = df[(df['昨日资金贡献_rank'] <= v)].copy()
+
+                # 年化收益百分之266，净值3.66
                 df = df.groupby(['日期'], group_keys=True).apply(
-                    lambda x: x.nlargest(num, '昨日资金波动')).reset_index(drop=True)
+                    lambda x: x.nsmallest(num, '总市值')).reset_index(drop=True)
+                df = df.groupby(['日期'], group_keys=True).apply(
+                    lambda x: x.nlargest(1, '昨日资金波动')).reset_index(drop=True)
+
+                df = df[(df['市盈率(TTM)'] > 0) & (
+                    df['市盈率(TTM)'] <= 30)].copy()  # 过滤低价股
+
                 m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ('分钟' in name):

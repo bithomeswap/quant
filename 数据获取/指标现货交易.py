@@ -43,9 +43,10 @@ for file in files:
                 m = 0.001  # 设置手续费
                 n = 6  # 设置持仓周期
                 df, m, n = choose.choose('交易', name, df)
-                trade_path = os.path.join(os.path.abspath('.'), '资产交易细节')
-                if not os.path.exists(trade_path):
-                    os.makedirs(trade_path)
+
+                # trade_path = os.path.join(os.path.abspath('.'), '资产交易细节')
+                # if not os.path.exists(trade_path):
+                #     os.makedirs(trade_path)
                 # df.to_csv(f'{trade_path}/{name}周期{n}交易细节.csv', index=False)
                 # print('交易细节已输出')
 
@@ -54,7 +55,12 @@ for file in files:
                     # 持有n天则掉仓周期为n，实际上资金实盘当中是单独留一份备用金补给亏的多的日期以及资金周转
                     days = dates[i::n+1]
                     daydf = df[df['日期'].isin(days)]
-                    # daydf.to_csv(f'{name}_{i}份交易细节.csv', index=False)  # 输出每份资金的交易细节
+
+                    # tradedaypath = os.path.join(os.path.abspath('.'), '资产分组交易细节')
+                    # if not os.path.exists(tradedaypath):
+                    #     os.makedirs(tradedaypath)
+                    # daydf.to_csv(f'{tradedaypath}/{name}周期{i}交易细节.csv', index=False)
+
                     result = []
                     cash_balance = 1  # 初始资金设置为1元
                     twocash_balance = 1
@@ -88,8 +94,7 @@ for file in files:
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     cash = 1
                     twocash = 1
-                    daysindex = result_df[result_df[f'第{i}份资金盘中资产收益'].notna()].copy()[
-                        '日期']
+                    daysindex = result_df[result_df[f'第{i}份资金盘中资产收益'].notna()].copy()['日期']
                     for dayindex in daysindex:
                         fill = result_df[result_df['日期']
                                          == dayindex][f'第{i}份资金盘中资产收益']
