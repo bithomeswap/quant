@@ -64,8 +64,9 @@ collectionbalance = db[f"order余额{name}"]
 buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 
-money = 600  # 每一批的下单金额
+money = 600  # 设置每一批的下单金额
 holdday = 0  # 设置持仓周期
+waittime = 5  # 设置下单间隔，避免权重过高程序暂停
 
 
 async def buy(buy_symbol, money):
@@ -80,7 +81,8 @@ async def buy(buy_symbol, money):
     error_count = 0
     for n in range(1, 86400):
         try:
-            await asyncio.sleep(1.0)
+            # 暂停5秒，等待撤单
+            await asyncio.sleep(waittime)
             buy_symbol_info = client.get_symbol_info(buy_symbol)
             # 针对现货市场的精度设置
             buy_price_precision = buy_symbol_info["filters"][0]["minPrice"]
@@ -101,8 +103,6 @@ async def buy(buy_symbol, money):
                 buy_ask_price_1 - pow(0.1, buy_price_precision), buy_price_precision)
             buy_ask_limit_price = round(
                 buy_bid_price_1 + pow(0.1, buy_price_precision), buy_price_precision)
-            print(f"buy第{n}次下单", "交易标的", buy_symbol, "最优卖价buy",
-                  buy_ask_limit_price, "最优买价buy", buy_bid_limit_price)
             quantity = round(round(12/buy_bid_limit_price /
                              buy_stepSize) * buy_stepSize, buy_precision)
             buy_order = client.create_order(
@@ -113,7 +113,7 @@ async def buy(buy_symbol, money):
                 price=float(buy_bid_limit_price),
                 timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
             )  # 限价成交
-            print("下单信息buy：", buy_order)
+            print(f"buy第{n}次下单", "交易标的", buy_symbol, "最优卖价buy",buy_ask_limit_price, "最优买价buy", buy_bid_limit_price,"下单信息buy", buy_order)
             collection.insert_one({
                 "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
                 "orderId": int(buy_order["orderId"]),
@@ -148,8 +148,8 @@ async def buy(buy_symbol, money):
                         result = client.cancel_order(
                             symbol=cancel_symbol, orderId=cancel_order_id)
                         print(f"撤销订单{cancel_order_id}成功buy:{result}")
-                        # 暂停1秒，等待撤单
-                        await asyncio.sleep(1.0)
+                        # 暂停5秒，等待撤单
+                        await asyncio.sleep(waittime)
                 except Exception as e:
                     print(f"撤销订单{cancel_order_id}失败buy{e}")
                 # 每10秒更新一次订单状态
@@ -201,21 +201,21 @@ async def buy(buy_symbol, money):
 
 async def sell(sell_symbol):
     try:
-        print("订单开始卖出")
         balancevalue = list(collectionbalance.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
         ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
         balancevalue = [b["买入数量"] for b in balancevalue][-1]
         # 列表索引不能是字符串
-        print(balancevalue)
+        print("需卖出数量", sell_symbol, balancevalue)
         # 查询已下单且未卖出的订单
         sell_orders = list(collection.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
         ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
-        print(sell_orders)
+        print("未卖出订单", sell_symbol, sell_orders)
         sellmoney = 0
         sellvalue = 0
         for n in range(1, 86400):
             for sell_order in sell_orders:
-                await asyncio.sleep(1.0)
+                # 暂停5秒，等待撤单
+                await asyncio.sleep(waittime)
                 sell_symbol = sell_order["symbol"]
                 sell_symbol_info = client.get_symbol_info(sell_symbol)
                 # 针对现货市场的精度设置
@@ -239,8 +239,6 @@ async def sell(sell_symbol):
                     sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
                 sell_ask_limit_price = round(
                     sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-                print(f"sell第{n}次下单", "交易标的", sell_symbol, "最优卖价sell",
-                      sell_ask_limit_price, "最优买价sell", sell_bid_limit_price)
                 # 判断当前买卖价差不超过千分之二才进行卖出
                 if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
                     if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
@@ -253,7 +251,7 @@ async def sell(sell_symbol):
                             price=sell_bid_price_1,
                             timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                         )
-                        print("卖出信息sell：", last_order)
+                        print(f"sell第{n}次下单","交易标的", sell_symbol, "最优卖价sell",sell_ask_limit_price, "最优买价sell", sell_bid_limit_price, "卖出信息sell", last_order)
                         # 如果卖出成功，就更新数据集合的状态为已平仓
                         if last_order["status"] == "FILLED":
                             print(sell_order, "卖出成功,卖出的orderid为：", last_order)
@@ -305,37 +303,9 @@ async def main():
     tasks = []
     for buy_symbol in buy_symbols:
         tasks.append(asyncio.create_task(buy(buy_symbol, money)))
-        await asyncio.sleep(5.0)
     for sell_symbol in sell_symbols:
         tasks.append(asyncio.create_task(sell(sell_symbol)))
-        await asyncio.sleep(5.0)
     tasks.append(asyncio.create_task(clearn()))
     await asyncio.gather(*tasks)
-
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# async def buy_task(buy_symbols):
-#     for buy_symbol in buy_symbols:
-#         await buy(buy_symbol, money)
-#         await asyncio.sleep(60.0)  # 模拟延迟
-
-
-# async def sell_task(sell_symbols):
-#     for sell_symbol in sell_symbols:
-#         await buy(sell_symbol, money)
-#         await asyncio.sleep(60.0)  # 模拟延迟
-
-
-# async def main():
-#     loop = asyncio.get_running_loop()
-#     tasks = []
-#     task = loop.create_task(buy_task(buy_symbols))
-#     tasks.append(task)
-#     task = loop.create_task(sell_task(sell_symbols))
-#     tasks.append(task)
-#     tasks.append(loop.create_task(clearn()))
-#     await asyncio.gather(*tasks)
-# if __name__ == "__main__":
-#     asyncio.run(main())
