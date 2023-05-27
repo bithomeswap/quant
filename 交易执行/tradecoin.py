@@ -66,7 +66,7 @@ sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 
 money = 600  # 设置每一批的下单金额
 holdday = 0  # 设置持仓周期
-waittime = 5  # 设置下单间隔，避免权重过高程序暂停
+waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 
 
 async def buy(buy_symbol, money):
@@ -92,8 +92,6 @@ async def buy(buy_symbol, money):
             buy_precision = abs(int(math.log10(float(buy_precision))))
             buy_tickSize = float(buy_symbol_info["filters"][0]["tickSize"])
             buy_stepSize = float(buy_symbol_info["filters"][1]["minQty"])
-            print(
-                f"数量精度buy: {buy_precision};{buy_symbol}数量步长buy: {buy_stepSize};价格精度buy: {buy_price_precision};价格步长buy: {buy_tickSize}")
             # 实时获取当前卖一和买一价格
             buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
             buy_ask_price_1 = float(buy_depth["asks"][0][0])
@@ -113,7 +111,9 @@ async def buy(buy_symbol, money):
                 price=float(buy_bid_limit_price),
                 timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
             )  # 限价成交
-            print(f"buy第{n}次下单", "交易标的", buy_symbol, "最优卖价buy",buy_ask_limit_price, "最优买价buy", buy_bid_limit_price,"下单信息buy", buy_order)
+            print(f"buy第{n}次下单", "交易标的", buy_symbol, "最优卖价:", buy_ask_limit_price, "最优买价:", buy_bid_limit_price,
+                  "数量精度:", buy_precision, "数量步长:", buy_stepSize, "价格精度:", buy_price_precision, "价格步长:", buy_tickSize,
+                  "下单信息:", buy_order)
             collection.insert_one({
                 "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
                 "orderId": int(buy_order["orderId"]),
@@ -206,10 +206,9 @@ async def sell(sell_symbol):
         balancevalue = [b["买入数量"] for b in balancevalue][-1]
         # 列表索引不能是字符串
         print("需卖出数量", sell_symbol, balancevalue)
-        # 查询已下单且未卖出的订单
+        # 查询已下单且未卖出的订单1
         sell_orders = list(collection.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
         ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
-        print("未卖出订单", sell_symbol, sell_orders)
         sellmoney = 0
         sellvalue = 0
         for n in range(1, 86400):
@@ -227,7 +226,6 @@ async def sell(sell_symbol):
                 sell_tickSize = float(
                     sell_symbol_info["filters"][0]["tickSize"])
                 sell_stepSize = float(sell_symbol_info["filters"][1]["minQty"])
-                print(f"{sell_symbol}数量精度sell: {sell_precision};数量步长sell: {sell_stepSize};价格精度sell: {sell_price_precision};价格步长sell: {sell_tickSize}")
                 # 实时获取当前卖一和买一价格
                 sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
                 sell_ask_price_1 = float(sell_depth["asks"][0][0])
@@ -239,41 +237,54 @@ async def sell(sell_symbol):
                     sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
                 sell_ask_limit_price = round(
                     sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
+                print(f"sell第{n}轮下单", "交易标的", sell_symbol, "最优卖价:", sell_ask_limit_price, "最优买价:", sell_bid_limit_price,
+                      "数量精度:", sell_precision, "数量步长:", sell_stepSize, "价格精度:", sell_price_precision, "价格步长:", sell_tickSize)
                 # 判断当前买卖价差不超过千分之二才进行卖出
-                if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
-                    if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
-                        # 卖出订单
-                        last_order = client.create_order(
-                            symbol=sell_symbol,
-                            side=Client.SIDE_SELL,
-                            type=Client.ORDER_TYPE_LIMIT,
-                            quantity=float(sell_order["buy_quantity"]),
-                            price=sell_bid_price_1,
-                            timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                # if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
+                #     if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
+                #         # 卖出订单
+                #         last_order = client.create_order(
+                #             symbol=sell_symbol,
+                #             side=Client.SIDE_SELL,
+                #             type=Client.ORDER_TYPE_LIMIT,
+                #             quantity=float(sell_order["buy_quantity"]),
+                #             price=sell_bid_price_1,
+                #             timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                #         )
+                if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
+                    # 卖出订单
+                    last_order = client.create_order(
+                        symbol=sell_symbol,
+                        side=Client.SIDE_SELL,
+                        type=Client.ORDER_TYPE_LIMIT,
+                        quantity=float(sell_order["buy_quantity"]),
+                        price=sell_bid_price_1,
+                        timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                    )
+                    print(f"sell第{n}轮下单", f"{sell_symbol}卖出成功","下单信息:", last_order["orderId"])
+                    # 如果卖出成功，就更新数据集合的状态为已平仓
+                    if last_order["status"] == "FILLED":
+                        collection.update_one(
+                            {"orderId": last_order["orderId"]},
+                            {"$set": {
+                                "sell_time": int(time.time()),
+                                "sell_quantity": float(last_order["executedQty"]),
+                                "sell_price": float(last_order["price"]),
+                                "sell_precision": int(sell_precision),
+                                "sell_price_precision": int(sell_price_precision),
+                                "sell_tickSize": float(sell_tickSize),
+                                "sell_stepSize": float(sell_stepSize),
+                                "last_orderId": int(last_order["orderId"]),
+                                "status": "END",
+                            }}
                         )
-                        print(f"sell第{n}次下单","交易标的", sell_symbol, "最优卖价sell",sell_ask_limit_price, "最优买价sell", sell_bid_limit_price, "卖出信息sell", last_order)
-                        # 如果卖出成功，就更新数据集合的状态为已平仓
-                        if last_order["status"] == "FILLED":
-                            print(sell_order, "卖出成功,卖出的orderid为：", last_order)
-                            collection.update_one(
-                                {"orderId": sell_order["orderId"]},
-                                {"$set": {
-                                    "sell_time": int(time.time()),
-                                    "sell_quantity": float(last_order["executedQty"]),
-                                    "sell_price": float(last_order["price"]),
-                                    "sell_precision": int(sell_precision),
-                                    "sell_price_precision": int(sell_price_precision),
-                                    "sell_tickSize": float(sell_tickSize),
-                                    "sell_stepSize": float(sell_stepSize),
-                                    "last_orderId": int(last_order["orderId"]),
-                                    "status": "END",
-                                }}
-                            )
-                            sellvalue += float(last_order["executedQty"])
-                            sellmoney += float(last_order["price"]) * \
-                                float(last_order["executedQty"])
-                        else:
-                            print(sell_order, "卖出失败sell")
+                        sellvalue += float(last_order["executedQty"])
+                        sellmoney += float(last_order["price"]) * \
+                            float(last_order["executedQty"])
+                        print(sell_order["orderId"],
+                              "卖出成功,卖出的orderid为：", last_order)
+                    else:
+                        print(sell_order, "卖出失败sell")
             if sellvalue >= balancevalue-5:
                 break
         print("卖出标的", sell_symbol, "卖出金额", sellmoney, "卖出数量", sellvalue)
@@ -301,8 +312,8 @@ async def clearn():
 
 async def main():
     tasks = []
-    for buy_symbol in buy_symbols:
-        tasks.append(asyncio.create_task(buy(buy_symbol, money)))
+    # for buy_symbol in buy_symbols:
+    #     tasks.append(asyncio.create_task(buy(buy_symbol, money)))
     for sell_symbol in sell_symbols:
         tasks.append(asyncio.create_task(sell(sell_symbol)))
     tasks.append(asyncio.create_task(clearn()))
