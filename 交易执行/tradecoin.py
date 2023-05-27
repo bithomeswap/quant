@@ -240,27 +240,27 @@ async def sell(sell_symbol):
                 print(f"sell第{n}轮下单", "交易标的", sell_symbol, "最优卖价:", sell_ask_limit_price, "最优买价:", sell_bid_limit_price,
                       "数量精度:", sell_precision, "数量步长:", sell_stepSize, "价格精度:", sell_price_precision, "价格步长:", sell_tickSize)
                 # 判断当前买卖价差不超过千分之二才进行卖出
-                # if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
-                #     if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
-                #         # 卖出订单
-                #         last_order = client.create_order(
-                #             symbol=sell_symbol,
-                #             side=Client.SIDE_SELL,
-                #             type=Client.ORDER_TYPE_LIMIT,
-                #             quantity=float(sell_order["buy_quantity"]),
-                #             price=sell_bid_price_1,
-                #             timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-                #         )
-                if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
-                    # 卖出订单
-                    last_order = client.create_order(
-                        symbol=sell_symbol,
-                        side=Client.SIDE_SELL,
-                        type=Client.ORDER_TYPE_LIMIT,
-                        quantity=float(sell_order["buy_quantity"]),
-                        price=sell_bid_price_1,
-                        timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-                    )
+                if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
+                    if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
+                        # 卖出订单
+                        last_order = client.create_order(
+                            symbol=sell_symbol,
+                            side=Client.SIDE_SELL,
+                            type=Client.ORDER_TYPE_LIMIT,
+                            quantity=float(sell_order["buy_quantity"]),
+                            price=sell_bid_price_1,
+                            timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                        )
+                # if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
+                #     # 卖出订单
+                #     last_order = client.create_order(
+                #         symbol=sell_symbol,
+                #         side=Client.SIDE_SELL,
+                #         type=Client.ORDER_TYPE_LIMIT,
+                #         quantity=float(sell_order["buy_quantity"]),
+                #         price=sell_bid_price_1,
+                #         timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                #     )
                     print(f"sell第{n}轮下单", f"{sell_symbol}卖出成功","下单信息:", last_order["orderId"])
                     # 如果卖出成功，就更新数据集合的状态为已平仓
                     if last_order["status"] == "FILLED":
