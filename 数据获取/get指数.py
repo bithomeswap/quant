@@ -37,7 +37,7 @@ for code in df:
         start_date_query = datetime.datetime.fromtimestamp(
             latest_timestamp).strftime("%Y%m%d")
 
-    # 通过 akshare 获取目标指数的分钟K线数据
+    # 通过 akshare 获取目标指数的日K线数据
     k_data = ak.index_zh_a_hist(symbol=code, period="daily")
     k_data = k_data[k_data["开盘"] != 0]
 

@@ -10,10 +10,10 @@ client = MongoClient(
 db = client["wth000"]
 names = [("000", "001", "002", "600", "601", "603", "605")]
 
-# 获取当前日期
-start_date = "20170101"
-current_date = datetime.datetime.now()
-end_date = current_date.strftime("%Y%m%d")
+# # 获取当前日期
+# start_date = "20170101"
+# current_date = datetime.datetime.now()
+# end_date = current_date.strftime("%Y%m%d")
 # 从akshare获取A股主板股票的代码和名称
 codes = ak.stock_zh_a_spot_em()
 # 过滤掉ST股票
@@ -25,7 +25,7 @@ for name in names:
         collection = db[f"股票{name}"]
         df = pd.DataFrame()
         df = codes[codes["代码"].str.startswith(name)][["代码", "名称"]].copy()
-        # 遍历目标指数代码，获取其分钟K线数据
+        # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
             # print(code)
             latest = list(collection.find({"代码": float(code)}, {
@@ -33,19 +33,25 @@ for name in names:
             # print(latest)
             if len(latest) == 0:
                 upsert_docs = True
-                start_date_query = start_date
+                # start_date_query = start_date
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
                 start_date_query = datetime.datetime.fromtimestamp(
                     latest_timestamp).strftime("%Y%m%d")
 
+            # # 通过 akshare 获取目标指数的日K线数据
+            # k_data = ak.stock_zh_a_hist(
+            #     symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
+            # k_data_true = ak.stock_zh_a_hist(
+            #     symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
+
             # 通过 akshare 获取目标指数的日K线数据
             k_data = ak.stock_zh_a_hist(
-                symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
+                symbol=code, adjust="hfq")
             k_data_true = ak.stock_zh_a_hist(
-                symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
-
+                symbol=code, adjust="")
+            
             for typename in ["总市值", "市盈率(TTM)"]:
                 k_value = ak.stock_zh_valuation_baidu(
                     symbol=code,  indicator=typename, period="全部")
