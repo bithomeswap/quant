@@ -12,22 +12,19 @@ import math
 def choose(choosename, name, df):
     if choosename == "交易":
         code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
-        rank = math.ceil(len(code)/100)
-        value = math.log(len(code))
-        if rank < 5:
-            print(name, "标的数量过少,不适合大模型策略")
+        value = math.floor(math.log10(len(code)))  # 整数位数
+        rank = math.ceil(len(code)/(10**value))  # 持仓数量
         df = df[(df["真实价格"] >= 4)].copy()  # 过滤低价股
         df = df[(df["开盘收盘幅"] <= 0.08) & (
             df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-        m = 0.04
-        n = 0.16
-        w = m*value/rank  # 权重系数
-        v = n*value/rank  # 权重系数
-        num = rank  # 持仓数量
-        df = df[(df["昨日资金波动_rank"] <= w)].copy()
-        df = df[(df["昨日资金贡献_rank"] <= v)].copy()
+        
+        df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
+        # df = df[(df["昨日资金贡献_rank"] <= 0.01)].copy()
+        # df = df[(df["昨日总市值_rank"] <= 0.01)].copy()
+        # df = df.groupby(["日期"], group_keys=True).apply(
+        #     lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
         df = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
+            lambda x: x.nlargest(rank, "昨日资金波动_rank")).reset_index(drop=True)
     return df
 
 
@@ -106,7 +103,8 @@ while True:
     names = [("000", "001", "002", "600", "601", "603", "605")]
     # 获取当前日期，并通过akshare访问当日A股指数是否有数据，如果有数据则说明今日A股开盘，进行下一步的操作
     start_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    day = ak.index_zh_a_hist(symbol="000002", start_date=start_date, period="daily")
+    day = ak.index_zh_a_hist(
+        symbol="000002", start_date=start_date, period="daily")
     if not day.notna().empty:
         timestamp = datetime.datetime.strptime(
             start_date, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()
