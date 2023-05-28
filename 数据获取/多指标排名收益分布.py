@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 import choose
 import os
-# names = ["COIN", "股票", "指数", "行业"]
-names = ["含基本面"]
+names = ["COIN", "股票", "指数", "行业"]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -27,7 +26,7 @@ for file in files:
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
                 df, m, n = choose.choose("分布", name, df)
                 # 将数据划分成a个等长度的区间
-                a = 10
+                a = 50
                 ranges = []
                 left = 0
                 right = 1

@@ -13,15 +13,11 @@ api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-
 # 设置参数
 name ="COIN分钟"
-
 collection = db[f"{name}"]
-
 # 创建Binance客户端
 client = Client(api_key, api_secret)
-
 # 获取所有USDT计价的现货交易对
 ticker_prices = client.get_exchange_info()["symbols"]
 usdt_ticker_prices = [

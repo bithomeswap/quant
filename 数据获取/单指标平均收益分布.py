@@ -5,12 +5,8 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-# names = ["COIN", "股票", "指数", "行业"]
-names = ["含基本面"]
-
-# mubiao = f"市盈率(TTM)"
+names = ["COIN", "股票", "指数", "行业"]
 mubiao = f"总市值"
-
 a = 50  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
