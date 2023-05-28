@@ -7,12 +7,9 @@ from pymongo import MongoClient
 # 函数说明
 # get_exchange_info()：获取当前交易对信息，包括交易对精度、限价单最大值、挂单最小值等。
 # get_order_book(symbol, limit=100)：获取指定交易对的深度信息，包括卖五、买五等信息。
-# get_avg_price(symbol)：获取指定交易对最新的平均价格。
-# get_ticker(symbol)：获取指定交易对最新的价格信息，包括最新成交价、成交量等。
 # get_account(recvWindow=60000)：获取当前账户信息，包括余额、冻结资金等。
+# get_avg_price(symbol)：获取指定交易对最新的平均价格。
 # get_open_orders(symbol=None, recvWindow=60000)：获取当前账户的所有未成交的订单信息，可以指定交易对。
-# create_test_order(symbol, side, type, timeInForce, quantity, price=None, stopPrice=None, icebergQty=None, newClientOrderId=None, recvWindow=60000)：下单测试接口，用于测试订单参数是否正确。
-# create_order(symbol, side, type, timeInForce, quantity, price=None, stopPrice=None, icebergQty=None, newClientOrderId=None, recvWindow=60000)：下单接口，用于在指定交易对下单。
 # cancel_order(symbol, orderId=None, origClientOrderId=None, newClientOrderId=None, recvWindow=60000)：取消指定订单，可以通过订单ID或客户端自定义ID来取消。
 # get_order(symbol, orderId=None, origClientOrderId=None, recvWindow=60000)：获取指定订单的信息，可以通过订单ID或客户端自定义ID来查询。
 # get_all_orders(symbol, orderId=None, startTime=None, endTime=None, limit=500, recvWindow=60000)：获取当前账户在指定交易对下的所有订单信息。
@@ -28,12 +25,6 @@ api_key = "I5To2CwMIp74EB6zkulpwo4eioWPrYyp4JwBDLBR6QFNHalQUnm595ZEy3Z3JWzK"
 api_secret = "37DJ4aGGfTTLuNtKHQC7p8IMRN3fx0kM5QY0iZGqFwZ9GDeBfi3YUF3FHCngInH3"
 # 创建Binance客户端
 client = Client(api_key, api_secret, testnet=True)
-
-# 币安的api配置(期货测试网)
-# api_key = "266950dec031270d32fed06a552c2698cf662f0e32c4788acf25646bba7ef2c6"
-# api_secret = "1a2b9793419db20e99a307be8ac04fec7a43bd77d46b71b161456105161b164d"
-# # 创建Binance客户端
-# client = Client(api_key, api_secret, testnet=True,base_endpoint="https://testnet.binancefuture.com/fapi")
 
 # 连接MongoDB数据库
 dbclient = MongoClient(
@@ -96,13 +87,12 @@ async def buy(buy_symbol, money):
             buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
             buy_ask_price_1 = float(buy_depth["asks"][0][0])
             buy_bid_price_1 = float(buy_depth["bids"][0][0])
-            # 计算买卖均价
+            # 计算最佳买单和最佳卖单
             buy_bid_limit_price = round(
                 buy_ask_price_1 - pow(0.1, buy_price_precision), buy_price_precision)
             buy_ask_limit_price = round(
                 buy_bid_price_1 + pow(0.1, buy_price_precision), buy_price_precision)
-            quantity = round(round(12/buy_bid_limit_price /
-                             buy_stepSize) * buy_stepSize, buy_precision)
+            quantity = round(round(12/buy_bid_limit_price /buy_stepSize) * buy_stepSize, buy_precision)
             buy_order = client.create_order(
                 symbol=buy_symbol,
                 side=Client.SIDE_BUY,
@@ -111,9 +101,9 @@ async def buy(buy_symbol, money):
                 price=float(buy_bid_limit_price),
                 timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
             )  # 限价成交
-            print(f"buy第{n}次下单", "交易标的", buy_symbol, "最优卖价:", buy_ask_limit_price, "最优买价:", buy_bid_limit_price,
-                  "数量精度:", buy_precision, "数量步长:", buy_stepSize, "价格精度:", buy_price_precision, "价格步长:", buy_tickSize,
-                  "下单信息:", buy_order)
+            print(f"buy第{n}次下单", "交易标的", buy_symbol,"买一价:",buy_bid_price_1,"最优卖价:", buy_ask_limit_price,"卖一价:",buy_ask_price_1, "最优买价:", buy_bid_limit_price,
+                "数量精度:", buy_precision, "数量步长:", buy_stepSize, "价格精度:", buy_price_precision, "价格步长:", buy_tickSize,
+                "下单信息:", buy_order)
             collection.insert_one({
                 "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
                 "orderId": int(buy_order["orderId"]),
@@ -230,27 +220,24 @@ async def sell(sell_symbol):
                 sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
                 sell_ask_price_1 = float(sell_depth["asks"][0][0])
                 sell_bid_price_1 = float(sell_depth["bids"][0][0])
-                # 计算买卖均价
-                sell_target_price = round(
-                    (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
+                # 计算最佳买单和最佳卖单
                 sell_bid_limit_price = round(
                     sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
                 sell_ask_limit_price = round(
                     sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-                print(f"sell第{n}轮下单", "交易标的", sell_symbol, "最优卖价:", sell_ask_limit_price, "最优买价:", sell_bid_limit_price,
+                print(f"sell第{n}轮下单", "交易标的", sell_symbol, "买一价:",sell_bid_price_1,"最优卖价:", sell_ask_limit_price, "卖一价:",sell_ask_price_1,"最优买价:", sell_bid_limit_price,
                       "数量精度:", sell_precision, "数量步长:", sell_stepSize, "价格精度:", sell_price_precision, "价格步长:", sell_tickSize)
                 # 判断当前买卖价差不超过千分之二才进行卖出
-                if 1-sell_bid_price_1/sell_target_price >= 0.001 or sell_ask_price_1/sell_target_price-1 <= 0.001:
-                    if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
-                        # 卖出订单
-                        last_order = client.create_order(
-                            symbol=sell_symbol,
-                            side=Client.SIDE_SELL,
-                            type=Client.ORDER_TYPE_LIMIT,
-                            quantity=float(sell_order["buy_quantity"]),
-                            price=sell_bid_price_1,
-                            timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-                        )
+                if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
+                    # 卖出订单
+                    last_order = client.create_order(
+                        symbol=sell_symbol,
+                        side=Client.SIDE_SELL,
+                        type=Client.ORDER_TYPE_LIMIT,
+                        quantity=float(sell_order["buy_quantity"]),
+                        price=sell_bid_price_1,
+                        timeInForce="FOK"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                    )
                 # if (sell_order["status"] != "END") & (sell_order["buy_quantity"] != 0) & (sell_order["buy_quantity"] != sell_order["sell_quantity"]):
                 #     # 卖出订单
                 #     last_order = client.create_order(
@@ -261,7 +248,9 @@ async def sell(sell_symbol):
                 #         price=sell_bid_price_1,
                 #         timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                 #     )
-                    print(f"sell第{n}轮下单", f"{sell_symbol}卖出成功","下单信息:", last_order["orderId"])
+
+                    print(f"sell第{n}轮下单", f"{sell_symbol}卖出成功",
+                          "下单信息:", last_order["orderId"])
                     # 如果卖出成功，就更新数据集合的状态为已平仓
                     if last_order["status"] == "FILLED":
                         collection.update_one(

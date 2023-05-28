@@ -29,7 +29,8 @@ def technology(df):  # 定义计算技术指标的函数
         if ("股票" in name):
             df["昨日总市值"] = df["总市值"].copy().shift(1)
             df["昨日市盈率"] = df["市盈率(TTM)"].copy().shift(1)
-
+            df["昨日总市值波动"] = df["昨日振幅"] / df["昨日总市值"]
+            df["昨日总市值贡献"] = df["昨日涨跌"] / df["昨日总市值"]
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
