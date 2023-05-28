@@ -42,7 +42,7 @@ holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 buy_limit_money = 12  # 设置买单的最小下单金额，不得低于12否则无法成交
 sell_limit_money = 12  # 设置卖单的最小下单金额，不得低于12否则无法成交
-
+cancelrate =5  # 设置撤单速率，每下多少轮次的订单，撤销一次订单
 
 def sell_all():  # 市价卖出所有代币
     # 获取账户余额
@@ -108,7 +108,7 @@ async def buy(buy_symbol, money):
                 price=float(buy_target_price),
                 timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
             )  # 限价成交
-            print(f"buy第{n}次下单", "交易标的", buy_symbol,"目标价格",buy_target_price,
+            print(f"buy第{n}次下单", "交易标的", buy_symbol, "目标价格", buy_target_price,
                   "买一价:", buy_bid_price_1, "买一量:", buy_bid_value_1,
                   "卖一价:", buy_ask_price_1, "卖一量:", buy_ask_value_1,
                   "数量精度:", buy_precision, "数量步长:", buy_stepSize,
@@ -130,8 +130,7 @@ async def buy(buy_symbol, money):
                 "目标买入金额": money,
                 "当前下单批次": n,
             })
-            if n % 10 == 0:
-                # 每10秒撤销一次未成交订单
+            if n % cancelrate == 0:
                 try:
                     for buy_cancel_order in collectionbuy.find({"status": "pending"}):
                         buy_cancel_symbol = buy_cancel_order["symbol"]
@@ -170,7 +169,7 @@ async def buy(buy_symbol, money):
                           "历史成交订单更新sell", all_order)
                 except Exception as e:
                     print(f"发生异常：{e}")
-            if buymoney >= money*0.99:
+            if buymoney >= money*0.95:
                 collectionbalance.insert_one(
                     {
                         "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -234,7 +233,7 @@ async def sell(sell_symbol):
                     price=float(sell_target_price),
                     timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                 )  # 限价成交
-                print(f"sell第{n}轮下单", "交易标的", sell_symbol,"目标价格",sell_target_price,
+                print(f"sell第{n}轮下单", "交易标的", sell_symbol, "目标价格", sell_target_price,
                       "买一价:", sell_bid_price_1, "买一量:", sell_bid_value_1,
                       "卖一价:", sell_ask_price_1, "卖一量:", sell_ask_value_1,
                       "数量精度:", sell_precision, "数量步长:", sell_stepSize,
@@ -256,8 +255,7 @@ async def sell(sell_symbol):
                     "目标卖出数量": balancevalue,
                     "当前下单批次": n,
                 })
-                if n % 10 == 0:
-                    # 每10秒撤销一次未成交订单
+                if n % cancelrate == 0:
                     try:
                         for sell_cancel_order in collectionsell.find({"status": "pending"}):
                             sell_cancel_symbol = sell_cancel_order["symbol"]
@@ -297,7 +295,7 @@ async def sell(sell_symbol):
                               "历史成交订单更新sell", all_sell_order)
                     except Exception as e:
                         print(f"发生异常：{e}")
-                if sellvalue >= balancevalue*0.99:
+                if sellvalue >= balancevalue*0.95:
                     collectionbalance.update_one(
                         {"symbol": sell_symbol, "日期": (datetime.datetime.now(
                         ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d")},
