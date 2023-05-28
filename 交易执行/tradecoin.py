@@ -304,6 +304,7 @@ async def sell(sell_symbol):
                             "卖出数量": sellvalue,
                         }}
                     )
+                    
                     break
             except Exception as e:
                 # 错误次数加1，并输出错误信息
