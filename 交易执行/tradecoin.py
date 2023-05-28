@@ -42,7 +42,8 @@ holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 buy_limit_money = 12  # 设置买单的最小下单金额，不得低于12否则无法成交
 sell_limit_money = 12  # 设置卖单的最小下单金额，不得低于12否则无法成交
-cancelrate =5  # 设置撤单速率，每下多少轮次的订单，撤销一次订单
+cancelrate = 5  # 设置撤单速率，每下多少轮次的订单，撤销一次订单
+
 
 def sell_all():  # 市价卖出所有代币
     # 获取账户余额
@@ -88,18 +89,24 @@ async def buy(buy_symbol, money):
             buy_precision = abs(int(math.log10(float(buy_precision))))
             buy_tickSize = float(buy_symbol_info["filters"][0]["tickSize"])
             buy_stepSize = float(buy_symbol_info["filters"][1]["minQty"])
-            # 实时获取当前卖一和买一价格
-            buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
-            print(buy_depth)
-            buy_ask_price_1 = float(buy_depth["asks"][0][0])
-            buy_ask_value_1 = float(buy_depth["asks"][0][1])
-            buy_bid_price_1 = float(buy_depth["bids"][0][0])
-            buy_bid_value_1 = float(buy_depth["bids"][0][1])
-            # 计算最佳买单和最佳卖单
-            buy_target_price = round(
-                (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
-            buy_quantity = round(round(
-                buy_limit_money/buy_target_price / buy_stepSize) * buy_stepSize, buy_precision)
+            while True:
+                # 实时获取当前卖一和买一价格
+                buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
+                print(buy_depth)
+                buy_ask_price_1 = float(buy_depth["asks"][0][0])
+                buy_ask_value_1 = float(buy_depth["asks"][0][1])
+                buy_bid_price_1 = float(buy_depth["bids"][0][0])
+                buy_bid_value_1 = float(buy_depth["bids"][0][1])
+                buy_ave = client.get_avg_price(symbol=buy_symbol)[
+                    "price"]  # 获取交易标的的一分钟均价
+                # 计算最佳买单和最佳卖单
+                buy_target_price = round(
+                    (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
+                buy_quantity = round(round(
+                    buy_limit_money/buy_target_price / buy_stepSize) * buy_stepSize, buy_precision)
+                if ((float(buy_target_price)/float(buy_ave)) <= 1.001) & ((float(buy_target_price)/float(buy_ave)) >= 0.999):
+                    # 上涨的时候会抬升目标价，如果目标价抬升的偏离均价千分之一就暂停下单
+                    break
             buy_order = client.create_order(
                 symbol=buy_symbol,
                 side=Client.SIDE_BUY,
@@ -214,17 +221,24 @@ async def sell(sell_symbol):
                 sell_tickSize = float(
                     sell_symbol_info["filters"][0]["tickSize"])
                 sell_stepSize = float(sell_symbol_info["filters"][1]["minQty"])
-                # 实时获取当前卖一和买一价格
-                sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
-                sell_ask_price_1 = float(sell_depth["asks"][0][0])
-                sell_ask_value_1 = float(sell_depth["asks"][0][1])
-                sell_bid_price_1 = float(sell_depth["bids"][0][0])
-                sell_bid_value_1 = float(sell_depth["bids"][0][1])
-                # 计算买卖均价
-                sell_target_price = round(
-                    (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
-                sell_quantity = round(
-                    round(sell_limit_money/sell_target_price/sell_stepSize) * sell_stepSize, sell_precision)
+                while True:
+                    # 实时获取当前卖一和买一价格
+                    sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
+                    print(sell_depth)
+                    sell_ask_price_1 = float(sell_depth["asks"][0][0])
+                    sell_ask_value_1 = float(sell_depth["asks"][0][1])
+                    sell_bid_price_1 = float(sell_depth["bids"][0][0])
+                    sell_bid_value_1 = float(sell_depth["bids"][0][1])
+                    sell_ave = client.get_avg_price(symbol=sell_symbol)[
+                        "price"]  # 获取交易标的的一分钟均价
+                    # 计算最佳买单和最佳卖单
+                    sell_target_price = round(
+                        (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
+                    sell_quantity = round(round(
+                        sell_limit_money/sell_target_price / sell_stepSize) * sell_stepSize, sell_precision)
+                    if ((float(sell_target_price)/float(sell_ave)) <= 1.001) & ((float(sell_target_price)/float(sell_ave)) >= 0.999):
+                        # 卖出的时候会砸低目标价，如果目标价砸低的偏离均价千分之一就暂停下单
+                        break
                 sell_order = client.create_order(
                     symbol=sell_symbol,
                     side=Client.SIDE_SELL,
@@ -311,7 +325,7 @@ async def sell(sell_symbol):
                 print(f"sell发生bug: {e}")
                 continue
         # 输出异常次数
-        print(f"buy共出现{error_count}次异常")
+        print(f"sell共出现{error_count}次异常")
     except Exception as e:
         print(e)
 
