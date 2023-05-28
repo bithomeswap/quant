@@ -25,8 +25,23 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
+                watchtime = all
+                if ("COIN" in name):
+                    watchtime = 2021
+                    start_date = datetime.datetime(
+                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    df = df[df["日期"] >= start_date]
+                    df = df[df["日期"] <= end_date]
+                if "股票" in name:  # 数据截取
+                    watchtime = 2019
+                    start_date = datetime.datetime(
+                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
+                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
                 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
                 for n in range(1, 9):
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
@@ -34,7 +49,7 @@ for file in files:
                     df["日期"], format="%Y-%m-%d")  # 转换日期格式
                 df, m, n = choose.choose("分布", name, df)
                 df = df.dropna()
-                # df.to_csv(f"实际统计数据{name}_{mubiao}.csv")
+                # df.to_csv(f"实际统计数据{name}_{mubiao}_{watchtime}年.csv")
                 sorted_data = np.sort(df[f"{mubiao}"])
                 indices = np.linspace(
                     0, len(df[f"{mubiao}"]), num=a+1, endpoint=True, dtype=int)
@@ -78,7 +93,7 @@ for file in files:
                 if not os.path.exists(path):
                     os.makedirs(path)
                 result_df.round(decimals=6).to_csv(
-                    f"{path}/{name}{mubiao}平均收益分布.csv", index=False)
+                    f"{path}/{name}{mubiao}{str(watchtime)}年平均收益分布.csv", index=False)
                 print(name, "已完成")
             except Exception as e:
                 print(f"发生bug: {e}")

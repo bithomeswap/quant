@@ -34,14 +34,21 @@ def choose(choosename, name, df):
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
-                m = 0.01
-                n = 0.04
-                w = m*value/rank  # 权重系数
-                v = n*value/rank  # 权重系数
-                df = df[(df["昨日资金波动_rank"] <= w)].copy()
-                df = df[(df["昨日资金贡献_rank"] <= v)].copy()
+                # m = 0.01
+                # n = 0.04
+                # w = m*value/rank  # 权重系数
+                # v = n*value/rank  # 权重系数
+                # df = df[(df["昨日资金波动_rank"] <= w)].copy()
+                # df = df[(df["昨日资金贡献_rank"] <= v)].copy()
+                # df = df.groupby(["日期"], group_keys=True).apply(
+                #     lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
+
+                df = df[(df["开盘_rank"] >= 0.5)].copy()
+                df = df[(df["昨日资金波动_rank"] <= 0.05)].copy()
+                df = df[(df["昨日资金贡献_rank"] <= 0.05)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
                     lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
+                m = 0.005  # 设置手续费
                 m = 0.005  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):

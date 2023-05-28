@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 import choose
 import os
-names = ["COIN", "股票", "指数", "行业"]
+import datetime
+# names = ["COIN", "股票", "指数", "行业"]
+names = ["股票"]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -19,6 +21,22 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
+                watchtime = 1900
+                if ("COIN" in name):
+                    watchtime = 2021
+                    start_date = datetime.datetime(
+                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    df = df[df["日期"] >= start_date]
+                    df = df[df["日期"] <= end_date]
+                if "股票" in name:  # 数据截取
+                    watchtime = 2020
+                    start_date = datetime.datetime(
+                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 df = df.groupby(["代码"], group_keys=False).apply(
                     choose.technology)
                 # 去掉噪音数据
@@ -56,7 +74,8 @@ for file in files:
                 path = os.path.join(os.path.abspath("."), "资产多指标排名收益分布")
                 if not os.path.exists(path):
                     os.makedirs(path)
-                result_df.to_csv(f"{path}/{name}_{n}日多指标排名收益分布.csv")
+                result_df.to_csv(
+                    f"{path}/{name}持有{n}日{str(watchtime)}年多指标排名收益分布.csv")
                 print("任务已经完成！")
             except Exception as e:
                 print(f"发生bug: {e}")
