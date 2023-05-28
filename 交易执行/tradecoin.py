@@ -37,7 +37,7 @@ collectionbalance = db[f"order余额{name}"]
 # 获取计划交易的标的
 buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
-money = 6000  # 设置每一批的下单金额
+money = 10000  # 设置每一批的下单金额
 holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 buy_limit_money = 12  # 设置买单的最小下单金额，不得低于12否则无法成交
@@ -104,7 +104,7 @@ async def buy(buy_symbol, money):
                     (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
                 buy_quantity = round(round(
                     buy_limit_money/buy_target_price / buy_stepSize) * buy_stepSize, buy_precision)
-                if ((float(buy_target_price)/float(buy_ave)) <= 1.001) & ((float(buy_target_price)/float(buy_ave)) >= 0.999):
+                if ((float(buy_target_price)/float(buy_ave)) <= 1.0005) & ((float(buy_target_price)/float(buy_ave)) >= 0.9995):
                     # 上涨的时候会抬升目标价，如果目标价抬升的偏离均价千分之一就暂停下单
                     break
             buy_order = client.create_order(
@@ -236,7 +236,7 @@ async def sell(sell_symbol):
                         (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
                     sell_quantity = round(round(
                         sell_limit_money/sell_target_price / sell_stepSize) * sell_stepSize, sell_precision)
-                    if ((float(sell_target_price)/float(sell_ave)) <= 1.001) & ((float(sell_target_price)/float(sell_ave)) >= 0.999):
+                    if ((float(sell_target_price)/float(sell_ave)) <= 1.0005) & ((float(sell_target_price)/float(sell_ave)) >= 0.9995):
                         # 卖出的时候会砸低目标价，如果目标价砸低的偏离均价千分之一就暂停下单
                         break
                 sell_order = client.create_order(
