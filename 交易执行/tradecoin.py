@@ -57,7 +57,7 @@ buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 
 money = 600  # 设置每一批的下单金额
-holdday = 0  # 设置持仓周期
+holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 
 
