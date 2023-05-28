@@ -34,32 +34,34 @@ name = "COIN"
 collectionbuy = db[f"order买入{name}"]
 collectionsell = db[f"order卖出{name}"]
 collectionbalance = db[f"order余额{name}"]
-# def sell_all():  # 市价卖出所有代币
-#     # 获取账户余额
-#     balances = client.get_account()["balances"]
-#     for balance in balances:
-#         asset = balance["asset"]
-#         free_balance = float(balance["free"])
-#         locked_balance = float(balance["locked"])
-#         total_balance = free_balance + locked_balance
-#         if asset != "USDT" and total_balance > 0:
-#             symbol = asset + "USDT"
-#             # 执行市价卖单
-#             client.order_market_sell(
-#                 symbol=symbol,
-#                 quantity=total_balance
-#             )
-#             print(f"卖出{asset}成功！")
-# sell_all()
-
 # 获取计划交易的标的
 buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
-
-money = 600  # 设置每一批的下单金额
+money = 6000  # 设置每一批的下单金额
 holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 
+
+def sell_all():  # 市价卖出所有代币
+    # 获取账户余额
+    balances = client.get_account()["balances"]
+    for balance in balances:
+        try:
+            asset = balance["asset"]
+            free_balance = float(balance["free"])
+            locked_balance = float(balance["locked"])
+            total_balance = free_balance + locked_balance
+            if asset != "USDT" and total_balance > 0:
+                symbol = asset + "USDT"
+                # 执行市价卖单
+                client.order_market_sell(
+                    symbol=symbol,
+                    quantity=total_balance
+                )
+                print(f"卖出{asset}成功！")
+        except Exception as e:
+            print(f"buy发生bug: {e}")
+            continue
 
 async def buy(buy_symbol, money):
     balances = client.get_account()["balances"]  # 获取现货账户资产余额
@@ -326,4 +328,5 @@ async def main():
     tasks.append(asyncio.create_task(clearn()))
     await asyncio.gather(*tasks)
 if __name__ == "__main__":
+    sell_all()
     asyncio.run(main())
