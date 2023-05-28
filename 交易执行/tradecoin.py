@@ -43,6 +43,7 @@ waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看
 buy_limit_money = 12  # 设置买单的最小下单金额，不得低于12否则无法成交
 sell_limit_money = 12  # 设置卖单的最小下单金额，不得低于12否则无法成交
 cancelrate = 5  # 设置撤单速率，每下多少轮次的订单，撤销一次订单
+w = 0.005  # 设置停止下单的价格偏离
 
 
 def sell_all():  # 市价卖出所有代币
@@ -104,7 +105,7 @@ async def buy(buy_symbol, money):
                     (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
                 buy_quantity = round(round(
                     buy_limit_money/buy_target_price / buy_stepSize) * buy_stepSize, buy_precision)
-                if ((float(buy_target_price)/float(buy_ave)) <= 1.0005) & ((float(buy_target_price)/float(buy_ave)) >= 0.9995):
+                if ((float(buy_target_price)/float(buy_ave)) <= 1+w) & ((float(buy_target_price)/float(buy_ave)) >= 1-w):
                     # 上涨的时候会抬升目标价，如果目标价抬升的偏离均价千分之一就暂停下单
                     break
             buy_order = client.create_order(
@@ -223,7 +224,8 @@ async def sell(sell_symbol):
                 sell_stepSize = float(sell_symbol_info["filters"][1]["minQty"])
                 while True:
                     # 实时获取当前卖一和买一价格
-                    sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
+                    sell_depth = client.get_order_book(
+                        symbol=sell_symbol, limit=5)
                     print(sell_depth)
                     sell_ask_price_1 = float(sell_depth["asks"][0][0])
                     sell_ask_value_1 = float(sell_depth["asks"][0][1])
@@ -236,7 +238,7 @@ async def sell(sell_symbol):
                         (sell_ask_price_1+sell_bid_price_1)/2, sell_price_precision)
                     sell_quantity = round(round(
                         sell_limit_money/sell_target_price / sell_stepSize) * sell_stepSize, sell_precision)
-                    if ((float(sell_target_price)/float(sell_ave)) <= 1.0005) & ((float(sell_target_price)/float(sell_ave)) >= 0.9995):
+                    if ((float(sell_target_price)/float(sell_ave)) <= 1+w) & ((float(sell_target_price)/float(sell_ave)) >= 1-w):
                         # 卖出的时候会砸低目标价，如果目标价砸低的偏离均价千分之一就暂停下单
                         break
                 sell_order = client.create_order(
