@@ -4,7 +4,7 @@ import choose
 import os
 import datetime
 # names = ["COIN", "股票", "指数", "行业"]
-names = ["股票"]
+names = ["COIN"]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -23,11 +23,11 @@ for file in files:
                 df = pd.read_csv(path)
                 watchtime = 1900
                 if ("COIN" in name):
-                    watchtime = 2021
+                    watchtime = 2020
                     start_date = datetime.datetime(
                         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
@@ -62,8 +62,8 @@ for file in files:
                         # 根据区间筛选DataFrame
                         sub_df = df[(df[col_name] >= rank_range[0]) &
                                     (df[col_name] <= rank_range[1])]
-                        # 计算均值
-                        sub_df_mean = sub_df.mean(numeric_only=True)
+                        # 计算收益
+                        sub_df_mean = sub_df.mean(numeric_only=True)  # 均值法
                         # 构造包含指标名和涨跌幅的DataFrame，并添加到列结果DataFrame中
                         result_sub_df = pd.DataFrame(
                             {col_name: [sub_df_mean[f"{n}日后总涨跌幅（未来函数）"]]}, index=[rank_range])
