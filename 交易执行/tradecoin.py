@@ -57,7 +57,7 @@ buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
 
 money = 600  # 设置每一批的下单金额
-holdday = 1  # 设置持仓周期
+holdday = 0  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 
 
@@ -124,17 +124,17 @@ async def buy(buy_symbol, money):
             if n % 10 == 0:
                 # 每10秒撤销一次未成交订单
                 try:
-                    for cancel_order in collectionbuy.find({"status": "pending"}):
-                        cancel_symbol = cancel_order["symbol"]
-                        cancel_order_id = cancel_order["orderId"]
+                    for buy_cancel_order in collectionbuy.find({"status": "pending"}):
+                        buy_cancel_symbol = buy_cancel_order["symbol"]
+                        buy_cancel_order_id = buy_cancel_order["orderId"]
                         # 撤销订单
-                        result = client.cancel_order(
-                            symbol=cancel_symbol, orderId=cancel_order_id)
-                        print(f"撤销订单{cancel_order_id}成功buy:{result}")
+                        buy_result = client.cancel_order(
+                            symbol=buy_cancel_symbol, orderId=buy_cancel_order_id)
+                        print(f"撤销订单{buy_cancel_order_id}成功buy:{buy_result}")
                         # 暂停5秒，等待撤单
                         await asyncio.sleep(waittime)
                 except Exception as e:
-                    print(f"撤销订单{cancel_order_id}失败buy{e}")
+                    print(f"撤销订单{buy_cancel_order_id}失败buy{e}")
                 # 每10秒更新一次订单状态
                 try:
                     # 获取当日已完成的订单
@@ -161,7 +161,7 @@ async def buy(buy_symbol, money):
                           "历史成交订单更新sell", all_order)
                 except Exception as e:
                     print(f"发生异常：{e}")
-            if buymoney >= money-150:
+            if buymoney >= money*0.99:
                 collectionbalance.insert_one(
                     {
                         "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -183,127 +183,132 @@ async def buy(buy_symbol, money):
 
 
 async def sell(sell_symbol):
-    balancevalue = list(collectionbalance.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
-    ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
-    balancevalue = [b["买入数量"] for b in balancevalue][-1]
-    # 列表索引不能是字符串
-    print("需卖出数量", sell_symbol, balancevalue)
-    sellmoney = 0
-    sellvalue = 0
-    error_count = 0
-    for n in range(1, 86400):
-        try:
-            # 暂停5秒，等待撤单
-            await asyncio.sleep(waittime)
-            sell_symbol_info = client.get_symbol_info(sell_symbol)
-            # 针对现货市场的精度设置
-            sell_price_precision = sell_symbol_info["filters"][0]["minPrice"]
-            sell_price_precision = abs(
-                int(math.log10(float(sell_price_precision))))
-            sell_precision = sell_symbol_info["filters"][1]["minQty"]
-            sell_precision = abs(int(math.log10(float(sell_precision))))
-            sell_tickSize = float(
-                sell_symbol_info["filters"][0]["tickSize"])
-            sell_stepSize = float(sell_symbol_info["filters"][1]["minQty"])
-            # 实时获取当前卖一和买一价格
-            sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
-            sell_ask_price_1 = float(sell_depth["asks"][0][0])
-            sell_bid_price_1 = float(sell_depth["bids"][0][0])
-            # 计算最佳买单和最佳卖单
-            sell_bid_limit_price = round(
-                sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
-            sell_ask_limit_price = round(
-                sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
-            sell_quantity = round(
-                round(12/sell_ask_limit_price / sell_stepSize) * sell_stepSize, sell_precision)
+    try:
+        balancevalue = list(collectionbalance.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
+        ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
+        balancevalue = [b["买入数量"] for b in balancevalue][-1]
+        # 列表索引不能是字符串
+        print("需卖出数量", sell_symbol, balancevalue)
+        sellmoney = 0
+        sellvalue = 0
+        error_count = 0
+        for n in range(1, 86400):
+            try:
+                # 暂停5秒，等待撤单
+                await asyncio.sleep(waittime)
+                sell_symbol_info = client.get_symbol_info(sell_symbol)
+                # 针对现货市场的精度设置
+                sell_price_precision = sell_symbol_info["filters"][0]["minPrice"]
+                sell_price_precision = abs(
+                    int(math.log10(float(sell_price_precision))))
+                sell_precision = sell_symbol_info["filters"][1]["minQty"]
+                sell_precision = abs(int(math.log10(float(sell_precision))))
+                sell_tickSize = float(
+                    sell_symbol_info["filters"][0]["tickSize"])
+                sell_stepSize = float(sell_symbol_info["filters"][1]["minQty"])
+                # 实时获取当前卖一和买一价格
+                sell_depth = client.get_order_book(symbol=sell_symbol, limit=5)
+                sell_ask_price_1 = float(sell_depth["asks"][0][0])
+                sell_bid_price_1 = float(sell_depth["bids"][0][0])
+                # 计算最佳买单和最佳卖单
+                sell_bid_limit_price = round(
+                    sell_ask_price_1 - pow(0.1, sell_price_precision), sell_price_precision)
+                sell_ask_limit_price = round(
+                    sell_bid_price_1 + pow(0.1, sell_price_precision), sell_price_precision)
+                sell_quantity = round(
+                    round(12/sell_ask_limit_price / sell_stepSize) * sell_stepSize, sell_precision)
+                sell_order = client.create_order(
+                    symbol=sell_symbol,
+                    side=Client.SIDE_SELL,
+                    type=Client.ORDER_TYPE_LIMIT,
+                    quantity=float(sell_quantity),
+                    price=float(sell_ask_limit_price),
+                    timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
+                )  # 限价成交
+                print(f"sell第{n}轮下单", "交易标的", sell_symbol, "买一价:", sell_bid_price_1, "最优卖价:", sell_ask_limit_price, "卖一价:", sell_ask_price_1, "最优买价:", sell_bid_limit_price,
+                      "数量精度:", sell_precision, "数量步长:", sell_stepSize, "价格精度:", sell_price_precision, "价格步长:", sell_tickSize,
+                      "下单信息:", sell_order)
+                collectionsell.insert_one({
+                    "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "orderId": int(sell_order["orderId"]),
+                    "symbol": sell_symbol,
+                    "time": int(time.time()),
+                    "quantity": float(sell_order["origQty"]),
+                    "sell_quantity": None,
+                    "sell_price": float(sell_order["price"]),
+                    "sell_precision": int(sell_precision),
+                    "sell_price_precision": int(sell_price_precision),
+                    "sell_tickSize": float(sell_tickSize),
+                    "sell_stepSize": float(sell_stepSize),
+                    "status": "pending",
+                    "目标卖出数量": balancevalue,
+                    "当前下单批次": n,
+                })
+                if n % 10 == 0:
+                    # 每10秒撤销一次未成交订单
+                    try:
+                        for sell_cancel_order in collectionsell.find({"status": "pending"}):
+                            sell_cancel_symbol = sell_cancel_order["symbol"]
+                            sell_cancel_order_id = sell_cancel_order["orderId"]
+                            # 撤销订单
+                            sell_result = client.cancel_order(
+                                symbol=sell_cancel_symbol, orderId=sell_cancel_order_id)
+                            print(
+                                f"撤销订单{sell_cancel_order_id}成功sell:{sell_result}")
+                            # 暂停5秒，等待撤单
+                            await asyncio.sleep(waittime)
+                    except Exception as e:
+                        print(f"撤销订单{sell_cancel_order_id}失败sell{e}")
+                    # 每10秒更新一次订单状态
+                    try:
+                        # 获取当日已完成的订单
+                        start_time = int(
+                            (datetime.datetime.now() - datetime.timedelta(days=1)).timestamp() * 1000)
+                        all_sell_orders = client.get_all_orders(
+                            symbol=sell_symbol, startTime=start_time)
+                        # 遍历已完成的订单
+                        for all_sell_order in all_sell_orders:
+                            all_sell_order_id = all_sell_order["orderId"]
+                            # 已成交订单
+                            collectionsell.update_one(
+                                {"orderId": all_sell_order_id},
+                                {"$set": {
+                                    "sell_price": float(all_sell_order["price"]),
+                                    "sell_quantity": float(all_sell_order["executedQty"]),
+                                    "status": all_sell_order["status"],
+                                }}
+                            )
+                            sellmoney += float(all_sell_order["price"]) * float(
+                                all_sell_order["executedQty"])
+                            sellvalue += float(all_sell_order["executedQty"])
+                        print(f"待下单金额：{sellmoney}", f"今日买入量：{sellvalue}",
+                              "历史成交订单更新sell", all_sell_order)
+                    except Exception as e:
+                        print(f"发生异常：{e}")
+                if sellvalue >= balancevalue*0.99:
+                    collectionbalance.update_one(
+                        {"symbol": sell_symbol, "日期": (datetime.datetime.now(
+                        ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d")},
+                        {"$set": {
+                            "卖出金额": sellmoney,
+                            "卖出数量": sellvalue,
+                        }}
+                    )
+                    break
+            except Exception as e:
+                # 错误次数加1，并输出错误信息
+                error_count += 1
+                print(f"sell发生bug: {e}")
+                continue
+        # 输出异常次数
+        print(f"buy共出现{error_count}次异常")
+    except Exception as e:
+        print(e)
 
-            sell_order = client.create_order(
-                symbol=sell_symbol,
-                side=Client.SIDE_SELL,
-                type=Client.ORDER_TYPE_LIMIT,
-                quantity=float(sell_quantity),
-                price=float(sell_ask_limit_price),
-                timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
-            )  # 限价成交
-            print(f"sell第{n}轮下单", "交易标的", sell_symbol, "买一价:", sell_bid_price_1, "最优卖价:", sell_ask_limit_price, "卖一价:", sell_ask_price_1, "最优买价:", sell_bid_limit_price,
-                    "数量精度:", sell_precision, "数量步长:", sell_stepSize, "价格精度:", sell_price_precision, "价格步长:", sell_tickSize,
-                    "下单信息:", sell_order)
-            collectionsell.insert_one({
-                "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
-                "orderId": int(sell_order["orderId"]),
-                "symbol": sell_symbol,
-                "time": int(time.time()),
-                "quantity": float(sell_order["origQty"]),
-                "sell_quantity": None,
-                "sell_price": float(sell_order["price"]),
-                "sell_precision": int(sell_precision),
-                "sell_price_precision": int(sell_price_precision),
-                "sell_tickSize": float(sell_tickSize),
-                "sell_stepSize": float(sell_stepSize),
-                "status": "pending",
-                "目标卖出数量": balancevalue,
-                "当前下单批次": n,
-            })
-            if n % 10 == 0:
-                # 每10秒撤销一次未成交订单
-                try:
-                    for cancel_order in collectionsell.find({"status": "pending"}):
-                        cancel_symbol = cancel_order["symbol"]
-                        cancel_order_id = cancel_order["orderId"]
-                        # 撤销订单
-                        result = client.cancel_order(
-                            symbol=cancel_symbol, orderId=cancel_order_id)
-                        print(f"撤销订单{cancel_order_id}成功sell:{result}")
-                        # 暂停5秒，等待撤单
-                        await asyncio.sleep(waittime)
-                except Exception as e:
-                    print(f"撤销订单{cancel_order_id}失败sell{e}")
-                # 每10秒更新一次订单状态
-                try:
-                    # 获取当日已完成的订单
-                    start_time = int(
-                        (datetime.datetime.now() - datetime.timedelta(days=1)).timestamp() * 1000)
-                    all_sell_orders = client.get_all_orders(
-                        symbol=sell_symbol, startTime=start_time)
-                    # 遍历已完成的订单
-                    for all_sell_order in all_sell_orders:
-                        all_sell_order_id = all_sell_order["orderId"]
-                        # 已成交订单
-                        collectionsell.update_one(
-                            {"orderId": all_sell_order_id},
-                            {"$set": {
-                                "sell_price": float(all_sell_order["price"]),
-                                "sell_quantity": float(all_sell_order["executedQty"]),
-                                "status": all_sell_order["status"],
-                            }}
-                        )
-                        sellmoney += float(all_sell_order["price"]) * \
-                            float(all_sell_order["executedQty"])
-                        sellvalue += float(all_sell_order["executedQty"])
-                    print(f"待下单金额：{sellmoney}", f"今日买入量：{sellvalue}",
-                          "历史成交订单更新sell", all_sell_order)
-                except Exception as e:
-                    print(f"发生异常：{e}")
-            if sellvalue >= balancevalue:
-                collectionbalance.update_one(
-                    {"symbol": sell_symbol,"日期": (datetime.datetime.now() - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d")},
-                    {"$set": {
-                    "卖出金额": sellmoney,
-                    "卖出数量": sellvalue,
-                    }}
-                )
-                break
-        except Exception as e:
-            # 错误次数加1，并输出错误信息
-            error_count += 1
-            print(f"sell发生bug: {e}")
-            continue
-    # 输出异常次数
-    print(f"buy共出现{error_count}次异常")
 
 async def clearn():
     limit = 10000
-    for collection in [collectionbuy,collectionsell,collectionbalance]:
+    for collection in [collectionbuy, collectionsell, collectionbalance]:
         if collection.count_documents({}) >= limit:
             oldest_data = collection.find().sort([("日期", 1)]).limit(
                 collection.count_documents({})-limit)
