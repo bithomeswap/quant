@@ -189,8 +189,8 @@ async def sell(sell_symbol):
         balancevalue = [b["买入数量"] for b in balancevalue][-1]
         # 列表索引不能是字符串
         print("需卖出数量", sell_symbol, balancevalue)
-        sellmoney = 0
-        sellvalue = 0
+        sellmoney = 0  # 累计卖出金额
+        sellvalue = 0  # 累计卖出量
         error_count = 0
         for n in range(1, 86400):
             try:
