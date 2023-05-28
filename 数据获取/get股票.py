@@ -47,25 +47,25 @@ for name in names:
             #     symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
 
             # 通过 akshare 获取目标指数的日K线数据
-            k_data = ak.stock_zh_a_hist(
-                symbol=code, adjust="hfq")
-            k_data_true = ak.stock_zh_a_hist(
-                symbol=code, adjust="")
+            k_data = ak.stock_zh_a_hist(symbol=code, adjust="hfq")
+            k_data_true = ak.stock_zh_a_hist(symbol=code, adjust="")
             try:
                 k_value = ak.stock_zh_valuation_baidu(
                     symbol=code,  indicator="总市值", period="全部")
                 k_value.rename(
                     columns={"date": "日期", "value": "总市值"}, inplace=True)
+                k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
             except Exception as e:
-                print(e, f"{code}百度基本面数据拼接错误")          
+                print(e, f"{code}百度基本面数据拼接错误")
             try:
-                k_data_true = k_data_true[["日期", "开盘"]].rename(columns={"开盘": "真实价格"})
+                k_data_true = k_data_true[["日期", "开盘"]].rename(
+                    columns={"开盘": "真实价格"})
                 k_data = pd.merge(k_data, k_data_true, on="日期", how="left")
                 k_data = pd.merge(k_data, k_value, on="日期", how="left")
-
                 k_data["代码"] = float(code)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(
+                    x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
 
                 k_data = k_data.sort_values(by=["代码", "日期"])

@@ -37,8 +37,7 @@ for file in files:
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
+                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
 
                 m = 0.001  # 设置默认手续费
                 n = 6  # 设置默认持仓周期
@@ -123,8 +122,7 @@ for file in files:
                                     twonextcash = value
                                     twocash = twonextcash
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
-                    result_df[f"第{i}份资金周期资产收益"] = result_df[f"第{i}份资金周期资产收益"].fillna(
-                        1)
+                    result_df[f"第{i}份资金周期资产收益"] = result_df[f"第{i}份资金周期资产收益"].fillna(1)
                     result_df[f"第{i}份资金累积资产收益复投"] = result_df[f"第{i}份资金累积资产收益复投"].fillna(
                         method="ffill").fillna(1)
                     result_df[f"第{i}份资金累积资产收益不复投"] = result_df[f"第{i}份资金累积资产收益不复投"].fillna(

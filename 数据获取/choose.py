@@ -31,8 +31,7 @@ def choose(choosename, name, df):
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
-                # 在百的数量级取百分之一，在千的数量级取千分之一
-                df = df[(df["昨日资金波动_rank"] <= 10**(-value))].copy()
+                df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
                     lambda x: x.nlargest(rank, "开盘_rank")).reset_index(drop=True)
                 m = 0.005  # 设置手续费
@@ -49,26 +48,13 @@ def choose(choosename, name, df):
                 df = df[(df["真实价格"] >= 4)].copy()  # 过滤低价股
                 df = df[(df["开盘收盘幅"] <= 0.08) & (
                     df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-                # m = 0.04
-                # n = 0.16
-                # w = m*value/rank  # 权重系数
-                # v = n*value/rank  # 权重系数
-                # df = df[(df["昨日资金波动_rank"] <= w)].copy()
-                # df = df[(df["昨日资金贡献_rank"] <= v)].copy()
-
-                # # df = df.groupby(["日期"], group_keys=True).apply(
-                # #     lambda x: x.nlargest(rank, "昨日资金波动")).reset_index(drop=True)
-
+                df = df[(df["昨日资金波动_rank"] <= 0.01) & (
+                    df["昨日资金贡献_rank"] <= 0.01)].copy()
+                # df = df[(df["昨日资金贡献_rank"] <= 0.02)].copy()
                 # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(rank, "总市值")).reset_index(drop=True)
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nlargest(1, "昨日资金波动")).reset_index(drop=True)
-                # # 年化收益百分之266，净值3.66,比之前有提升，尤其是在2018年的回撤上面，市盈率的数据还没加上，到时候加上看一看
-
-                # 在百的数量级取百分之一，在千的数量级取千分之一
-                df = df[(df["昨日资金波动_rank"] <= 10**(-value))].copy()
+                #     lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nlargest(rank, "开盘_rank")).reset_index(drop=True)
+                    lambda x: x.nlargest(rank, "昨日资金波动_rank")).reset_index(drop=True)
                 m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
