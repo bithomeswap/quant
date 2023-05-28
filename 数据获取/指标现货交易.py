@@ -76,8 +76,7 @@ for file in files:
                         if not group.empty:  # 如果当日没有入选标的，则收益率为0
                             for x in range(1, n+1):
                                 if x < n:
-                                    group_return = (
-                                        (group[f"{x}日后总涨跌幅（未来函数）"]).mean() + 1)  # 计算平均收益率
+                                    group_return = ((group[f"{x}日后总涨跌幅（未来函数）"]).mean() + 1)  # 计算平均收益率
                                 if x == n:
                                     group_return = group_return*(1-m)
                                     cash_balance *= group_return  # 复投累计收益率
@@ -100,8 +99,8 @@ for file in files:
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     cash = 1
                     twocash = 1
-                    daysindex = result_df[result_df[f"第{i}份资金盘中资产收益"].notna()].copy()[
-                        "日期"]
+                    firstcash=1000000 # 假设初始资金每天分配100万元
+                    daysindex = result_df[result_df[f"第{i}份资金盘中资产收益"].notna()].copy()["日期"]
                     for dayindex in daysindex:
                         fill = result_df[result_df["日期"]
                                          == dayindex][f"第{i}份资金盘中资产收益"]
