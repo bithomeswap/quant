@@ -169,7 +169,7 @@ async def buy(buy_symbol, money):
                           "历史成交订单更新sell", all_order)
                 except Exception as e:
                     print(f"发生异常：{e}")
-            if buymoney >= money*0.95:
+            if buymoney >= money*0.995:
                 collectionbalance.insert_one(
                     {
                         "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -295,7 +295,7 @@ async def sell(sell_symbol):
                               "历史成交订单更新sell", all_sell_order)
                     except Exception as e:
                         print(f"发生异常：{e}")
-                if sellvalue >= balancevalue*0.95:
+                if sellvalue >= balancevalue*0.995:
                     collectionbalance.update_one(
                         {"symbol": sell_symbol, "日期": (datetime.datetime.now(
                         ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d")},
@@ -304,7 +304,6 @@ async def sell(sell_symbol):
                             "卖出数量": sellvalue,
                         }}
                     )
-                    
                     break
             except Exception as e:
                 # 错误次数加1，并输出错误信息
