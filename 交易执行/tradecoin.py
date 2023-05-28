@@ -108,7 +108,7 @@ async def buy(buy_symbol, money):
                 price=float(buy_target_price),
                 timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
             )  # 限价成交
-            print(f"buy第{n}次下单", "交易标的", buy_symbol,
+            print(f"buy第{n}次下单", "交易标的", buy_symbol,"目标价格",buy_target_price,
                   "买一价:", buy_bid_price_1, "买一量:", buy_bid_value_1,
                   "卖一价:", buy_ask_price_1, "卖一量:", buy_ask_value_1,
                   "数量精度:", buy_precision, "数量步长:", buy_stepSize,
@@ -234,7 +234,7 @@ async def sell(sell_symbol):
                     price=float(sell_target_price),
                     timeInForce="GTC"  # “GTC”（成交为止），“IOC”（立即成交并取消剩余）和“FOK”（全部或无）
                 )  # 限价成交
-                print(f"sell第{n}轮下单", "交易标的", sell_symbol,
+                print(f"sell第{n}轮下单", "交易标的", sell_symbol,"目标价格",sell_target_price,
                       "买一价:", sell_bid_price_1, "买一量:", sell_bid_value_1,
                       "卖一价:", sell_ask_price_1, "卖一量:", sell_ask_value_1,
                       "数量精度:", sell_precision, "数量步长:", sell_stepSize,
