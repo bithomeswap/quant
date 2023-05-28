@@ -91,6 +91,7 @@ async def buy(buy_symbol, money):
             buy_tickSize = float(buy_symbol_info["filters"][0]["tickSize"])
             buy_stepSize = float(buy_symbol_info["filters"][1]["minQty"])
             while True:
+                await asyncio.sleep(waittime)
                 # 实时获取当前卖一和买一价格
                 buy_depth = client.get_order_book(symbol=buy_symbol, limit=5)
                 print(buy_depth)
