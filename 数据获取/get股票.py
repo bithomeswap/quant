@@ -51,18 +51,20 @@ for name in names:
                 symbol=code, adjust="hfq")
             k_data_true = ak.stock_zh_a_hist(
                 symbol=code, adjust="")
-            
-            for typename in ["总市值", "市盈率(TTM)"]:
-                k_value = ak.stock_zh_valuation_baidu(
-                    symbol=code,  indicator=typename, period="全部")
-                k_value.rename(
-                    columns={"date": "日期", "value": f"{typename}"}, inplace=True)
-                k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
-                if typename == "总市值":
-                    k_valuedata = k_value
-                else:
-                    k_valuedata = pd.merge(
-                        k_valuedata, k_value, on="日期", how="left")
+            try:
+                for typename in ["总市值", "市盈率(TTM)"]:
+                    k_value = ak.stock_zh_valuation_baidu(
+                        symbol=code,  indicator=typename, period="全部")
+                    k_value.rename(
+                        columns={"date": "日期", "value": f"{typename}"}, inplace=True)
+                    k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
+                    if typename == "总市值":
+                        k_valuedata = k_value
+                    else:
+                        k_valuedata = pd.merge(
+                            k_valuedata, k_value, on="日期", how="left")
+            except Exception as e:
+                print(e, f"{code}百度基本面数据拼接错误")          
             try:
                 k_data_true = k_data_true[["日期", "开盘"]].rename(columns={"开盘": "真实价格"})
                 k_data = pd.merge(k_data, k_data_true, on="日期", how="left")
