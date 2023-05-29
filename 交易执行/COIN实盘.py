@@ -40,6 +40,11 @@ def technology(df):  # 定义计算技术指标的函数
             1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
         df["昨日成交额"] = df["成交额"].copy().shift(1)
         df["昨日资金波动"] = df["昨日振幅"] / df["昨日成交额"]
+        if ("股票" in name):
+            df["昨日总市值"] = df["总市值"].copy().shift(1)
+        if ("分钟" in name) | ("指数" in name) | ("行业" in name):
+            for n in range(1, 10):
+                df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
     except Exception as e:
         print(f"发生bug: {e}")
     return df

@@ -49,12 +49,9 @@ def choose(choosename, name, df):
                 df = df[(df["开盘收盘幅"] <= 0.08) & (
                     df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-                # df = df[(df["昨日资金贡献_rank"] <= 0.01)].copy()
-                # df = df[(df["昨日总市值_rank"] <= 0.01)].copy()
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
+                df = df[(df["昨日总市值_rank"] >= 0.99)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nlargest(rank, "昨日资金波动_rank")).reset_index(drop=True)
+                    lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
                 m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):

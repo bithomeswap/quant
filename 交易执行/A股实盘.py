@@ -15,10 +15,9 @@ def choose(choosename, name, df):
         value = math.floor(math.log10(len(code)))  # 整数位数
         rank = math.ceil(len(code)/(10**value))  # 持仓数量
         df = df[(df["真实价格"] >= 4)].copy()  # 过滤低价股
-        df = df[(df["开盘收盘幅"] <= 0.08) & (
-            df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+        df = df[(df["开盘收盘幅"] <= 0.08) & (df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
         df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-        df = df[(df["昨日总市值_rank"] >= 0.995)].copy()
+        df = df[(df["昨日总市值_rank"] >= 0.99)].copy()
         df = df.groupby(["日期"], group_keys=True).apply(
             lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
     return df
@@ -36,6 +35,11 @@ def technology(df):  # 定义计算技术指标的函数
             1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
         df["昨日成交额"] = df["成交额"].copy().shift(1)
         df["昨日资金波动"] = df["昨日振幅"] / df["昨日成交额"]
+        if ("股票" in name):
+            df["昨日总市值"] = df["总市值"].copy().shift(1)
+        if ("分钟" in name) | ("指数" in name) | ("行业" in name):
+            for n in range(1, 10):
+                df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
     except Exception as e:
         print(f"发生bug: {e}")
     return df
