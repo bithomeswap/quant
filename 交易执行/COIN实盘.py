@@ -23,8 +23,7 @@ def choose(choosename, name, df):
         rank = math.ceil(len(code)/(10**value))  # 持仓数量
         df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
         df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-        df = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nlargest(rank, "开盘_rank")).reset_index(drop=True)
+        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(rank, "开盘")).reset_index(drop=True)
     return df
 
 
