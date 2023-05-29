@@ -99,8 +99,7 @@ async def buy(buy_symbol, money):
                 buy_ask_value_1 = float(buy_depth["asks"][0][1])
                 buy_bid_price_1 = float(buy_depth["bids"][0][0])
                 buy_bid_value_1 = float(buy_depth["bids"][0][1])
-                buy_ave = client.get_avg_price(symbol=buy_symbol)[
-                    "price"]  # 获取交易标的的一分钟均价
+                buy_ave = client.get_avg_price(symbol=buy_symbol)["price"]  # 获取交易标的的一分钟均价
                 # 计算最佳买单和最佳卖单
                 buy_target_price = round(
                     (buy_ask_price_1+buy_bid_price_1)/2, buy_price_precision)
