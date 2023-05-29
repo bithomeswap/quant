@@ -2,8 +2,8 @@ import choose
 import pandas as pd
 import os
 import datetime
-# names = ["COIN", "股票", "指数", "行业"]
-names = ["股票"]
+names = ["COIN", "股票", "指数", "行业"]
+# names = ["股票"]
 
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -21,19 +21,24 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
                 if ("COIN" in name):
-                    n = 2021
-                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    n = 2023
+                    start_date = datetime.datetime(
+                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
-                    n = 2019
-                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    n = 2017
+                    start_date = datetime.datetime(
+                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+                df = df.groupby(["代码"], group_keys=False).apply(
+                    choose.technology)
 
                 m = 0.001  # 设置默认手续费
                 n = 6  # 设置默认持仓周期

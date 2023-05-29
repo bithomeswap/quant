@@ -22,7 +22,7 @@ def technology(df):  # 定义计算技术指标的函数
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
     except Exception as e:
-        print(df["代码"], f"发生bug: {e}")
+        print(f"发生bug: {e}")
     return df
 
 
@@ -38,14 +38,15 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 def tradelist(name):
     collection = db[f"{name}"]
     # # 获取数据并转换为DataFrame格式
+    watchtime = 1990
     if "股票" in name:  # 数据截取
         watchtime = 2017
         df = pd.DataFrame(list(collection.find(
-            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1)}})))
+            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
     if "COIN" in name:  # 数据截取
         watchtime = 2020
         df = pd.DataFrame(list(collection.find(
-            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1)}})))
+            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
     else:
         df = pd.DataFrame(list(collection.find()))
     # 按照“代码”列进行分组并计算技术指标
@@ -79,11 +80,11 @@ print(names)
 for name in names:
     if ("指标" not in name) & ("实盘" not in name) & ("order" not in name) & ("js" not in name):
         # if ("分钟" not in name) & ("股票" in name):
-            # if ("分钟" in name):
-            # if ("行业" in name) | ("指数" in name):
+        # if ("分钟" in name):
+        if ("行业" in name) | ("指数" in name):
             # if ("COIN" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)
             except Exception as e:
-                print(f"发生bug: {e}")
+                print(f"tradelist发生bug: {e}")
