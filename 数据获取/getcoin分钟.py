@@ -19,14 +19,13 @@ collection = db[f"{name}"]
 # 创建Binance客户端
 client = Client(api_key, api_secret)
 # 获取所有USDT计价的现货交易对
-ticker_prices = client.get_exchange_info()["symbols"]
-usdt_ticker_prices = [
-    ticker_price for ticker_price in ticker_prices if ticker_price["quoteAsset"] == "USDT" and ("DOWN" not in ticker_price["symbol"]) and ("UP" not in ticker_price["symbol"])]
-print(f"当前币安现货有{len(ticker_prices)}个交易对")
+codes = client.get_exchange_info()["symbols"]
+usdt_codes = [code for code in codes if code["quoteAsset"] == "USDT" and ("DOWN" not in code["symbol"]) and ("UP" not in code["symbol"])]
+print(f"当前币安现货USDT有{len(usdt_codes)}个交易对")
 
 # 遍历所有现货交易对，并获取日K线数据
-for ticker_price in usdt_ticker_prices:
-    symbol = ticker_price["symbol"]
+for code in usdt_codes:
+    symbol = code["symbol"]
     data_list = []
     # 找到该标的最新的时间戳
     latest_data = collection.find_one(
