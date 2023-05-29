@@ -15,7 +15,7 @@ def choose(choosename, name, df):
         value = math.floor(math.log10(len(code)))  # 整数位数
         rank = math.ceil(len(code)/(10**value))  # 持仓数量
         df = df[(df["真实价格"] >= 4)].copy()  # 过滤低价股
-        df = df[(df["开盘收盘幅"] <= 0.08) & (df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
+        df = df[(df["开盘收盘幅"] <= 0.08)].copy()  # 过滤可能产生大回撤的股票
         df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
         df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(rank, "昨日总市值")).reset_index(drop=True)
     return df
