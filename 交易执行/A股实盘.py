@@ -17,14 +17,10 @@ def choose(choosename, name, df):
         df = df[(df["真实价格"] >= 4)].copy()  # 过滤低价股
         df = df[(df["开盘收盘幅"] <= 0.08) & (
             df["开盘收盘幅"] >= -0.01)].copy()  # 过滤可能产生大回撤的股票
-        
         df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-        # df = df[(df["昨日资金贡献_rank"] <= 0.01)].copy()
-        # df = df[(df["昨日总市值_rank"] <= 0.01)].copy()
-        # df = df.groupby(["日期"], group_keys=True).apply(
-        #     lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
+        df = df[(df["昨日总市值_rank"] >= 0.995)].copy()
         df = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nlargest(rank, "昨日资金波动_rank")).reset_index(drop=True)
+            lambda x: x.nlargest(rank, "总市值_rank")).reset_index(drop=True)
     return df
 
 
