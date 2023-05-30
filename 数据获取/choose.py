@@ -24,14 +24,16 @@ def choose(choosename, name, df):
         if ("指数" in name) | ("行业" in name):
             # df = df[df[f'过去{5}日涨跌{0}金叉'] == 1].copy()
             # df=df[df[f"指数{5}日偏离"]>df[f"指数{2}日偏离"]]
-            df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
+            df = df.groupby(["日期"], group_keys=True).apply(
+                lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
             m = 0.005  # 设置手续费
             n = 30  # 设置持仓周期
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-                df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
+                df = df.groupby(["日期"], group_keys=True).apply(
+                    lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
