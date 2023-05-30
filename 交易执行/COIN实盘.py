@@ -70,10 +70,6 @@ try:
             interval=Client.KLINE_INTERVAL_1DAY,
             limit=10
         )
-        # 实际上实盘的时候，这里应该改成八小时
-        # KLINE_INTERVAL_15MINUTE="15m"
-        # KLINE_INTERVAL_8HOUR="8h"
-        # KLINE_INTERVAL_1DAY ="1d"
         # 插入到集合中
         for kline in klines:
             timestamp = kline[0] / 1000
@@ -93,9 +89,6 @@ try:
                     "成交量": float(kline[5]),
                     "收盘timestamp": float(kline[6]/1000),
                     "成交额": float(kline[7]),
-                    "成交笔数": float(kline[8]),
-                    "主动买入成交量": float(kline[9]),
-                    "主动买入成交额":  float(kline[10])
                 }
                 filter = {"代码": symbol, "timestamp": latest_timestamp}
                 collection.update_one(
@@ -111,9 +104,6 @@ try:
                                   "成交量": float(kline[5]),
                                   "收盘timestamp": float(kline[6]/1000),
                                   "成交额": float(kline[7]),
-                                  "成交笔数": float(kline[8]),
-                                  "主动买入成交量": float(kline[9]),
-                                  "主动买入成交额":  float(kline[10])
                                   })
         # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
         if len(data_list) > 0:
