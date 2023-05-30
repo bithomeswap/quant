@@ -346,6 +346,7 @@ async def clearn():
 
 async def get_buy_symbols():
     buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
+    time.sleep(10)
     return buy_symbols
 
 
@@ -353,18 +354,26 @@ async def get_sell_symbols():
     sell_symbols = pd.DataFrame(list(collectionbuy.find({"日期": (
         datetime.datetime.now() - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d")})))
     sell_symbols = sell_symbols["symbol"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
+    time.sleep(10)
     return sell_symbols
 
 
 async def main():
     tasks = []
-    sell_symbols = await get_sell_symbols()
-    for sell_symbol in sell_symbols:
-        tasks.append(asyncio.create_task(sell(sell_symbol)))
-    buy_symbols = await get_buy_symbols()
-    for buy_symbol in buy_symbols:
-        tasks.append(asyncio.create_task(buy(buy_symbol, money)))
+    try:
+        sell_symbols = await get_sell_symbols()
+        for sell_symbol in sell_symbols:
+            tasks.append(asyncio.create_task(sell(sell_symbol)))
+    except Exception as e:
+        print(e)
+    try:
+        buy_symbols = await get_buy_symbols()
+        for buy_symbol in buy_symbols:
+            tasks.append(asyncio.create_task(buy(buy_symbol, money)))
+    except Exception as e:
+        print(e)
     tasks.append(asyncio.create_task(clearn()))
+
     await asyncio.gather(*tasks)
 if __name__ == "__main__":
     # sell_all()
