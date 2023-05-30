@@ -7,18 +7,6 @@ import time
 import pandas as pd
 
 
-def choose(choosename, name, df):
-    if choosename == "交易":
-        code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
-        value = math.floor(math.log10(len(code)))  # 整数位数
-        rank = math.ceil(len(code)/(10**value))  # 持仓数量
-        df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
-        df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-        df = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(rank, "开盘")).reset_index(drop=True)
-    return df
-
-
 def technology(df):  # 定义计算技术指标的函数
     try:
         # df = df.dropna()  # 删除缺失值，避免无效数据的干扰
@@ -31,8 +19,6 @@ def technology(df):  # 定义计算技术指标的函数
             1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
         df["昨日成交额"] = df["成交额"].copy().shift(1)
         df["昨日资金波动"] = df["昨日振幅"] / df["昨日成交额"]
-        if ("股票" in name):
-            df["昨日总市值"] = df["总市值"].copy().shift(1)
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
@@ -50,59 +36,27 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
     return df
 
 
-def tradelist(name):
-    collection = db[f"实盘{name}"]
-    # 获取数据并转换为DataFrame格式
-    df = pd.DataFrame(list(collection.find()))
-    print(f"{name}数据读取成功")
-    # 按照“代码”列进行分组并计算技术指标
-    df = df.groupby(["代码"], group_keys=False).apply(technology)
-    # 分组并计算指标排名
-    df = df.groupby(["日期"], group_keys=False).apply(rank)
-    try:
-        df.sort_values(by="日期")    # 以日期列为索引,避免计算错误
-        # 获取最后一天的数据
-        last_day = df.iloc[-1]["日期"]
-        # 计算总共统计的股票数量
-        df = df[df[f"日期"] == last_day].copy()
-        df = choose("交易", name, df)
-        print(df)
-        if len(df) < 200:
-            # 发布到钉钉机器人
-            df["市场"] = f"实盘{name}"
-            message = df[["市场", "代码", "日期", "开盘"]].to_markdown()
-            print(type(message))
-            webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
-            requests.post(webhook, json={"msgtype": "markdown", "markdown": {
-                "title": f"{name}", "text": message}})
-    except Exception as e:
-        print(f"发生bug: {e}")
-
-
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-name = ("COIN")
+# 币安的api配置
+api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
+api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
+# 需要写入的数据库配置
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
 try:
-    # 币安的api配置
-    api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
-    api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
-    # 需要写入的数据库配置
-    client = MongoClient(
-        "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
-    db = client["wth000"]
     # 设置参数
     name = "COIN"
     collection = db[f"实盘{name}"]
     # 创建Binance客户端
     client = Client(api_key, api_secret)
-
     # 获取所有USDT计价的现货交易对
     ticker_prices = client.get_exchange_info()["symbols"]
     usdt_ticker_prices = [
         ticker_price for ticker_price in ticker_prices if ticker_price["quoteAsset"] == "USDT" and ("DOWN" not in ticker_price["symbol"]) and ("UP" not in ticker_price["symbol"])]
     print(f"当前币安现货有{len(ticker_prices)}个交易对")
-
     # 遍历所有现货交易对，并获取日K线数据
     for ticker_price in usdt_ticker_prices:
         symbol = ticker_price["symbol"]
@@ -126,7 +80,7 @@ try:
             if timestamp < latest_timestamp:  # 如果时间戳小于等于最后时间戳，直接跳过
                 continue
             date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                    time.gmtime(timestamp))
+                                 time.gmtime(timestamp))
             if timestamp == latest_timestamp:
                 update_data = {
                     "timestamp": timestamp,
@@ -148,19 +102,19 @@ try:
                     filter, {"$set": update_data})
             else:
                 data_list.append({"timestamp": timestamp,
-                                    "代码": symbol,
-                                    "日期": date,
-                                    "开盘": float(kline[1]),
-                                    "最高": float(kline[2]),
-                                    "最低": float(kline[3]),
-                                    "收盘": float(kline[4]),
-                                    "成交量": float(kline[5]),
-                                    "收盘timestamp": float(kline[6]/1000),
-                                    "成交额": float(kline[7]),
-                                    "成交笔数": float(kline[8]),
-                                    "主动买入成交量": float(kline[9]),
-                                    "主动买入成交额":  float(kline[10])
-                                    })
+                                  "代码": symbol,
+                                  "日期": date,
+                                  "开盘": float(kline[1]),
+                                  "最高": float(kline[2]),
+                                  "最低": float(kline[3]),
+                                  "收盘": float(kline[4]),
+                                  "成交量": float(kline[5]),
+                                  "收盘timestamp": float(kline[6]/1000),
+                                  "成交额": float(kline[7]),
+                                  "成交笔数": float(kline[8]),
+                                  "主动买入成交量": float(kline[9]),
+                                  "主动买入成交额":  float(kline[10])
+                                  })
         # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
         if len(data_list) > 0:
             collection.insert_many(data_list)
@@ -175,4 +129,37 @@ try:
 except Exception as e:
     print(e)
 time.sleep(1)
-tradelist(name)
+try:
+    # 获取数据并转换为DataFrame格式
+    df = pd.DataFrame(list(collection.find()))
+    print(f"{name}数据读取成功")
+    # 按照“代码”列进行分组并计算技术指标
+    df = df.groupby(["代码"], group_keys=False).apply(technology)
+    # 分组并计算指标排名
+    df = df.groupby(["日期"], group_keys=False).apply(rank)
+    df.sort_values(by="日期")    # 以日期列为索引,避免计算错误
+    # 获取最后一天的数据
+    last_day = df.iloc[-1]["日期"]
+    # 计算总共统计的股票数量
+    df = df[df[f"日期"] == last_day].copy()
+
+    code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
+    value = math.floor(math.log10(len(code)))  # 整数位数
+    num = math.ceil(len(code)/(10**value))  # 持仓数量
+    df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
+    df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
+    df = df.groupby(["日期"], group_keys=True).apply(
+        lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
+    print(df)
+    if len(df) < 200:
+        # 发布到钉钉机器人
+        df["市场"] = f"实盘{name}"
+        message = df[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
+        print(type(message))
+        webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
+        requests.post(webhook, json={"msgtype": "markdown", "markdown": {
+            "title": f"{name}", "text": message}})
+except Exception as e:
+    print(f"发生bug: {e}")
+buy_symbols = df["symbol"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
+print(buy_symbols)

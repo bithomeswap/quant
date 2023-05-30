@@ -36,7 +36,7 @@ collectionbuy = db[f"order买入{name}"]
 collectionsell = db[f"order卖出{name}"]
 collectionbalance = db[f"order余额{name}"]
 
-money = 10000  # 设置每一批的下单金额
+money = 5000  # 设置每一批的下单金额
 holdday = 0  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 buy_limit_money = 12  # 设置买单的最小下单金额，不得低于12否则无法成交
