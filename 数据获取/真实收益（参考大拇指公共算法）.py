@@ -1,5 +1,4 @@
 from typing import List, Dict, Callable
-
 import pandas as pd
 import numpy as np
 import requests
@@ -246,18 +245,10 @@ if __name__ == '__main__':
     end = datetime.datetime.now()
     print((end - start))
 
-    print(buy_price(4.32))  # 4.33
-    print(buy_price(9.79))  # 9.8
-    print(buy_price(396.88))  # 397.28
-    print(buy_price(549.9))  # 550.45
-    print(buy_price(1705))  # 1706.71
-
-    print(sell_price(4.32))  # 4.31
-    print(sell_price(9.79))  # 9.76
-    print(sell_price(396.88))  # 395.96
-    print(sell_price(549.9))  # 548.63
-    print(sell_price(1705))  # 1701.08
-
+    # print(buy_price(4.32))  # 4.33
+    # print(buy_price(1705))  # 1706.71
+    # print(sell_price(4.32))  # 4.31
+    # print(sell_price(1705))  # 1701.08
     # print(sell_fee(3000))  # 5
     # print(sell_fee(5000))  # 6.5
 
