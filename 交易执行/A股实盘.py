@@ -8,6 +8,7 @@ import pandas as pd
 import time
 import math
 
+
 def technology(df):  # 定义计算技术指标的函数
     try:
         # df = df.dropna()  # 删除缺失值，避免无效数据的干扰
@@ -41,7 +42,8 @@ db = client["wth000"]
 name = ("000", "001", "002", "600", "601", "603", "605")
 # 获取当前日期，并通过akshare访问当日A股指数是否有数据，如果有数据则说明今日A股开盘，进行下一步的操作
 start_date = datetime.datetime.now().strftime("%Y-%m-%d")
-day = ak.index_zh_a_hist(symbol="000002", start_date=start_date, period="daily")
+day = ak.index_zh_a_hist(
+    symbol="000002", start_date=start_date, period="daily")
 if not day.notna().empty:
     timestamp = datetime.datetime.strptime(
         start_date, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()
@@ -53,7 +55,8 @@ if not day.notna().empty:
         codes["开盘"] = codes["今开"]
         codes["收盘"] = codes["最新价"]
         collection = db[f"实盘{name}"]
-        latest = list(collection.find({"timestamp": timestamp}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
+        latest = list(collection.find({"timestamp": timestamp}, {
+                      "timestamp": 1}).sort("timestamp", -1).limit(1))
         if len(latest) == 0:
             upsert_docs = True
             start_date_query = start_date
@@ -79,7 +82,8 @@ if not day.notna().empty:
                         # 否则，加入插入列表
                         bulk_insert.append(doc)
                     if doc["timestamp"] == float(latest_timestamp):
-                        collection.update_many({"代码": doc["代码"], "timestamp": float(timestamp)}, {"$set": doc}, upsert=True)
+                        collection.update_many({"代码": doc["代码"], "timestamp": float(timestamp)}, {
+                                               "$set": doc}, upsert=True)
                 # 执行批量插入操作
                 if bulk_insert:
                     collection.insert_many(bulk_insert)
@@ -115,17 +119,18 @@ if not day.notna().empty:
         df = df[(df["开盘"] >= 4)].copy()  # 过滤低价股
         df = df[(df["开盘收盘幅"] <= 0.08)].copy()  # 过滤可能产生大回撤的股票
         df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
+        df = df.groupby(["日期"], group_keys=True).apply(
+            lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
         print(df)
-        if len(df) < 200:
-            # 发布到钉钉机器人
-            df["市场"] = f"实盘{name}"
-            message = df[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
-            print(type(message))
-            webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
-            requests.post(webhook, json={"msgtype": "markdown", "markdown": {
-                "title": f"{name}", "text": message}})
+        # if len(df) < 200:
+        #     # 发布到钉钉机器人
+        #     df["市场"] = f"实盘{name}"
+        #     message = df[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
+        #     print(type(message))
+        #     webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
+        #     requests.post(webhook, json={"msgtype": "markdown", "markdown": {
+        #         "title": f"{name}", "text": message}})
     except Exception as e:
         print(f"发生bug: {e}")
-buy_symbols = df["symbol"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
+buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
 print(buy_symbols)
