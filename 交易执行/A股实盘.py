@@ -14,7 +14,7 @@ def choose(choosename, name, df):
         code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
         value = math.floor(math.log10(len(code)))  # 整数位数
         rank = math.ceil(len(code)/(10**value))  # 持仓数量
-        df = df[(df["真实价格"] >= 4)].copy()  # 过滤低价股
+        df = df[(df["开盘"] >= 4)].copy()  # 过滤低价股
         df = df[(df["开盘收盘幅"] <= 0.08)].copy()  # 过滤可能产生大回撤的股票
         df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
         df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(rank, "昨日总市值")).reset_index(drop=True)
@@ -99,7 +99,6 @@ while True:
             try:
                 codes = codes[codes["代码"].str.startswith(name)]
                 codes["开盘"] = codes["今开"]
-                codes["真实价格"] = codes["开盘"]
                 codes["收盘"] = codes["最新价"]
                 collection = db[f"实盘{name}"]
                 latest = list(collection.find({"timestamp": timestamp}, {
