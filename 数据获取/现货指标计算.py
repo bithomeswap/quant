@@ -14,16 +14,11 @@ def technology(df):  # 定义计算技术指标的函数
         df["涨跌幅"] = df["收盘"]/df["收盘"].copy().shift(1) - 1
         df["昨日成交额"] = df["成交额"].copy().shift(1)
         df["昨日振幅"] = (df["最高"].copy().shift(1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
-        
         df["昨日涨跌"] = df["涨跌幅"].copy().shift(1)+1
         df["昨日资金贡献"] = df["昨日涨跌"] / df["昨日成交额"]
         df["昨日资金波动"] = df["昨日振幅"] / df["昨日成交额"]
-        if ("股票" in name)| ("COIN" in name):
+        if ("股票" in name) | ("COIN" in name):
             df["昨日总市值"] = df["总市值"].copy().shift(1)
-            df["昨日市值获利"] = df["昨日涨跌"] / df["昨日总市值"]
-            df["昨日市值资金贡献"] = df["昨日资金贡献"]/df["昨日总市值"]
-            df["昨日市值资金波动"] = df["昨日资金波动"]/df["昨日总市值"]
-            df["昨日市值成交"] = df["昨日成交额"]*df["昨日总市值"]
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
@@ -45,7 +40,7 @@ def tradelist(name):
     collection = db[f"{name}"]
     # # 获取数据并转换为DataFrame格式
     if "股票" in name:  # 数据截取
-        watchtime = 2017
+        watchtime = 2021
         df = pd.DataFrame(list(collection.find(
             {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标

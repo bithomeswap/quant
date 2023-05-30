@@ -27,18 +27,18 @@ for file in files:
                     start_date = datetime.datetime(watchtime, int(
                         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
-                    watchtime = 2017
+                    watchtime = 2021
                     start_date = datetime.datetime(watchtime, int(
                         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
+                    df = df[df["日期"] >= start_date]
+                    df = df[df["日期"] <= end_date]
+                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
                 # 去掉噪音数据
                 for n in range(1, 9):
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
