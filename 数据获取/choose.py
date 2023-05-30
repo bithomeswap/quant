@@ -14,8 +14,8 @@ def choose(choosename, name, df):
     if choosename == "交易":
         code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
         value = math.floor(math.log10(len(code)))  # 整数位数
-        rank = math.ceil(len(code)/(10**value))  # 持仓数量
-        print(name, "板块第一天的标的数量", len(code), "整数位数", value, "择股数量", rank)
+        num = math.ceil(len(code)/(10**value))  # 持仓数量
+        print(name, "板块第一天的标的数量", len(code), "整数位数", value, "择股数量", num)
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
             for n in (2, 9):
                 df = df[(df[f"过去{n}日总涨跌_rank"] >= 0.5)].copy()
@@ -24,14 +24,14 @@ def choose(choosename, name, df):
         if ("指数" in name) | ("行业" in name):
             # df = df[df[f'过去{5}日涨跌{0}金叉'] == 1].copy()
             # df=df[df[f"指数{5}日偏离"]>df[f"指数{2}日偏离"]]
-            df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nlargest(rank, "昨日资金波动")).reset_index(drop=True)
+            df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
             m = 0.005  # 设置手续费
             n = 30  # 设置持仓周期
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-                df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(rank, "开盘")).reset_index(drop=True)
+                df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
@@ -46,7 +46,7 @@ def choose(choosename, name, df):
                 df = df[(df["开盘收盘幅"] <= 0.08)].copy()  # 过滤可能产生大回撤的股票
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nsmallest(rank, "昨日总市值")).reset_index(drop=True)
+                    lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
                 m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
