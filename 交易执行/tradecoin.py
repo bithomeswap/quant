@@ -34,9 +34,7 @@ name = "COIN"
 collectionbuy = db[f"order买入{name}"]
 collectionsell = db[f"order卖出{name}"]
 collectionbalance = db[f"order余额{name}"]
-# 获取计划交易的标的
-buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
-sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
+
 money = 10000  # 设置每一批的下单金额
 holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
@@ -45,8 +43,7 @@ sell_limit_money = 12  # 设置卖单的最小下单金额，不得低于12否�
 cancelrate = 5  # 设置撤单速率，每下多少轮次的订单，撤销一次订单
 stoprate = 0.0005  # 设置停止下单的价格偏离
 
-
-def sell_all():  # 市价卖出所有代币
+async def sell_all():  # 市价卖出所有代币
     # 获取账户余额
     balances = client.get_account()["balances"]
     for balance in balances:
@@ -200,8 +197,7 @@ async def buy(buy_symbol, money):
 
 async def sell(sell_symbol):
     try:
-        balancevalue = list(collectionbalance.find({"symbol": sell_symbol, "日期": (datetime.datetime.now(
-        ) - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
+        balancevalue = list(collectionbalance.find({"symbol": sell_symbol, "日期": (datetime.datetime.now() - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d"), "symbol": sell_symbol}))
         balancevalue = [b["买入数量"] for b in balancevalue][-1]
         # 列表索引不能是字符串
         print("需卖出数量", sell_symbol, balancevalue)
@@ -342,13 +338,22 @@ async def clearn():
             collection.delete_many({"_id": {"$in": ids_to_delete}})
         print(f"{collection}数据清理成功")
 
+# 获取计划交易的标的
+async def get_buy_symbols():
+    buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
+    return buy_symbols
+async def get_sell_symbols():
+    sell_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
+    return sell_symbols
 
 async def main():
     tasks = []
-    for buy_symbol in buy_symbols:
-        tasks.append(asyncio.create_task(buy(buy_symbol, money)))
+    sell_symbols=get_sell_symbols()
     for sell_symbol in sell_symbols:
         tasks.append(asyncio.create_task(sell(sell_symbol)))
+    buy_symbols=get_buy_symbols()
+    for buy_symbol in buy_symbols:
+        tasks.append(asyncio.create_task(buy(buy_symbol, money)))
     tasks.append(asyncio.create_task(clearn()))
     await asyncio.gather(*tasks)
 if __name__ == "__main__":
