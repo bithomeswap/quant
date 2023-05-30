@@ -105,7 +105,7 @@ try:
         if len(data_list) > 0:
             collection.insert_many(data_list)
     print("任务已经完成")
-    limit = 50000
+    limit = 5000
     if collection.count_documents({}) >= limit:
         oldest_data = collection.find().sort([("日期", 1)]).limit(
             collection.count_documents({})-limit)
@@ -137,14 +137,14 @@ try:
     df = df.groupby(["日期"], group_keys=True).apply(
         lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
     print(df)
-    if len(df) < 200:
-        # 发布到钉钉机器人
-        df["市场"] = f"实盘{name}"
-        message = df[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
-        print(type(message))
-        webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
-        requests.post(webhook, json={"msgtype": "markdown", "markdown": {
-            "title": f"{name}", "text": message}})
+    # if len(df) < 200:
+    #     # 发布到钉钉机器人
+    #     df["市场"] = f"实盘{name}"
+    #     message = df[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
+    #     print(type(message))
+    #     webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
+    #     requests.post(webhook, json={"msgtype": "markdown", "markdown": {
+    #         "title": f"{name}", "text": message}})
 except Exception as e:
     print(f"发生bug: {e}")
 buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
