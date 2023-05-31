@@ -4,23 +4,6 @@ import pandas as pd
 import os
 import datetime
 
-
-def buy_price(price: float, slippage: float = 0.001) -> float:
-    # 买入价格计算
-    # :param price: 当前价格
-    # :param slippage: 滑点
-    return math.ceil(price * (1 + slippage) * 100) / 100
-
-
-def sell_price(price: float, slippage: float = 0.001, commission: float = 0.0013) -> float:
-    # 卖出价格计算 去除滑点和手续费
-    # :param price: 当前价格
-    # :param slippage: 滑点
-    # :param commission: 手续费
-    return (math.floor(price * (1 - slippage) * 100) / 100) * (1 - commission)
-# 实际最大滑点是0.001+0.001+0.0013+0.02/price即0.0033++0.02/price
-
-
 names = ["COIN", "股票", "指数", "行业"]
 # names = ["股票"]
 
