@@ -27,23 +27,20 @@ for name in names:
         df = codes[codes["代码"].str.startswith(name)][["代码", "名称"]].copy()
         # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
-            # print(code)
             latest = list(collection.find({"代码": float(code)}, {
                           "timestamp": 1}).sort("timestamp", -1).limit(1))
-            # print(latest)
             if len(latest) == 0:
                 upsert_docs = True
-                # start_date_query = start_date
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
                 start_date_query = datetime.datetime.fromtimestamp(
                     latest_timestamp).strftime("%Y%m%d")
-
             # 通过 akshare 获取目标指数的日K线数据
             k_data = ak.stock_zh_a_hist(symbol=code, adjust="")
+            k_data = k_data[k_data["日期"] >= datetime.datetime(2017, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")]
             try:
-                k_value = ak.stock_zh_valuation_baidu(symbol=code,  indicator="总市值", period="全部")
+                k_value = ak.stock_zh_valuation_baidu(symbol=code,  indicator="总市值", period="近十年")
                 k_value.rename(columns={"date": "日期", "value": "总市值"}, inplace=True)
                 k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
             except Exception as e:

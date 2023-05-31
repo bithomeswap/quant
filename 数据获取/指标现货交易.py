@@ -4,11 +4,14 @@ import pandas as pd
 import os
 import datetime
 
+
 def buy_price(price: float, slippage: float = 0.001) -> float:
     # 买入价格计算
     # :param price: 当前价格
     # :param slippage: 滑点
     return math.ceil(price * (1 + slippage) * 100) / 100
+
+
 def sell_price(price: float, slippage: float = 0.001, commission: float = 0.0013) -> float:
     # 卖出价格计算 去除滑点和手续费
     # :param price: 当前价格
@@ -17,8 +20,9 @@ def sell_price(price: float, slippage: float = 0.001, commission: float = 0.0013
     return (math.floor(price * (1 - slippage) * 100) / 100) * (1 - commission)
 # 实际最大滑点是0.001+0.001+0.0013+0.02/price即0.0033++0.02/price
 
-# names = ["COIN", "股票", "指数", "行业"]
-names = ["股票"]
+
+names = ["COIN", "股票", "指数", "行业"]
+# names = ["股票"]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -38,7 +42,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
                 if ("COIN" in name):
-                    n = 2017
+                    n = 2021
                     start_date = datetime.datetime(
                         n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
@@ -46,16 +50,16 @@ for file in files:
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
-                    n = 2020
-                    start_date = datetime.datetime(
-                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    n = 2023
+                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
 
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+                df = df.groupby(["代码"], group_keys=False).apply(
+                    choose.technology)
 
                 m = 0.001  # 设置默认手续费
                 n = 6  # 设置默认持仓周期

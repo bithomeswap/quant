@@ -34,7 +34,7 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
-                if "股票" in name:  # 数据截取
+                if ("股票" in name)&("分组" not in name):
                     watchtime = 2019
                     start_date = datetime.datetime(
                         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")

@@ -24,21 +24,19 @@ for name in names:
         for code in df["代码"]:
             # 通过 akshare 获取目标指数的日K线数据
             k_data = ak.stock_zh_a_hist(symbol=code, adjust="")
+            # try:
+            #     k_value = ak.stock_zh_valuation_baidu(symbol=code,  indicator="总市值", period="近五年")
+            #     k_value.rename(columns={"date": "日期", "value": "总市值"}, inplace=True)
+            #     k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
+            # except Exception as e:
+            #     print(e, f"{code}百度基本面数据缺失")
             try:
-                k_value = ak.stock_zh_valuation_baidu(symbol=code,  indicator="总市值", period="全部")
-                k_value.rename(columns={"date": "日期", "value": "总市值"}, inplace=True)
-                k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
-            except Exception as e:
-                print(e, f"{code}百度基本面数据拼接错误")
-            try:
-                k_data = pd.merge(k_data, k_value, on="日期", how="left")
+                # k_data = pd.merge(k_data, k_value, on="日期", how="left")
                 k_data["代码"] = float(code)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(
-                    x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 k_data = k_data.sort_values(by=["代码", "日期"])
-                
                 # 获取当前.py文件的绝对路径
                 file_path = os.path.abspath(__file__)
                 # 获取当前.py文件所在目录的路径

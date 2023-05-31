@@ -40,7 +40,7 @@ def tradelist(name):
     collection = db[f"{name}"]
     # # 获取数据并转换为DataFrame格式
     if "股票" in name:  # 数据截取
-        watchtime = 2021
+        watchtime = 2018
         df = pd.DataFrame(list(collection.find(
             {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标
