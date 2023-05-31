@@ -45,6 +45,7 @@ collection = db[f"实盘{name}"]
 start_date = datetime.datetime.now().strftime("%Y-%m-%d")
 day = ak.index_zh_a_hist(
     symbol="000002", start_date=start_date, period="daily")
+print(day)
 if not day.notna().empty:
     timestamp = datetime.datetime.strptime(
         start_date, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()
@@ -55,7 +56,7 @@ if not day.notna().empty:
         k_data = k_data[k_data["代码"].str.startswith(name)]
         k_data["开盘"] = k_data["今开"]
         k_data["收盘"] = k_data["最新价"]
-        k_data["代码"] = k_data.apply(lambda x: float(x))
+        k_data["代码"] = k_data["代码"].apply(lambda x: float(x))
         k_data["总市值(计算)"] = k_data["成交额"]/(k_data["换手率"]/100)
         latest = list(collection.find({"timestamp": timestamp}, {
                       "timestamp": 1}).sort("timestamp", -1).limit(1))
