@@ -36,8 +36,7 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
     return df
 
 
-client = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+client = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 name = ("000", "001", "002", "600", "601", "603", "605")
 collection = db[f"实盘{name}"]
