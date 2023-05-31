@@ -4,8 +4,8 @@ import pandas as pd
 import os
 import datetime
 
-names = ["COIN", "股票", "指数", "行业"]
-# names = ["股票"]
+# names = ["COIN", "股票", "指数", "行业"]
+names = ["COIN",]
 
 moneyused = 0.9  # 设置资金利用率
 

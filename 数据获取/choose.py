@@ -42,9 +42,8 @@ def choose(choosename, name, df):
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
                 # df = df.groupby(["日期"], group_keys=True).apply(
                 #     lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
-                # 最小市值比开盘价稳一些，但是需要单独从CMC拿数据
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nsmallest(num, "总市值")).reset_index(drop=True)
+                    lambda x: x.nsmallest(1, "总市值")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
