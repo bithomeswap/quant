@@ -57,7 +57,7 @@ if not day.notna().empty:
         k_data["开盘"] = k_data["今开"]
         k_data["收盘"] = k_data["最新价"]
         k_data["代码"] = k_data["代码"].apply(lambda x: float(x))
-        k_data["总市值(计算)"] = k_data["成交额"]/(k_data["换手率"]/100)
+        k_data["总市值"] = k_data["成交额"]/(k_data["换手率"]/100)
         latest = list(collection.find({"timestamp": timestamp}, {
                       "timestamp": 1}).sort("timestamp", -1).limit(1))
         if len(latest) == 0:
