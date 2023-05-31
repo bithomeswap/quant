@@ -40,6 +40,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 name = ("000", "001", "002", "600", "601", "603", "605")
+collection = db[f"实盘{name}"]
 # 获取当前日期，并通过akshare访问当日A股指数是否有数据，如果有数据则说明今日A股开盘，进行下一步的操作
 start_date = datetime.datetime.now().strftime("%Y-%m-%d")
 day = ak.index_zh_a_hist(
@@ -47,14 +48,15 @@ day = ak.index_zh_a_hist(
 if not day.notna().empty:
     timestamp = datetime.datetime.strptime(
         start_date, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()
-    codes = ak.stock_zh_a_spot_em()    # 从akshare获取A股主板股票实时数据
-    codes = codes[~codes["名称"].str.contains("ST")]    # 过滤掉ST股票
-    codes = codes[~codes["名称"].str.contains("退")]    # 过滤掉退市股票
+    k_data = ak.stock_zh_a_spot_em()    # 从akshare获取A股主板股票实时数据
+    k_data = k_data[~k_data["名称"].str.contains("ST")]    # 过滤掉ST股票
+    k_data = k_data[~k_data["名称"].str.contains("退")]    # 过滤掉退市股票
     try:
-        codes = codes[codes["代码"].str.startswith(name)]
-        codes["开盘"] = codes["今开"]
-        codes["收盘"] = codes["最新价"]
-        collection = db[f"实盘{name}"]
+        k_data = k_data[k_data["代码"].str.startswith(name)]
+        k_data["开盘"] = k_data["今开"]
+        k_data["收盘"] = k_data["最新价"]
+        k_data["代码"] = k_data.apply(lambda x: float(x))
+        k_data["总市值(计算)"] = k_data["成交额"]/(k_data["换手率"]/100)
         latest = list(collection.find({"timestamp": timestamp}, {
                       "timestamp": 1}).sort("timestamp", -1).limit(1))
         if len(latest) == 0:
@@ -67,16 +69,16 @@ if not day.notna().empty:
             start_date_query = datetime.datetime.fromtimestamp(
                 latest_timestamp).strftime("%Y-%m-%d")
         try:
-            codes["timestamp"] = timestamp
-            codes["日期"] = start_date
-            codes["代码"] = codes["代码"].apply(lambda x: float(x))
-            codes["成交量"] = codes["成交量"].apply(lambda x: float(x))
-            codes = codes.to_dict("records")
+            k_data["timestamp"] = timestamp
+            k_data["日期"] = start_date
+            k_data["代码"] = k_data["代码"].apply(lambda x: float(x))
+            k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
+            k_data = k_data.to_dict("records")
             if upsert_docs:
-                collection.insert_many(codes)
+                collection.insert_many(k_data)
             else:
                 bulk_insert = []
-                for doc in codes:
+                for doc in k_data:
                     print(doc["代码"], "数据更新")
                     if doc["timestamp"] > latest_timestamp:
                         # 否则，加入插入列表
