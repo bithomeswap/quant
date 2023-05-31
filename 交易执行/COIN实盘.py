@@ -19,6 +19,10 @@ def technology(df):  # 定义计算技术指标的函数
             1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
         df["昨日成交额"] = df["成交额"].copy().shift(1)
         df["昨日资金波动"] = df["昨日振幅"] / df["昨日成交额"]
+        try:
+            df["昨日总市值"] = df["总市值"].copy().shift(1)
+        except Exception as e:
+            print(e, "未找到市值数据")
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
@@ -118,6 +122,12 @@ time.sleep(1)
 try:
     # 获取数据并转换为DataFrame格式
     df = pd.DataFrame(list(collection.find()))
+    try:
+        dfbase = pd.DataFrame(list(db[f"{name}基本面"].find()))
+        df = pd.merge(df, dfbase[["代码", "发行量"]], on="代码")
+        df["总市值"] = df["开盘"]*df["发行量"]
+    except Exception as e:
+        print(e, "拼接基本面数据失败")
     print(f"{name}数据读取成功")
     # 按照“代码”列进行分组并计算技术指标
     df = df.groupby(["代码"], group_keys=False).apply(technology)
@@ -134,8 +144,11 @@ try:
     num = math.ceil(len(code)/(10**value))  # 持仓数量
     df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
     df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-    df = df.groupby(["日期"], group_keys=True).apply(
-        lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
+    try:
+        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
+    except Exception as e:
+        print(e, "使用开盘价最低替代昨日市值最低")
+        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
     print(df)
     if len(df) < 200:
         # 发布到钉钉机器人
