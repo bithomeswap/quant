@@ -92,7 +92,7 @@ names = list(db.list_collection_names())
 print(names)
 for name in names:
     if ("指标" not in name) & ("实盘" not in name) & ("order" not in name) & ("js" not in name):
-        if ("分钟" not in name) & ("股票" in name):
+        if ("分钟" not in name) & ("股票" not in name):
             # if ("分钟" in name):
             # if ("行业" in name) | ("指数" in name):
             # if ("COIN" in name):
