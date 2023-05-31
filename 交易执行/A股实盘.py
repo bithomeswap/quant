@@ -132,5 +132,5 @@ if not day.notna().empty:
                 "title": f"{name}", "text": message}})
     except Exception as e:
         print(f"发生bug: {e}")
-buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
-print(buy_symbols)
+    buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
+    print(buy_symbols)
