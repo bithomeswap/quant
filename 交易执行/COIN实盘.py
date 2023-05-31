@@ -145,10 +145,10 @@ try:
     df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
     df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
     try:
-        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
+        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, "昨日总市值")).reset_index(drop=True)
     except Exception as e:
         print(e, "使用开盘价最低替代昨日市值最低")
-        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
+        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, "开盘")).reset_index(drop=True)
     print(df)
     if len(df) < 200:
         # 发布到钉钉机器人
