@@ -40,14 +40,8 @@ for name in names:
             k_data = ak.stock_zh_a_hist(symbol=code, adjust="")
             k_data = k_data[k_data["日期"] >= datetime.datetime(2017, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")]
             try:
-                k_value = ak.stock_zh_valuation_baidu(symbol=code,  indicator="总市值", period="近十年")
-                k_value.rename(columns={"date": "日期", "value": "总市值"}, inplace=True)
-                k_value["日期"] = k_value["日期"].apply(lambda x: str(x))
-            except Exception as e:
-                print(e, f"{code}百度基本面数据拼接错误")
-            try:
-                k_data = pd.merge(k_data, k_value, on="日期", how="left")
                 k_data["代码"] = float(code)
+                k_data["总市值"] = k_data["成交额"]/(k_data["换手率"]/100)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
                 k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(
                     x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))

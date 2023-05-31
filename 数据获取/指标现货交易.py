@@ -5,7 +5,7 @@ import os
 import datetime
 
 # names = ["COIN", "股票", "指数", "行业"]
-names = ["COIN",]
+names = ["股票"]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -25,7 +25,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
                 if ("COIN" in name):
-                    n = 2021
+                    n = 2023
                     start_date = datetime.datetime(
                         n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
@@ -33,10 +33,11 @@ for file in files:
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
-                    n = 2023
-                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    n = 2019
+                    start_date = datetime.datetime(
+                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
 
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误

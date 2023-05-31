@@ -6,13 +6,13 @@ def technology(df):  # 定义计算技术指标的函数
     commission = 0.0013  # 设置滑点千分之一
     try:
         for n in range(1, 46):
-            # 计算不加滑点的收益
-            df[f"{n}日后总涨跌幅（未来函数）"] = (df["收盘"].copy().shift(-n) / df["收盘"]) - 1
+            # # 计算不加滑点的收益
+            # df[f"{n}日后总涨跌幅（未来函数）"] = (df["收盘"].copy().shift(-n) / df["收盘"]) - 1
 
-            # # 计算加滑点之后的收益，A股扣一分钱版本
-            # df["买入"] = df["开盘"].apply(lambda x: math.ceil(x * (1 + slippage) * 100) / 100)
-            # df["卖出"] = df["开盘"].apply(lambda x: math.floor(x * (1 - slippage) * (1 - commission) * 100) / 100)
-            # df[f"{n}日后总涨跌幅（未来函数）"] = (df["卖出"].copy().shift(-n) / df["买入"]) - 1
+            # 计算加滑点之后的收益，A股扣一分钱版本
+            df["买入"] = df["开盘"].apply(lambda x: math.ceil(x * (1 + slippage) * 100) / 100)
+            df["卖出"] = df["开盘"].apply(lambda x: math.floor(x * (1 - slippage) * (1 - commission) * 100) / 100)
+            df[f"{n}日后总涨跌幅（未来函数）"] = (df["卖出"].copy().shift(-n) / df["买入"]) - 1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
@@ -40,8 +40,7 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
+                # df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
                 df = df.groupby(["日期"], group_keys=True).apply(
                     lambda x: x.nsmallest(1, "总市值")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
@@ -59,7 +58,7 @@ def choose(choosename, name, df):
                 df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
                     lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
-                m = 0.005  # 设置手续费
+                m = 0.000  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
                 df = df[(df["开盘"] >= 4)].copy()  # 过滤低价股
