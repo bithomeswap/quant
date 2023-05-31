@@ -78,12 +78,18 @@ for name in names:
             except Exception as e:
                 print(e, f"因为{code}停牌")
         print("任务已经完成")
-        # limit = 600000
-        # if collection.count_documents({}) >= limit:
-        #     oldest_data = collection.find().sort([("日期", 1)]).limit(
-        #         collection.count_documents({})-limit)
-        #     ids_to_delete = [data["_id"] for data in oldest_data]
-        #     collection.delete_many({"_id": {"$in": ids_to_delete}})
-        # print("数据清理成功")
     except Exception as e:
         print(e)
+# limit = 600000
+# if collection.count_documents({}) >= limit:
+#     oldest_data = collection.find().sort([("日期", 1)]).limit(
+#         collection.count_documents({})-limit)
+#     ids_to_delete = [data["_id"] for data in oldest_data]
+#     collection.delete_many({"_id": {"$in": ids_to_delete}})
+# print("数据清理成功")
+
+# import tradelist
+# try:
+#     tradelist.tradelist(name)
+# except Exception as e:
+#     print(f"tradelist发生bug: {e}")

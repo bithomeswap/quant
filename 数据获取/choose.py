@@ -6,7 +6,7 @@ def technology(df):  # 定义计算技术指标的函数
     commission = 0.0013  # 设置滑点千分之一
     try:
         for n in range(1, 46):
-            if df["换手率"]:
+            if "换手率" in df.columns:
                 # 计算加滑点之后的收益，A股扣一分钱版本
                 df["买入"] = df["开盘"].apply(
                     lambda x: math.ceil(x * (1 + slippage) * 100) / 100)
@@ -44,7 +44,7 @@ def choose(choosename, name, df):
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
-                # df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
+                df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
                 # df = df.groupby(["日期"], group_keys=True).apply(
                 #     lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
                 # df = df.groupby(["日期"], group_keys=True).apply(
@@ -65,7 +65,7 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[(df["开盘"] >= 4)].copy()  # 过滤低价股
                 df = df[(df["开盘收盘幅"] <= 0.08)].copy()  # 过滤可能产生大回撤的股票
-                # df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
+                df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
                 # df = df.groupby(["日期"], group_keys=True).apply(
                 #     lambda x: x.nsmallest(num, "昨日资金波动_rank")).reset_index(drop=True)
                 # df = df.groupby(["日期"], group_keys=True).apply(

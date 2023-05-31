@@ -15,13 +15,12 @@ response = requests.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/lis
                         },
                         params={
                             'start': '1',
-                            'limit': '9000',
+                            'limit': '5000',
                             'convert': 'USD'
                         })
 data_list = []
 if response.status_code == 200:
     data = response.json()
-    print(data)
     for coin in data['data']:
         circulating_supply = float(coin['circulating_supply'])
         latest_data = collection.find_one({"代码": str(coin['symbol'])+"USDT"})

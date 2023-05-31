@@ -14,13 +14,14 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # 设置参数
-name ="COIN分钟"
+name = "COIN分钟"
 collection = db[f"{name}"]
 # 创建Binance客户端
 client = Client(api_key, api_secret)
 # 获取所有USDT计价的现货交易对
 codes = client.get_exchange_info()["symbols"]
-usdt_codes = [code for code in codes if code["quoteAsset"] == "USDT" and ("DOWN" not in code["symbol"]) and ("UP" not in code["symbol"])]
+usdt_codes = [code for code in codes if code["quoteAsset"] == "USDT" and (
+    "DOWN" not in code["symbol"]) and ("UP" not in code["symbol"])]
 print(f"当前币安现货USDT有{len(usdt_codes)}个交易对")
 
 # 遍历所有现货交易对，并获取日K线数据
@@ -84,11 +85,27 @@ for code in usdt_codes:
     if len(data_list) > 0:
         collection.insert_many(data_list)
 
-print("任务已经完成")
-limit = 600000
-if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([("日期", 1)]).limit(
-        collection.count_documents({})-limit)
-    ids_to_delete = [data["_id"] for data in oldest_data]
-    collection.delete_many({"_id": {"$in": ids_to_delete}})
-print("数据清理成功")
+# limit = 600000
+# if collection.count_documents({}) >= limit:
+#     oldest_data = collection.find().sort([("日期", 1)]).limit(
+#         collection.count_documents({})-limit)
+#     ids_to_delete = [data["_id"] for data in oldest_data]
+#     collection.delete_many({"_id": {"$in": ids_to_delete}})
+# print("数据清理成功")
+
+# 数据拼接及指标计算
+time.sleep(1)
+df = pd.DataFrame(list(collection.find()))
+try:
+    dfbase = pd.DataFrame(list(db[f"{name}基本面"].find()))
+    df = pd.merge(df, dfbase[["代码", "发行量"]], on="代码")
+    df["总市值"] = df["开盘"]*df["发行量"]
+    db[f"{name}拼接"].insert_many(df.to_dict("records"))
+except Exception as e:
+    print(e, "拼接基本面数据失败")
+
+# import tradelist
+# try:
+#     tradelist.tradelist(name)
+# except Exception as e:
+#     print(f"tradelist发生bug: {e}")

@@ -12,11 +12,11 @@ def technology(df):  # 定义计算技术指标的函数
         df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
         df["开盘收盘幅"] = df["开盘"]/df["收盘"].copy().shift(1) - 1
         df["涨跌幅"] = df["收盘"]/df["收盘"].copy().shift(1) - 1
+        df["当日资金贡献"] = df["涨跌幅"] / df["成交额"]
+        df["当日振幅"] = (df["最高"].copy()-df["最低"].copy())/df["开盘"].copy()
+        df["当资金波动"] = df["当日振幅"] / df["成交额"]
         df["昨日成交额"] = df["成交额"].copy().shift(1)
-        df["昨日振幅"] = (df["最高"].copy().shift(
-            1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
-        df["昨日涨跌"] = df["涨跌幅"].copy().shift(1)+1
-        df["昨日资金贡献"] = df["昨日涨跌"] / df["昨日成交额"]
+        df["昨日振幅"] = (df["最高"].copy().shift(1)-df["最低"].copy().shift(1))/df["开盘"].copy().shift(1)
         df["昨日资金波动"] = df["昨日振幅"] / df["昨日成交额"]
         if ("股票" in name) | ("COIN" in name):
             df["昨日总市值"] = df["总市值"].copy().shift(1)
@@ -92,12 +92,12 @@ names = list(db.list_collection_names())
 print(names)
 for name in names:
     if ("指标" not in name) & ("实盘" not in name) & ("order" not in name) & ("js" not in name):
-        if ("分钟" not in name) & ("股票" not in name):
-            # if ("分钟" in name):
-            # if ("行业" in name) | ("指数" in name):
-            # if ("COIN" in name):
-            print(f"当前计算{name}")
-            try:
-                tradelist(name)
-            except Exception as e:
-                print(f"tradelist发生bug: {e}")
+        # if ("分钟" not in name) & ("股票" not in name):
+        # if ("分钟" in name):
+        # if ("行业" in name) | ("指数" in name):
+        # if ("COIN" in name):
+        print(f"当前计算{name}")
+        try:
+            tradelist(name)
+        except Exception as e:
+            print(f"tradelist发生bug: {e}")

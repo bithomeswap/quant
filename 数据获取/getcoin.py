@@ -14,7 +14,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # 设置参数
-name ="COIN"
+name = "COIN"
 collection = db[f"{name}"]
 # 创建Binance客户端
 client = Client(api_key, api_secret)
@@ -32,10 +32,6 @@ for code in usdt_codes:
     latest_data = collection.find_one(
         {"代码": symbol}, {"timestamp": 1}, sort=[("timestamp", -1)])
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
-
-    totalSupply = client.get_ticker(symbol=symbol)
-    print(totalSupply)
-
     klines = client.get_klines(
         symbol=symbol,
         interval=Client.KLINE_INTERVAL_1DAY,
@@ -85,15 +81,33 @@ for code in usdt_codes:
                               "主动买入成交量": float(kline[9]),
                               "主动买入成交额":  float(kline[10])
                               })
+
     # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
     if len(data_list) > 0:
         collection.insert_many(data_list)
-
 print("任务已经完成")
-limit = 600000
-if collection.count_documents({}) >= limit:
-    oldest_data = collection.find().sort([("日期", 1)]).limit(
-        collection.count_documents({})-limit)
-    ids_to_delete = [data["_id"] for data in oldest_data]
-    collection.delete_many({"_id": {"$in": ids_to_delete}})
-print("数据清理成功")
+
+# limit = 600000
+# if collection.count_documents({}) >= limit:
+#     oldest_data = collection.find().sort([("日期", 1)]).limit(
+#         collection.count_documents({})-limit)
+#     ids_to_delete = [data["_id"] for data in oldest_data]
+#     collection.delete_many({"_id": {"$in": ids_to_delete}})
+# print("数据清理成功")
+
+# 数据拼接及指标计算
+time.sleep(1)
+df = pd.DataFrame(list(collection.find()))
+try:
+    dfbase = pd.DataFrame(list(db[f"{name}基本面"].find()))
+    df = pd.merge(df, dfbase[["代码", "发行量"]], on="代码")
+    df["总市值"] = df["开盘"]*df["发行量"]
+    db[f"{name}拼接"].insert_many(df.to_dict("records"))
+except Exception as e:
+    print(e, "拼接基本面数据失败")
+
+# import tradelist
+# try:
+#     tradelist.tradelist(name)
+# except Exception as e:
+#     print(f"tradelist发生bug: {e}")

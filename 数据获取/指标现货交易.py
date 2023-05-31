@@ -5,7 +5,6 @@ import os
 import datetime
 
 names = ["COIN", "股票", "指数", "行业"]
-# names = ["股票"]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -25,7 +24,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
                 if ("COIN" in name):
-                    n = 2023
+                    n = 2021
                     start_date = datetime.datetime(
                         n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(

@@ -22,7 +22,7 @@ for file in files:
                 df = pd.read_csv(path)
                 watchtime = 1900
                 if ("COIN" in name):
-                    watchtime = 2022
+                    watchtime = 2021
                     start_date = datetime.datetime(watchtime, int(
                         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
