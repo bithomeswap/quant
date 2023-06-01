@@ -7,8 +7,6 @@ from pymongo import MongoClient
 def technology(df):  # 定义计算技术指标的函数
     try:
         # df = df.dropna()  # 删除缺失值，避免无效数据的干扰
-        df.drop(df[(df["最高"] < 0) | (df["最低"] < 0)].index,
-                inplace=True)  # 删除价格为负的异常数据
         df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
         df["涨跌幅"] = df["收盘"]/df["收盘"].copy().shift(1) - 1
         df["振幅"] = (df["最高"].copy()-df["最低"].copy())/df["开盘"].copy()
