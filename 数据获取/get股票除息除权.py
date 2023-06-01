@@ -23,12 +23,13 @@ codes = codes[~codes["名称"].str.contains("退")]
 for name in names:
     try:
         collection = db[f"股票除息除权{name}"]
+        collection.drop()
         df = pd.DataFrame()
         df = codes[codes["代码"].str.startswith(name)][["代码", "名称"]].copy()
         # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
             try:
-                time.sleep(5.0)
+                time.sleep(20.0)
                 # 通过 akshare 获取目标指数的日K线数据
                 k_data = ak.stock_history_dividend_detail(
                     symbol=code, indicator="配股")
