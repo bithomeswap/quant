@@ -6,8 +6,8 @@ import datetime
 import os
 # 设置参数
 names = ["COIN", "股票", "指数", "行业"]
-mubiao = f"总市值"
-a = 50  # 将数据划分成a个等距离的区间
+mubiao = f"涨跌幅"
+a = 20  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径

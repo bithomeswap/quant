@@ -16,12 +16,10 @@ def technology(df):  # 定义计算技术指标的函数
         df["振幅"] = (df["最高"].copy()-df["最低"].copy())/df["开盘"].copy()
         df["资金波动"] = df["振幅"] / df["成交额"]
         for n in range(1, 2):
-            df[f"过去{n}日涨跌幅"] = df["涨跌幅"].shift(n)
             df[f"过去{n}日资金贡献"] = df["资金贡献"].shift(n)
             df[f"过去{n}日资金波动"] = df["资金波动"].shift(n)
         if ("股票" in name) | ("拼接" in name):
             df["昨日总市值"] = df["总市值"].copy().shift(1)
-
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))

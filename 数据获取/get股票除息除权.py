@@ -10,7 +10,7 @@ client = MongoClient(
 db = client["wth000"]
 names = [("000", "001", "002", "600", "601", "603", "605")]
 
-# # 获取当前日期
+# 获取当前日期
 start_date = "20170101"
 # current_date = datetime.datetime.now()
 # end_date = current_date.strftime("%Y%m%d")
@@ -28,17 +28,18 @@ for name in names:
         # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
             try:
-                time.sleep(10.0)
+                time.sleep(3.0)
                 # 通过 akshare 获取目标指数的日K线数据
                 k_data = ak.stock_history_dividend_detail(
                     symbol=code, indicator="配股")
-                print(k_data)
                 k_data["代码"] = float(code)
-                k_data["股权登记日"] = k_data["股权登记日"].apply(lambda x: str(x))
-                k_data["除权除息日"] = k_data["除权除息日"].apply(lambda x: str(x))
+                print(k_data["股权登记日"][:1])
+                k_data["股权登记日"][:1] = str(k_data["股权登记日"][:1])
+                k_data["除权日"][:1] = str(k_data["除权日"][:1])
                 collection.insert_many(k_data.to_dict("records"))
+                print(code, "已完成")
             except Exception as e:
-                print(code, "未分红", e)
+                print(code, "未除权除息", e)
         print("任务已经完成")
     except Exception as e:
         print(e)

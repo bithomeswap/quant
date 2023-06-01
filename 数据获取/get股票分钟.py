@@ -40,7 +40,7 @@ for name in names:
                 start_date_query = datetime.datetime.fromtimestamp(
                     latest_timestamp).strftime("%Y-%m-%d")
             # 通过 akshare 获取目标指数的日K线数据
-            k_data = ak.stock_zh_a_hist_min_em(symbol=code, period="1")
+            k_data = ak.stock_zh_a_hist_min_em(symbol=code, period="30")
             try:
                 k_data["代码"] = float(code)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))

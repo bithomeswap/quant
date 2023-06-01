@@ -14,7 +14,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # 设置参数
-name = "COIN分钟"
+name = "COIN30分钟"
 collection = db[f"{name}"]
 # 创建Binance客户端
 client = Client(api_key, api_secret)
@@ -34,7 +34,7 @@ for code in usdt_codes:
     latest_timestamp = latest_data["timestamp"] if latest_data else 0
     klines = client.get_klines(
         symbol=symbol,
-        interval=Client.KLINE_INTERVAL_1MINUTE,
+        interval=Client.KLINE_INTERVAL_30MINUTE,
         limit=1000
     )
     # 实际上实盘的时候，这里应该改成八小时

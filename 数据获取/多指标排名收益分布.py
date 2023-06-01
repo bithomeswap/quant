@@ -37,8 +37,7 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
+                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
                 # 去掉噪音数据
                 for n in range(1, 9):
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
