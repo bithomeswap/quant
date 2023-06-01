@@ -40,7 +40,7 @@ for name in names:
             try:
                 k_data = k_data[k_data["日期"] >= datetime.datetime(2017, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")]
                 k_data["代码"] = float(code)
-                k_data["总市值"] = k_data["成交额"]/(k_data["换手率"]/100)
+                k_data["总市值"] = k_data["开盘"]*k_data["成交量"]/(k_data["换手率"]/100)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
                 k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))

@@ -34,14 +34,15 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
-                if ("股票" in name)&("分组" not in name):
+                if ("股票" in name) & ("分组" not in name):
                     watchtime = 2019
                     start_date = datetime.datetime(
                         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 1, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+                df = df.groupby(["代码"], group_keys=False).apply(
+                    choose.technology)
                 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
                 for n in range(1, 9):
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
@@ -62,29 +63,32 @@ for file in files:
                     upper_bound = sorted_data[end_idx-1]  # 注意索引从0开始，因此要减1
                     ranges.append((sorted_data[start_idx], upper_bound))
                 result_dicts = []
-                for a in range(1, n+1):
+                day = n  # 观察不同的持仓周期的涨跌分布
+                for n in range(1, day):
                     for rank_range in ranges:
-                        sub_df = df.copy()[(df[f"{mubiao}"] >= rank_range[0]) &(df[f"{mubiao}"] <= rank_range[1])]
+                        sub_df = df.copy()[(df[f"{mubiao}"] >= rank_range[0]) &
+                                           (df[f"{mubiao}"] <= rank_range[1])]
                         count = len(sub_df)
-                        future_returns = np.array(sub_df[f"{a}日后总涨跌幅（未来函数）"])
+                        future_returns = np.array(sub_df[f"{n}日后总涨跌幅（未来函数）"])
                         # 括号注意大小写的问题，要不就会报错没这个参数
                         up_rate = len(
                             future_returns[future_returns >= 0]) / len(future_returns)
                         avg_return = np.mean(future_returns)
                         result_dict = {
                             f"{mubiao}": f"from{rank_range[0]}to{rank_range[1]}",
-                            f"{a}日统计次数（已排除涨停）": count,
-                            f"未来{a}日上涨概率": up_rate,
-                            f"未来{a}日上涨次数": len(future_returns[future_returns >= 0]),
-                            f"未来{a}日平均涨跌幅": avg_return,
+                            f"{n}日统计次数（已排除涨停）": count,
+                            f"未来{n}日上涨概率": up_rate,
+                            f"未来{n}日上涨次数": len(future_returns[future_returns >= 0]),
+                            f"未来{n}日平均涨跌幅": avg_return,
                         }
                         result_dicts.append(result_dict)
                 # 将结果持久化
                 result_df = pd.DataFrame(result_dicts)
-                for a in range(1, n+1):
-                    cols_to_shift = [f"{a}日统计次数（已排除涨停）",f"未来{a}日上涨概率", f"未来{a}日上涨次数", f"未来{a}日平均涨跌幅"]
+                for n in range(1, day):
+                    cols_to_shift = [f"{n}日统计次数（已排除涨停）",
+                                     f"未来{n}日上涨概率", f"未来{n}日上涨次数", f"未来{n}日平均涨跌幅"]
                     result_df[cols_to_shift] = result_df[cols_to_shift].shift(
-                        -a*(a-1))
+                        -a*(n-1))
                 # result_df = result_df.dropna()  # 删除含有空值的行
                 path = os.path.join(os.path.abspath("."), "资产单指标平均收益分布")
                 if not os.path.exists(path):
