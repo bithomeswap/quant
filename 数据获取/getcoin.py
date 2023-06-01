@@ -85,7 +85,7 @@ for code in usdt_codes:
     # 如果时间戳等于最新数据的时间戳，则执行更新操作，否则执行插入操作
     if len(data_list) > 0:
         collection.insert_many(data_list)
-print("任务已经完成")
+print("原始数据获取完成")
 
 # limit = 600000
 # if collection.count_documents({}) >= limit:
@@ -99,10 +99,18 @@ print("任务已经完成")
 time.sleep(1)
 df = pd.DataFrame(list(collection.find()))
 try:
-    dfbase = pd.DataFrame(list(db[f"{name}基本面"].find()))
+    dfbase = pd.DataFrame(list(db[f"COIN基本面"].find()))
+    # 仅保留共有代码的数据行
+    common_codes = set(df["代码"]).intersection(set(dfbase["代码"]))
+    df = df[df["代码"].isin(common_codes)]
+    dfbase = dfbase[dfbase["代码"].isin(common_codes)]
     df = pd.merge(df, dfbase[["代码", "发行量"]], on="代码")
     df["总市值"] = df["开盘"]*df["发行量"]
+    df.drop('_id', axis=1, inplace=True)  # 删掉目标列
+    db[f"{name}拼接"].drop()
+    # time.sleep(1)
     db[f"{name}拼接"].insert_many(df.to_dict("records"))
+    print("拼接数据插入完成")
 except Exception as e:
     print(e, "拼接基本面数据失败")
 
