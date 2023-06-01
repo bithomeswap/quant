@@ -62,32 +62,29 @@ for file in files:
                     upper_bound = sorted_data[end_idx-1]  # 注意索引从0开始，因此要减1
                     ranges.append((sorted_data[start_idx], upper_bound))
                 result_dicts = []
-                for n in range(1, 10):
+                for a in range(1, n+1):
                     for rank_range in ranges:
-                        sub_df = df.copy()[(df[f"{mubiao}"] >= rank_range[0]) &
-                                           (df[f"{mubiao}"] <= rank_range[1])]
-
+                        sub_df = df.copy()[(df[f"{mubiao}"] >= rank_range[0]) &(df[f"{mubiao}"] <= rank_range[1])]
                         count = len(sub_df)
-                        future_returns = np.array(sub_df[f"{n}日后总涨跌幅（未来函数）"])
+                        future_returns = np.array(sub_df[f"{a}日后总涨跌幅（未来函数）"])
                         # 括号注意大小写的问题，要不就会报错没这个参数
                         up_rate = len(
                             future_returns[future_returns >= 0]) / len(future_returns)
                         avg_return = np.mean(future_returns)
                         result_dict = {
                             f"{mubiao}": f"from{rank_range[0]}to{rank_range[1]}",
-                            f"{n}日统计次数（已排除涨停）": count,
-                            f"未来{n}日上涨概率": up_rate,
-                            f"未来{n}日上涨次数": len(future_returns[future_returns >= 0]),
-                            f"未来{n}日平均涨跌幅": avg_return,
+                            f"{a}日统计次数（已排除涨停）": count,
+                            f"未来{a}日上涨概率": up_rate,
+                            f"未来{a}日上涨次数": len(future_returns[future_returns >= 0]),
+                            f"未来{a}日平均涨跌幅": avg_return,
                         }
                         result_dicts.append(result_dict)
                 # 将结果持久化
                 result_df = pd.DataFrame(result_dicts)
-                for n in range(1, 10):
-                    cols_to_shift = [f"{n}日统计次数（已排除涨停）",
-                                     f"未来{n}日上涨概率", f"未来{n}日上涨次数", f"未来{n}日平均涨跌幅"]
+                for a in range(1, n+1):
+                    cols_to_shift = [f"{a}日统计次数（已排除涨停）",f"未来{a}日上涨概率", f"未来{a}日上涨次数", f"未来{a}日平均涨跌幅"]
                     result_df[cols_to_shift] = result_df[cols_to_shift].shift(
-                        -a*(n-1))
+                        -a*(a-1))
                 # result_df = result_df.dropna()  # 删除含有空值的行
                 path = os.path.join(os.path.abspath("."), "资产单指标平均收益分布")
                 if not os.path.exists(path):

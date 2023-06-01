@@ -22,7 +22,7 @@ codes = codes[~codes["名称"].str.contains("ST")]
 codes = codes[~codes["名称"].str.contains("退")]
 for name in names:
     try:
-        collection = db[f"股票分钟{name}"]
+        collection = db[f"股票30分钟{name}"]
         df = pd.DataFrame()
         df = codes[codes["代码"].str.startswith(name)][["代码", "名称"]].copy()
         # 遍历目标指数代码，获取其分钟K线数据

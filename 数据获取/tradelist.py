@@ -18,8 +18,6 @@ def technology(df):  # 定义计算技术指标的函数
         for n in range(1, 2):
             df[f"过去{n}日资金贡献"] = df["资金贡献"].shift(n)
             df[f"过去{n}日资金波动"] = df["资金波动"].shift(n)
-        if ("股票" in name) | ("拼接" in name):
-            df["昨日总市值"] = df["总市值"].copy().shift(1)
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):
                 df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
@@ -97,7 +95,7 @@ for name in names:
         # if ("行业" in name) | ("指数" in name):
         # if ("COIN" in name):
         if ("拼接" in name):
-        # if ("股票" in name):
+            # if ("股票" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)
