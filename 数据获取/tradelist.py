@@ -11,11 +11,9 @@ def technology(df):  # 定义计算技术指标的函数
                 inplace=True)  # 删除价格为负的异常数据
         df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
         df["涨跌幅"] = df["收盘"]/df["收盘"].copy().shift(1) - 1
-        df["资金贡献"] = df["涨跌幅"] / df["成交额"]
         df["振幅"] = (df["最高"].copy()-df["最低"].copy())/df["开盘"].copy()
         df["资金波动"] = df["振幅"] / df["成交额"]
-        for n in range(1, 2):
-            df[f"过去{n}日资金贡献"] = df["资金贡献"].shift(n)
+        for n in range(1, 5):
             df[f"过去{n}日资金波动"] = df["资金波动"].shift(n)
         if ("分钟" in name) | ("指数" in name) | ("行业" in name):
             for n in range(1, 10):

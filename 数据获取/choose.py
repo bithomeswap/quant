@@ -35,28 +35,21 @@ def choose(choosename, name, df):
             m = 0.001  # 设置手续费
             n = 6  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
-            # df = df[df[f'过去{5}日涨跌{0}金叉'] == 1].copy()
-            # df=df[df[f"指数{5}日偏离"]>df[f"指数{2}日偏离"]]
-            df = df.groupby(["日期"], group_keys=True).apply(
-                lambda x: x.nlargest(num, "昨日资金波动")).reset_index(drop=True)
+            df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nlargest(num, f"过去{1}日资金波动")).reset_index(drop=True)
             m = 0.005  # 设置手续费
             n = 30  # 设置持仓周期
         if ("COIN" in name):
             if ("分钟" not in name):
-                df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
-                df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, "开盘")).reset_index(drop=True)
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, "昨日资金波动_rank")).reset_index(drop=True)
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
+                df = df[(df[f"开盘"] >= 0.00000500) & (
+                    df[f"开盘"] <= 0.01)].copy()  # 过滤低价股
+                df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nsmallest(num, "涨跌幅_rank")).reset_index(drop=True)
+                    lambda x: x.nsmallest(num, f"开盘")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
-                df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
+                df = df[(df[f"开盘"] >= 0.00000500) & (
+                    df[f"开盘"] <= 0.01)].copy()  # 过滤低价股
                 for n in (2, 9):
                     df = df[(df[f"过去{n}日总涨跌_rank"] >= 0.5)].copy()
                 m = 0.0000  # 设置手续费
@@ -64,14 +57,12 @@ def choose(choosename, name, df):
         if ("股票" in name):  # 股票数量在三千以下的时候适合这个数值计算方法，如果数量过多的话，把数据拆分成这种数据会比较厚
             if ("分钟" not in name):
                 df = df[(df["开盘"] >= 4)].copy()  # 过滤低价股
-                df = df[(df["开盘收盘幅"] <= 0.08)].copy()  # 过滤可能产生大回撤的股票
-                df = df[(df["昨日资金波动_rank"] <= 0.01)].copy()
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, "昨日资金波动_rank")).reset_index(drop=True)
-                # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, "昨日总市值")).reset_index(drop=True)
+                df = df[(df["涨跌幅"] <= 0.08) & (
+                    df["涨跌幅"] >= 0.02)].copy()  # 过滤可能产生大回撤的股票
+                df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nsmallest(num, "涨跌幅_rank")).reset_index(drop=True)
+                    lambda x: x.nsmallest(num, f"开盘")).reset_index(drop=True)
+                # df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(num, "涨跌幅_rank")).reset_index(drop=True)
                 m = 0.000  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
@@ -86,16 +77,17 @@ def choose(choosename, name, df):
             m = 0.001  # 设置手续费
             n = 6  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
-            df = df[(df["开盘收盘幅"] >= 0.005)].copy()  # 过滤可能产生大回撤的股票
             m = 0.005  # 设置手续费
             n = 6  # 设置持仓周期
         if ("COIN" in name):
             if ("分钟" not in name):
-                df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
+                df = df[(df[f"开盘"] >= 0.00000500) & (
+                    df[f"开盘"] <= 0.01)].copy()  # 过滤低价股
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
-                df = df[df[f"开盘"] >= 0.00001000].copy()  # 过滤低价股
+                df = df[(df[f"开盘"] >= 0.00000500) & (
+                    df[f"开盘"] <= 0.01)].copy()  # 过滤低价股
                 m = 0.0000  # 设置手续费
                 n = 45  # 设置持仓周期
         if ("股票" in name):

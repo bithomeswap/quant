@@ -25,8 +25,7 @@ for file in files:
                 df = pd.read_csv(path)
                 if ("COIN" in name):
                     n = 2021
-                    start_date = datetime.datetime(
-                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]

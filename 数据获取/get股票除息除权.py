@@ -28,14 +28,16 @@ for name in names:
         # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
             try:
-                time.sleep(3.0)
+                time.sleep(5.0)
                 # 通过 akshare 获取目标指数的日K线数据
                 k_data = ak.stock_history_dividend_detail(
                     symbol=code, indicator="配股")
                 k_data["代码"] = float(code)
-                print(k_data["股权登记日"][:1])
-                k_data["股权登记日"][:1] = str(k_data["股权登记日"][:1])
-                k_data["除权日"][:1] = str(k_data["除权日"][:1])
+                k_data = k_data[["代码", "股权登记日", "除权日"]]
+                # 之前用切片方式保留的列,有点问题改成直接保留某几列了
+                k_data["股权登记日"] = k_data["股权登记日"].apply(lambda x: str(x))
+                k_data["除权日"] = k_data["除权日"].apply(lambda x: str(x))
+                print(k_data)
                 collection.insert_many(k_data.to_dict("records"))
                 print(code, "已完成")
             except Exception as e:
