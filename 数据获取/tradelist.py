@@ -89,8 +89,7 @@ for name in names:
         # if ("分钟" in name):
         # if ("行业" in name) | ("指数" in name):
         # if ("COIN" in name):
-        if ("拼接" in name):
-            # if ("股票" in name):
+        # if ("股票" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)
