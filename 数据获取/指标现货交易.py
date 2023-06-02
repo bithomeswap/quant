@@ -32,11 +32,11 @@ for file in files:
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
-                    n = 2019
+                    n = 2017
                     start_date = datetime.datetime(
                         n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 2, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
 
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误

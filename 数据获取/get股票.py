@@ -16,10 +16,10 @@ names = [("000", "001", "002", "600", "601", "603", "605")]
 # end_date = current_date.strftime("%Y%m%d")
 # 从akshare获取A股主板股票的代码和名称
 codes = ak.stock_zh_a_spot_em()
-# 过滤掉ST股票
-codes = codes[~codes["名称"].str.contains("ST")]
-# 过滤掉退市股票
-codes = codes[~codes["名称"].str.contains("退")]
+# # 过滤掉ST股票
+# codes = codes[~codes["名称"].str.contains("ST")]
+# # 过滤掉退市股票
+# codes = codes[~codes["名称"].str.contains("退")]
 for name in names:
     try:
         collection = db[f"股票{name}"]
