@@ -29,7 +29,7 @@ for name in names:
         # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
             try:
-                time.sleep(20.0)
+                time.sleep(60.0)
                 # 通过 akshare 获取目标指数的日K线数据
                 k_data = ak.stock_history_dividend_detail(
                     symbol=code, indicator="配股")

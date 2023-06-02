@@ -119,10 +119,7 @@ if not day.notna().empty:
         num = math.ceil(len(code)/100)
         df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
         df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-        # df = df.groupby(["日期"], group_keys=True).apply(
-        #     lambda x: x.nsmallest(num, f"涨跌幅_rank")).reset_index(drop=True)
-        df = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+        df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
         print(df)
         if len(df) < 200:
             # 发布到钉钉机器人
