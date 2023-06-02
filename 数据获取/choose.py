@@ -55,13 +55,13 @@ def choose(choosename, name, df):
         if ("股票" in name):
             if ("分钟" not in name):
                 df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
-                df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
+                # df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
                 # df = df.groupby(["日期"], group_keys=True).apply(
-                #     lambda x: x.nsmallest(num, f"涨跌幅_rank")).reset_index(drop=True)
+                #     lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
                 df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+                    lambda x: x.nsmallest(1, f"涨跌幅_rank")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
-                n = 30  # 设置持仓周期
+                n = 10  # 设置持仓周期
             if ("分钟" in name):
                 df = df[(df["开盘"] >= 2)].copy()  # 过滤垃圾股
                 for n in (2, 9):

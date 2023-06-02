@@ -132,6 +132,9 @@ if not day.notna().empty:
             webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
             requests.post(webhook, json={"msgtype": "markdown", "markdown": {
                 "title": f"{name}", "text": message}})
+
+
+        
     except Exception as e:
         print(f"发生bug: {e}")
     buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
