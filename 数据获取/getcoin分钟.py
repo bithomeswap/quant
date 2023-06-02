@@ -94,28 +94,27 @@ print("原始数据获取完成")
 #     collection.delete_many({"_id": {"$in": ids_to_delete}})
 # print("数据清理成功")
 
-# 数据拼接及指标计算
-time.sleep(1)
-df = pd.DataFrame(list(collection.find()))
-try:
-    dfbase = pd.DataFrame(list(db[f"COIN基本面"].find()))
-    # 仅保留共有代码的数据行
-    common_codes = set(df["代码"]).intersection(set(dfbase["代码"]))
-    df = df[df["代码"].isin(common_codes)]
-    dfbase = dfbase[dfbase["代码"].isin(common_codes)]
-    df = pd.merge(df, dfbase[["代码", "发行量"]], on="代码")
-    df["总市值"] = df["开盘"]*df["发行量"]
-    df.drop('_id', axis=1, inplace=True)  # 删掉目标列
-    db[f"{name}拼接"].drop()
-    time.sleep(1)
-    db[f"{name}拼接"].insert_many(df.to_dict("records"))
-    print("拼接数据插入完成")
-except Exception as e:
-    print(e, "拼接基本面数据失败")
+# # 数据拼接及指标计算
+# time.sleep(1)
+# df = pd.DataFrame(list(collection.find()))
+# try:
+#     dfbase = pd.DataFrame(list(db[f"COIN基本面"].find()))
+#     # 仅保留共有代码的数据行
+#     common_codes = set(df["代码"]).intersection(set(dfbase["代码"]))
+#     df = df[df["代码"].isin(common_codes)]
+#     dfbase = dfbase[dfbase["代码"].isin(common_codes)]
+#     df = pd.merge(df, dfbase[["代码", "发行量"]], on="代码")
+#     df["总市值"] = df["开盘"]*df["发行量"]
+#     df.drop('_id', axis=1, inplace=True)  # 删掉目标列
+#     db[f"{name}拼接"].drop()
+#     time.sleep(1)
+#     db[f"{name}拼接"].insert_many(df.to_dict("records"))
+#     print("拼接数据插入完成")
+# except Exception as e:
+#     print(e, "拼接基本面数据失败")
 
 # import tradelist
 # try:
 #     tradelist.tradelist(name)
 # except Exception as e:
 #     print(f"tradelist发生bug: {e}")
-
