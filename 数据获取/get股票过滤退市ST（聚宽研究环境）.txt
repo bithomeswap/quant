@@ -1,0 +1,53 @@
+!python -m pip install pandas
+!python -m pip install pymongo
+!wget -c https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
+
+
+import pandas as pd
+codes=get_all_securities(types=['stock']).index
+# codes=pd.DataFrame({"代码":list(codes)})
+
+
+names = [("000", "001", "002", "600", "601", "603", "605")]
+for name in names:
+    codes = [code for code in codes if code.startswith(name)]
+    print(codes)
+
+# for code in codes:
+#     today = datetime.datetime.now()
+#     df = get_price(stock, start_date=(today - datetime.timedelta(days=80)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"), frequency='daily')
+#     df["开盘"]=df["open"]
+#     df["最高"]=df["high"]
+#     df["最低"]=df["low"]
+#     df["收盘"]=df["close"]
+#     print(df)
+#     历史数据跟其他的一样的
+
+q = query(valuation.market_cap,income.total_operating_revenue).filter(valuation.code.in_(codes))
+df = get_fundamentals_continuously(q, end_date='2023-01-01', count=5,panel=False)
+df["日期"]=df["day"]
+df["代码"]=df["code"]
+df["营收"]=df["total_operating_revenue"]
+df["总市值"]=df["market_cap"]
+df=df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
+print(df)
+
+
+import pandas as pd
+from pymongo import MongoClient
+
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
+names = [("000", "001", "002", "600", "601", "603", "605")]
+# for day
+# 日期每天加一，获取到数据以后输出到数据库，把只有两边数据都有才是有效数据，否则应该过滤掉。
+date = '2010-06-01'  # 要查询的日期
+codes = get_all_securities(types=['stock'], date=date)
+codes = codes[~all_stocks['display_name'].str.contains('ST')]
+codes = codes[~codes["display_name"].str.contains("退")]
+for name in names:
+    df = codes[codes["代码"].str.startswith(name)][["代码", "名称"]].copy()
+df.to_csv("非ST股票.csv")
+# 输出结果
+print(df.dropna())

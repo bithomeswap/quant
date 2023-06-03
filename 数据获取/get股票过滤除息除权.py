@@ -33,7 +33,7 @@ for name in names:
                 # 通过 akshare 获取目标指数的日K线数据
                 k_data = ak.stock_history_dividend_detail(symbol=code, indicator="配股")
                 k_data["代码"] = float(code)
-                k_data = k_data[["代码", "股权登记日", "除权日"]]
+                k_data = k_data[["代码","配股方案","配股价格","基准股本","股权登记日","除权日"]]
                 # 之前用切片方式保留的列,有点问题改成直接保留某几列了
                 k_data["股权登记日"] = k_data["股权登记日"].apply(lambda x: str(x))
                 k_data["除权日"] = k_data["除权日"].apply(lambda x: str(x))
