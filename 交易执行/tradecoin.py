@@ -37,7 +37,7 @@ collectionsell = db[f"order卖出{name}"]
 collectionbalance = db[f"order余额{name}"]
 
 money = 1000  # 设置每一批的下单金额
-holdday = 0  # 设置持仓周期
+holdday = 1  # 设置持仓周期
 waittime = 5  # 设置下单间隔，避免权重过高程序暂停,目前来看5比较好
 buy_limit_money = 12  # 设置买单的最小下单金额，不得低于12否则无法成交
 sell_limit_money = 12  # 设置卖单的最小下单金额，不得低于12否则无法成交
@@ -343,7 +343,6 @@ async def clearn():
         print(f"{collection}数据清理成功")
 
 
-
 async def get_buy_symbols():
     buy_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "TRXUSDT"]
     time.sleep(10)
@@ -353,7 +352,8 @@ async def get_buy_symbols():
 async def get_sell_symbols():
     sell_symbols = pd.DataFrame(list(collectionbuy.find({"日期": (
         datetime.datetime.now() - datetime.timedelta(days=holdday)).strftime("%Y-%m-%d")})))
-    sell_symbols = sell_symbols["symbol"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
+    sell_symbols = sell_symbols["symbol"].copy(
+    ).drop_duplicates().tolist()  # 获取所有不重复的交易标的
     time.sleep(10)
     return sell_symbols
 
@@ -366,6 +366,7 @@ async def main():
             tasks.append(asyncio.create_task(sell(sell_symbol)))
     except Exception as e:
         print(e)
+    time.sleep(10800)  # 之前的卖出委托执行三个小时后执行买入委托
     try:
         buy_symbols = await get_buy_symbols()
         for buy_symbol in buy_symbols:
