@@ -42,12 +42,7 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[(df[f"开盘"] >= 0.00000200)].copy()  # 过滤垃圾股
                 df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-                
-                df['score'] = 0
-                for n in range(1, 5):  # 对短期趋势上涨进行打分
-                    df['score'] += df[f"过去{n}日资金波动_rank"].copy().apply(lambda x: 1 if x >=1 else 0)
-                df = df.groupby(['日期']).apply(lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
-                # df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+                df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
