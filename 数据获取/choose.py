@@ -1,11 +1,5 @@
 import math
 import pandas as pd
-from pymongo import MongoClient
-
-client = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
-db = client["wth000"]
-names = [("000", "001", "002", "600", "601", "603", "605")]
 
 def technology(df):  # 定义计算技术指标的函数
     slippage = 0.001  # 设置滑点千分之一
@@ -19,7 +13,7 @@ def technology(df):  # 定义计算技术指标的函数
                 df["卖出（未来函数）"] = df["开盘"].apply(lambda x: math.floor(
                     x * (1 - slippage) * (1 - commission) * 100) / 100)
                 df[f"{n}日后总涨跌幅（未来函数）"] = (
-                    df["卖出"].copy().shift(-n) / df["买入"]) - 1
+                    df["卖出（未来函数）"].copy().shift(-n) / df["买入（未来函数）"]) - 1
             else:
                 # 计算不加滑点的收益
                 df[f"{n}日后总涨跌幅（未来函数）"] = (
@@ -39,15 +33,8 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 
 
 def choose(choosename, name, df):
-    if ("股票" in name):
-        for name in names:
-            print(name)
-            df = pd.merge(df, pd.DataFrame(list(db[f"非ST股票{name}"].find())), on=['代码', '日期'], how='inner')
-    # 分组并计算指标排名
-    df = df.groupby(["日期"], group_keys=False).apply(rank)
-    print("ST")
-
-
+    m = 0.001  # 设置默认手续费
+    n = 6  # 设置默认持仓周期
     if choosename == "交易":
         code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
         num = math.ceil(len(code)/100)
@@ -58,7 +45,8 @@ def choose(choosename, name, df):
             m = 0.001  # 设置手续费
             n = 6  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
-            df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nlargest(1, f"过去{1}日资金波动")).reset_index(drop=True)
+            df = df.groupby(["日期"], group_keys=True).apply(
+                lambda x: x.nlargest(1, f"过去{1}日资金波动")).reset_index(drop=True)
             m = 0.005  # 设置手续费
             n = 30  # 设置持仓周期
         if ("COIN" in name):

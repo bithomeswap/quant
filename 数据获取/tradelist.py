@@ -27,16 +27,14 @@ def tradelist(name):
     # # 获取数据并转换为DataFrame格式
     if "股票" in name:  # 数据截取
         watchtime = 2018
-        df = pd.DataFrame(list(collection.find(
-            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
+        df = pd.DataFrame(list(collection.find({"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby(["代码"], group_keys=False).apply(technology)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
     if "COIN" in name:  # 数据截取
         watchtime = 2020
-        df = pd.DataFrame(list(collection.find(
-            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
+        df = pd.DataFrame(list(collection.find({"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby(["代码"], group_keys=False).apply(technology)
         # 连接MongoDB数据库并创建新集合

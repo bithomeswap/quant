@@ -3,8 +3,13 @@ import choose
 import pandas as pd
 import os
 import datetime
+from pymongo import MongoClient
 
-names = ["COIN", "股票", "指数", "行业"]
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
+# names = ["COIN", "股票", "指数", "行业"]
+names = ["股票"]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -33,21 +38,22 @@ for file in files:
                     df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
                     n = 2017
-                    start_date = datetime.datetime(
-                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
 
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
-
-                m = 0.001  # 设置默认手续费
-                n = 6  # 设置默认持仓周期
+                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+                if ("股票" in name):
+                    df = pd.merge(df, pd.DataFrame(list(db[f"非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df.dropna
+                print(df)
+                # 分组并计算指标排名
+                df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+                df.to_csv(f"最终版指标{name}")
                 df, m, n = choose.choose("交易", name, df)
-
                 if ("COIN" in name):
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
@@ -81,24 +87,29 @@ for file in files:
                         if not group.empty:  # 如果当日没有入选标的，则收益率为0
                             for x in range(1, n+1):
                                 if x < n:
-                                    group_return = ((group[f"{x}日后总涨跌幅（未来函数）"]).mean() + 1)  # 计算平均收益率
+                                    group_return = (
+                                        (group[f"{x}日后总涨跌幅（未来函数）"]).mean() + 1)  # 计算平均收益率
                                 if x == n:
                                     group_return = group_return*(1-m)
                                     # 复投累计收益率
-                                    cash_balance *= (group_return-1)*moneyused+1
+                                    cash_balance *= (group_return-1) * \
+                                        moneyused+1
                                     # 不复投累计收益率
-                                    twocash_balance += (group_return-1)*moneyused
+                                    twocash_balance += (group_return-1) * \
+                                        moneyused
                                 daily_cash_balance[f"未来{x}日盘中资产收益"] = group_return
                         daily_cash_balance[f"下周期余额复投"] = cash_balance
                         daily_cash_balance[f"下周期余额不复投"] = twocash_balance
-                        result.append({"日期": date, f"第{i}份资金盘中资产收益": daily_cash_balance})
+                        result.append(
+                            {"日期": date, f"第{i}份资金盘中资产收益": daily_cash_balance})
                     result_df = pd.concat([result_df, pd.DataFrame(result)])
 
                 manyday = pd.DataFrame({"日期": dates})
                 manyday = manyday[~manyday["日期"].isin(df["日期"])]
                 # 将两个数据集根据key列进行合并
                 result_df = pd.concat([result_df,  manyday])
-                result_df = result_df.sort_values(by="日期").reset_index(drop=True)
+                result_df = result_df.sort_values(
+                    by="日期").reset_index(drop=True)
 
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     cash = 1
@@ -134,9 +145,11 @@ for file in files:
                         method="ffill").fillna(1)
                 # 使用 filter() 方法选择所有包含指定子字符串的列
                 retrade = result_df.filter(like="资金累积资产收益复投").columns
-                result_df["总资产收益率（复投）%"] = (result_df[retrade].mean(axis=1)-1)*100
+                result_df["总资产收益率（复投）%"] = (
+                    result_df[retrade].mean(axis=1)-1)*100
                 notretrade = result_df.filter(like="资金累积资产收益不复投").columns
-                result_df["总资产收益率（不复投）%"] = (result_df[notretrade].mean(axis=1)-1)*100
+                result_df["总资产收益率（不复投）%"] = (
+                    result_df[notretrade].mean(axis=1)-1)*100
                 print("持仓周期", n, "复投收益率", result_df["总资产收益率（复投）%"])
                 result_df["日期"] = result_df["日期"].str.replace('-', '||')
                 # 新建涨跌分布文件夹在上级菜单下，并保存结果
