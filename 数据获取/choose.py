@@ -42,8 +42,12 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[(df[f"开盘"] >= 0.00000200)].copy()  # 过滤垃圾股
                 df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-                df = df.groupby(["日期"], group_keys=True).apply(
-                    lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+                
+                df['score'] = 0
+                for n in range(1, 5):  # 对短期趋势上涨进行打分
+                    df['score'] += df[f"过去{n}日资金波动_rank"].copy().apply(lambda x: 1 if x >=1 else 0)
+                df = df.groupby(['日期']).apply(lambda x: x.nlargest(10, 'score')).reset_index(drop=True)
+                # df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
             if ("分钟" in name):
@@ -56,11 +60,11 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
                 df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-                # df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)|(df[f"过去{2}日资金波动_rank"] <= 0.01)|(df[f"过去{3}日资金波动_rank"] <= 0.01)].copy()
-                
-                # 改成根据过去n日资金波动进行打分，然后取排名靠前的
-
-                df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+                # for n in range(1,5):
+                #     df["score"] += df.groupby("日期")[f"过去{1}日资金波动_rank"].apply(lambda x: (x <= x.quantile(0.01)).astype(int))
+                # df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+                df = df.groupby(["日期"], group_keys=True).apply(
+                    lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
                 m = 0.000  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
