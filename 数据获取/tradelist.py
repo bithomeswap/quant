@@ -21,14 +21,6 @@ def technology(df):  # 定义计算技术指标的函数
     return df
 
 
-def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排名映射到 [0, 1] 的区间中
-    # 计算每个指标的排名
-    for column in df.columns:
-        if ("未来函数" not in str(column)):
-            df = pd.concat([df, (df[str(column)].rank(
-                method="max", ascending=False) / len(df)).rename(f"{str(column)}_rank")], axis=1)
-    return df
-
 
 def tradelist(name):
     collection = db[f"{name}"]
@@ -39,8 +31,6 @@ def tradelist(name):
             {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby(["代码"], group_keys=False).apply(technology)
-        # 分组并计算指标排名
-        df = df.groupby(["日期"], group_keys=False).apply(rank)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
     if "COIN" in name:  # 数据截取
@@ -49,16 +39,12 @@ def tradelist(name):
             {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby(["代码"], group_keys=False).apply(technology)
-        # 分组并计算指标排名
-        df = df.groupby(["日期"], group_keys=False).apply(rank)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
     else:
         df = pd.DataFrame(list(collection.find()))
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby(["代码"], group_keys=False).apply(technology)
-        # 分组并计算指标排名
-        df = df.groupby(["日期"], group_keys=False).apply(rank)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}指标"]
     new_collection.drop()  # 清空集合中的所有文档

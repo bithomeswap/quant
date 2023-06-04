@@ -5,8 +5,7 @@ from pymongo import MongoClient
 import time
 import pytz
 
-client = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+client = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 names = [("000", "001", "002", "600", "601", "603", "605")]
 
