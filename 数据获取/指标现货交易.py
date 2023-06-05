@@ -47,7 +47,7 @@ for file in files:
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
                 df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
                 if ("股票" in name):
-                    df = pd.merge(df, pd.DataFrame(list(db[f"非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df = pd.merge(df, pd.DataFrame(list(db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
                     df.dropna
                 print(df)
                 # 分组并计算指标排名
