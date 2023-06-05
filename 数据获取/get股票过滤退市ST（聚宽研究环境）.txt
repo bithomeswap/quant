@@ -55,7 +55,7 @@ print(df)
 collection.insert_many(df.to_dict("records"))
 
 
-//基本面数据
+//基本面数据（未确认）
 import pandas as pd
 from pymongo import MongoClient
 import datetime
