@@ -20,6 +20,7 @@ while date >= end_date:
     ), date=date)
     df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
     df = df[df["代码"].str.startswith(name)]
+    df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
     df['日期']=today
     if today not in dates:

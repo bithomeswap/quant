@@ -13,9 +13,9 @@ db = client["wth000"]
 name = "ETF"
 collection = db[f"{name}"]
 # 获取当前日期
-current_date = datetime.datetime.now()
-start_date = "20150101"
-end_date = current_date.strftime("%Y%m%d")
+# current_date = datetime.datetime.now()
+# start_date = "20150101"
+# end_date = current_date.strftime("%Y%m%d")
 codelist = list(ak.stock_board_industry_name_ths()["name"])
 codelist = str(codelist).replace(",", "|")
 print(codelist)
@@ -31,7 +31,7 @@ for code in df["代码"]:
     # print(latest)
     if len(latest) == 0:
         upsert_docs = True
-        start_date_query = start_date
+        # start_date_query = start_date
     else:
         upsert_docs = False
         latest_timestamp = latest[0]["timestamp"]
@@ -39,9 +39,9 @@ for code in df["代码"]:
             latest_timestamp).strftime("%Y%m%d")
     # 通过 akshare 获取目标指数的日K线数据
     k_data = ak.fund_etf_hist_em(
-        symbol=code, start_date=start_date_query, end_date=end_date, adjust="hfq")
+        symbol=code, adjust="hfq")
     k_data_true = ak.fund_etf_hist_em(
-        symbol=code, start_date=start_date_query, end_date=end_date, adjust="")
+        symbol=code, adjust="")
     try:
         k_data_true = k_data_true[["日期", "开盘"]].rename(columns={"开盘": "真实价格"})
         k_data = pd.merge(k_data, k_data_true, on="日期", how="left")
