@@ -1,3 +1,32 @@
+//基本面数据
+import pandas as pd
+from pymongo import MongoClient
+import datetime
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
+name = ("000", "001", "002", "600", "601", "603", "605")
+collection = db[f"聚宽基本面股票{name}"]
+end_date= datetime.date(2015, 1, 1)
+start_date = datetime.date.today()  # 结束日期为今天
+delta = datetime.timedelta(days=1)  # 时间间隔为一天
+date = start_date
+dates = collection.distinct("日期")
+print("已收录日期数据",dates)
+while date >= end_date:
+    date -= delta
+    df = get_fundamentals(query(
+        valuation.code, valuation.market_cap, valuation.pe_ratio, income.total_operating_revenue
+    ), date=date)
+    df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
+    df = df[df["代码"].str.startswith(name)]
+    today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+    df['日期']=today
+    if today not in dates:
+        collection.insert_many(df.to_dict("records"))
+        print(df)
+
+
 //获取未ST股票
 import pandas as pd
 from pymongo import MongoClient
@@ -52,32 +81,3 @@ df['日期']=today
 df=df[['日期','代码']]
 print(df)
 collection.insert_many(df.to_dict("records"))
-
-
-//基本面数据
-import pandas as pd
-from pymongo import MongoClient
-import datetime
-client = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
-db = client["wth000"]
-name = ("000", "001", "002", "600", "601", "603", "605")
-collection = db[f"聚宽基本面股票{name}"]
-end_date= datetime.date(2015, 1, 1)
-start_date = datetime.date.today()  # 结束日期为今天
-delta = datetime.timedelta(days=1)  # 时间间隔为一天
-date = start_date
-dates = collection.distinct("日期")
-print("已收录日期数据",dates)
-while date >= end_date:
-    date -= delta
-    df = get_fundamentals(query(
-        valuation.code, valuation.market_cap, valuation.pe_ratio, income.total_operating_revenue
-    ), date=date)
-    df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
-    df = df[df["代码"].str.startswith(name)]
-    today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
-    df['日期']=today
-    if today not in dates:
-        collection.insert_many(df.to_dict("records"))
-        print(df)
