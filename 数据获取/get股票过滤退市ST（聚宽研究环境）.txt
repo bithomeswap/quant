@@ -30,8 +30,7 @@ while date >= end_date:
         collection.insert_many(df.to_dict("records"))
 
 
-
-//获取已ST股票
+//获取ST股票
 import pandas as pd
 from pymongo import MongoClient
 import datetime
@@ -55,7 +54,7 @@ print(df)
 collection.insert_many(df.to_dict("records"))
 
 
-//基本面数据（未确认）
+//基本面数据
 import pandas as pd
 from pymongo import MongoClient
 import datetime
@@ -75,9 +74,10 @@ while date >= end_date:
     df = get_fundamentals(query(
         valuation.code, valuation.market_cap, valuation.pe_ratio, income.total_operating_revenue
     ), date=date)
-#     df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
-#     df=df[["代码","营收","总市值","市盈率"]]
-#     df = df[df["代码"].str.startswith(name)]
-#     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
-#     df['日期']=today
-    print(df)
+    df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
+    df = df[df["代码"].str.startswith(name)]
+    today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+    df['日期']=today
+    if today not in dates:
+        collection.insert_many(df.to_dict("records"))
+        print(df)
