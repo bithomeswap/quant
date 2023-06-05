@@ -18,6 +18,6 @@ path = os.path.join(
     dir_path, f"股票('000', '001', '002', '600', '601', '603', '605')指标周期30交易细节.csv")
 df = pd.read_csv(path)
 df = pd.merge(df, pd.DataFrame(list(
-    db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+    db[f"聚宽ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
 df.to_csv("策略买入的ST股票.csv")
 print(df)
