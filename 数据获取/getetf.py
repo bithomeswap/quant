@@ -14,7 +14,7 @@ name = "ETF"
 collection = db[f"{name}"]
 # 获取当前日期
 current_date = datetime.datetime.now()
-start_date = "20190101"
+start_date = "20150101"
 end_date = current_date.strftime("%Y%m%d")
 codelist = list(ak.stock_board_industry_name_ths()["name"])
 codelist = str(codelist).replace(""", "").replace(""", "").replace(",", "|")
