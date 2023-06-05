@@ -34,14 +34,13 @@ for code in df["代码"]:
     else:
         upsert_docs = False
         latest_timestamp = latest[0]["timestamp"]
-        start_date_query = datetime.datetime.fromtimestamp(
-            latest_timestamp).strftime("%Y%m%d")
-    # 通过 akshare 获取目标指数的日K线数据
-    k_data = ak.fund_etf_hist_min_em(symbol=code, period=1)
+        start_date_query = datetime.datetime.fromtimestamp(latest_timestamp).strftime("%Y%m%d")
     try:
+        # 通过 akshare 获取目标指数的日K线数据
+        k_data = ak.fund_etf_hist_min_em(symbol=code, period=30)
         k_data['代码'] = float(code)
         k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-        k_data['日期'] = k_data['时间']
+        k_data = k_data.rename(columns={"时间": "日期"})
         # k_data['timestamp'] = k_data['日期'].apply(lambda x: float(
         #     datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=pytz.timezone('Asia/Shanghai')).timestamp()))
         k_data['timestamp'] = k_data['日期'].apply(lambda x: float(

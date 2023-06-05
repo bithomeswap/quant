@@ -35,14 +35,13 @@ for code in df["代码"]:
     else:
         upsert_docs = False
         latest_timestamp = latest[0]["timestamp"]
-        start_date_query = datetime.datetime.fromtimestamp(
-            latest_timestamp).strftime("%Y%m%d")
-    # 通过 akshare 获取目标指数的日K线数据
-    k_data = ak.fund_etf_hist_em(
-        symbol=code, adjust="hfq")
-    k_data_true = ak.fund_etf_hist_em(
-        symbol=code, adjust="")
+        start_date_query = datetime.datetime.fromtimestamp(latest_timestamp).strftime("%Y%m%d")
     try:
+        # 通过 akshare 获取目标指数的日K线数据
+        k_data = ak.fund_etf_hist_em(
+            symbol=code, adjust="hfq")
+        k_data_true = ak.fund_etf_hist_em(
+            symbol=code, adjust="")
         k_data_true = k_data_true[["日期", "开盘"]].rename(columns={"开盘": "真实价格"})
         k_data = pd.merge(k_data, k_data_true, on="日期", how="left")
         k_data["代码"] = float(code)

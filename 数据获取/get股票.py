@@ -36,9 +36,9 @@ for name in names:
                 latest_timestamp = latest[0]["timestamp"]
                 start_date_query = datetime.datetime.fromtimestamp(
                     latest_timestamp).strftime("%Y%m%d")
-            # 通过 akshare 获取目标指数的日K线数据
-            k_data = ak.stock_zh_a_hist(symbol=code, adjust="")
             try:
+                # 通过 akshare 获取目标指数的日K线数据
+                k_data = ak.stock_zh_a_hist(symbol=code, adjust="")
                 k_data = k_data[k_data["日期"] >= datetime.datetime(
                     2017, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")]
                 k_data["代码"] = float(code)
