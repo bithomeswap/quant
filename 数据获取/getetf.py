@@ -17,7 +17,7 @@ current_date = datetime.datetime.now()
 start_date = "20150101"
 end_date = current_date.strftime("%Y%m%d")
 codelist = list(ak.stock_board_industry_name_ths()["name"])
-codelist = str(codelist).replace(""", "").replace(""", "").replace(",", "|")
+codelist = str(codelist).replace(",", "|")
 print(codelist)
 # 获取 A 股所有 ETF 基金代码
 df = ak.fund_etf_spot_em()
