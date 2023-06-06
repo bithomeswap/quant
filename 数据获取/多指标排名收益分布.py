@@ -22,15 +22,8 @@ for file in files:
                 print(name)
                 df = pd.read_csv(path)
                 watchtime = 1990
-                if ("COIN" in name):
-                    watchtime = 2021
-                    start_date = datetime.datetime(watchtime, int(
-                        1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[df["日期"] >= start_date]
-                    df = df[df["日期"] <= end_date]
-                if ("股票" in name) & ("分钟" not in name):
+
+                if ("股票" in name):
                     watchtime = 2019
                     start_date = datetime.datetime(watchtime, int(
                         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
@@ -38,12 +31,18 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
-
-                df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
-                # 分组并计算指标排名
-                df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+                    df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+                    df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+                if ("股票" not in name):
+                    if ("COIN" in name):
+                        watchtime = 2021
+                        start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        end_date = datetime.datetime(datetime.datetime.strptime(
+                            start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        df = df[df["日期"] >= start_date]
+                        df = df[df["日期"] <= end_date]
+                    # 分组并计算指标排名
+                    df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
                 df, m, n = choose.choose("分布", name, df)
                 if ("COIN" in name):
                     for i in range(1, n+1):
@@ -51,7 +50,6 @@ for file in files:
                 if ("股票" in name):
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]
-
                 # 将数据划分成a个等长度的区间
                 a = 5
                 ranges = []

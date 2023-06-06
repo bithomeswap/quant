@@ -7,6 +7,7 @@ def technology(df):  # 定义计算技术指标的函数
     commission = 0.0013  # 设置滑点千分之一
     try:
         for n in range(1, 46):
+            df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
             if "换手率" in df.columns:
                 # 计算加滑点之后的收益，A股扣一分钱版本
                 df["买入（未来函数）"] = df["开盘"].apply(
