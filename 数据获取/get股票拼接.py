@@ -25,5 +25,5 @@ dftwo = pd.merge(pd.DataFrame(list(db[f"聚宽非ST股票('000', '001', '002', '
 print(dftwo)
 for name in names:
     db[f"股票测试{name}"].drop()
-    print("清理完毕准备插入数据")
     db[f"股票测试{name}"].insert_many(dftwo.to_dict("records"))
+    print("插入数据完毕")

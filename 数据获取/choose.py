@@ -40,6 +40,10 @@ def choose(choosename, name, df):
         num = math.ceil(len(code)/100)
         print(name, "板块第一天的标的数量", len(code), "择股数量", num)
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
+            df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
+            # df = df[(df[f"涨跌幅_rank"] <= 0.01)].copy()
+            df = df.groupby("日期", group_keys=True).apply(
+                lambda x: x.nsmallest(1, f"换手率")).reset_index(drop=True)
             m = 0.002  # 设置手续费
             n = 45  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
@@ -81,9 +85,11 @@ def choose(choosename, name, df):
         print(len(df), name)
     if choosename == "分布":
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
+            df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
             m = 0.002  # 设置手续费
             n = 45  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
+            df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
             m = 0.005  # 设置手续费
             n = 45  # 设置持仓周期
         if ("COIN" in name):

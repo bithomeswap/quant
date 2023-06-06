@@ -9,7 +9,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # names = ["COIN", "股票", "指数", "行业", "ETF",]
-names = ["股票"]
+names = ["ETF",]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -29,18 +29,22 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
                 if "股票" in name:  # 数据截取
-                    n = 2017
+                    watchtime = 2017
                     start_date = datetime.datetime(
-                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                    df = df.groupby("代码", group_keys=False).apply(choose.technology)
-                    df = pd.merge(df, pd.DataFrame(list(db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df = df.groupby("代码", group_keys=False).apply(
+                        choose.technology)
+                    # df = pd.merge(df, pd.DataFrame(list(
+                    #     db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df = df[~df[['代码', '日期']].duplicated()]
                     df = df.groupby("日期", group_keys=False).apply(choose.rank)
-                if ("COIN" in name):
-                    n = 2021
-                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                if "股票" not in name:  # 数据截取
+                    watchtime = 2021
+                    start_date = datetime.datetime(
+                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
@@ -107,7 +111,6 @@ for file in files:
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     cash = 1
                     twocash = 1
-                    firstcash = 1000000  # 假设初始资金每天分配100万元
                     daysindex = result_df[result_df[f"第{i}份资金盘中资产收益"].notna()].copy()[
                         "日期"]
                     for dayindex in daysindex:
@@ -149,7 +152,8 @@ for file in files:
                 path = os.path.join(os.path.abspath("."), "资产变动")
                 if not os.path.exists(path):
                     os.makedirs(path)
-                result_df.to_csv(f"{path}/{name}周期{n}真实收益.csv", index=False)
+                result_df.to_csv(
+                    f"{path}/{name}持有{n}日{str(watchtime)}年真实收益.csv", index=False)
                 print("任务已经完成！")
             except Exception as e:
                 print(f"发生bug: {e}")
