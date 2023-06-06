@@ -34,24 +34,13 @@ def tradelist(name):
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
     if "股票" not in name:  # 数据截取
-        if "COIN" in name:  # 数据截取
-            watchtime = 2020
-            df = pd.DataFrame(list(collection.find(
-                {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
-            # 按照“代码”列进行分组并计算技术指标
-            df = df.groupby(["代码"], group_keys=False).apply(technology)
-            df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-            df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
-            # 连接MongoDB数据库并创建新集合
-            new_collection = db[f"{name}{watchtime}指标"]
-        else:
-            df = pd.DataFrame(list(collection.find()))
-            # 按照“代码”列进行分组并计算技术指标
-            df = df.groupby(["代码"], group_keys=False).apply(technology)
-            df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-            df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
-            # 连接MongoDB数据库并创建新集合
-            new_collection = db[f"{name}指标"]
+        df = pd.DataFrame(list(collection.find()))
+        # 按照“代码”列进行分组并计算技术指标
+        df = df.groupby(["代码"], group_keys=False).apply(technology)
+        df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+        df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+        # 连接MongoDB数据库并创建新集合
+        new_collection = db[f"{name}指标"]
     new_collection.drop()  # 清空集合中的所有文档
     # 获取当前.py文件的绝对路径
     file_path = os.path.abspath(__file__)
@@ -75,13 +64,10 @@ db = client["wth000"]
 names = list(db.list_collection_names())
 print(names)
 for name in names:
-    if ("指标" not in name) & ("实盘" not in name) & ("order" not in name) & ("js" not in name) & ("ST" not in name):
-        # if ("分钟" not in name):
-        # if ("分钟" in name):
-        # if ("行业" in name) | ("指数" in name):
-        if ("ETF" in name):
-        # if ("COIN" in name):
-        # if ("股票30分钟" in name)| ("股票已拼接" in name):
+    # if ("分钟" not in name):
+    # if ("分钟" in name):
+    # if ("行业" in name) | ("指数" in name):
+    if ("ETF" in name)|("COIN" in name)|("股票30分钟" in name)| ("股票已拼接" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)

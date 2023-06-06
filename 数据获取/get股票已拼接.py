@@ -14,5 +14,6 @@ df = pd.merge(pd.DataFrame(list(db[f"股票('000', '001', '002', '600', '601', '
 df.dropna
 print(df)
 for name in names:
-    db[f"股票已拼接{name}"].drop
+    db[f"股票已拼接{name}"].drop()
+    print("清理完毕准备插入数据")
     db[f"股票已拼接{name}"].insert_many(df.to_dict("records"))

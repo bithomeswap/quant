@@ -5,8 +5,8 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-# names = ["COIN", "股票", "指数", "行业", "ETF",]
-names = ["ETF",]
+names = ["COIN", "股票", "指数", "行业", "ETF",]
+# names = ["ETF",]
 mubiao = f"开盘"
 a = 20  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
