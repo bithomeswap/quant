@@ -26,19 +26,18 @@ def tradelist(name):
     collection = db[f"{name}"]
     # # 获取数据并转换为DataFrame格式
     if "股票" in name:  # 数据截取
-        watchtime = 2018
-        df = pd.DataFrame(list(collection.find(
-            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
+        watchtime = 2017
+        df = pd.DataFrame(list(collection.find({"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}}))).drop('_id', axis=1)
         # 按照“代码”列进行分组并计算技术指标
-        df = df.groupby(["代码"], group_keys=False).apply(technology)
+        df = df.groupby("代码", group_keys=False).apply(technology)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
     if "股票" not in name:  # 数据截取
-        df = pd.DataFrame(list(collection.find()))
+        df = pd.DataFrame(list(collection.find())).drop('_id', axis=1)
         # 按照“代码”列进行分组并计算技术指标
-        df = df.groupby(["代码"], group_keys=False).apply(technology)
-        df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-        df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+        df = df.groupby("代码", group_keys=False).apply(technology)
+        df = df.groupby("代码", group_keys=False).apply(choose.technology)
+        df = df.groupby("日期", group_keys=False).apply(choose.rank)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}指标"]
     new_collection.drop()  # 清空集合中的所有文档
@@ -52,22 +51,23 @@ def tradelist(name):
     file_path = os.path.join(dir_path, f"{name}指标.csv")
     df.to_csv(file_path, index=False)
     print(f"{name}准备插入数据")
-    new_collection.insert_many(df.to_dict("records"))
-    print(f"{name}数据插入结束")
+    # new_collection.insert_many(df.to_dict("records"))
+    # print(f"{name}数据插入结束")
 
 
 # 连接MongoDB数据库
-client = MongoClient(
-    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+client = MongoClient("mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # 获取当前数据库中的所有集合名称
 names = list(db.list_collection_names())
 print(names)
 for name in names:
-    # if ("分钟" not in name):
-    # if ("分钟" in name):
-    # if ("行业" in name) | ("指数" in name):
-    if ("ETF" in name)|("COIN" in name)|("股票30分钟" in name)| ("股票已拼接" in name):
+    if ("指标" not in name) & ("实盘" not in name) & ("基本面" not in name) & ("ST" not in name) & ("order" not in name) & ("js" not in name):
+        # if ("分钟" not in name):
+        # if ("分钟" in name):
+        # if ("行业" in name) | ("指数" in name):
+        if ("ETF" in name)|("COIN" in name)|("股票30分钟" in name):
+        # if("股票已拼接" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)

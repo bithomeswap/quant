@@ -3,6 +3,11 @@ import numpy as np
 import choose
 import os
 import datetime
+from pymongo import MongoClient
+
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
 names = ["COIN", "股票", "指数", "行业", "ETF",]
 # names = ["ETF",]
 # 获取当前.py文件的绝对路径
@@ -14,7 +19,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file) & ("排名" not in file) & ("细节" not in file):
+        if (filename in file) & ("指标" in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
@@ -31,18 +36,18 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
-                    df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-                    df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+                    df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                    df = pd.merge(df, pd.DataFrame(list(db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df = df.groupby("日期", group_keys=False).apply(choose.rank)
                 if ("股票" not in name):
                     if ("COIN" in name):
                         watchtime = 2021
-                        start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        start_date = datetime.datetime(watchtime, int(
+                            1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                         end_date = datetime.datetime(datetime.datetime.strptime(
                             start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                         df = df[df["日期"] >= start_date]
                         df = df[df["日期"] <= end_date]
-                    # 分组并计算指标排名
-                    df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
                 df, m, n = choose.choose("分布", name, df)
                 if ("COIN" in name):
                     for i in range(1, n+1):
@@ -51,7 +56,7 @@ for file in files:
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]
                 # 将数据划分成a个等长度的区间
-                a = 5
+                a = 20
                 ranges = []
                 left = 0
                 right = 1

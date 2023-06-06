@@ -22,20 +22,12 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file) & ("排名" not in file) & ("细节" not in file) & ("分钟" not in file):
+        if (filename in file) & ("指标" in file) & ("分钟" not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
-                if ("COIN" in name):
-                    n = 2021
-                    start_date = datetime.datetime(
-                        n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[df["日期"] >= start_date]
-                    df = df[df["日期"] <= end_date]
                 if "股票" in name:  # 数据截取
                     n = 2017
                     start_date = datetime.datetime(
@@ -43,19 +35,25 @@ for file in files:
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                    df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-                    df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
-
+                    df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                    df = pd.merge(df, pd.DataFrame(list(db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df = df.groupby("日期", group_keys=False).apply(choose.rank)
+                if ("COIN" in name):
+                    n = 2021
+                    start_date = datetime.datetime(n, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    df = df[df["日期"] >= start_date]
+                    df = df[df["日期"] <= end_date]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
                 df, m, n = choose.choose("分布", name, df)
-                if ("COIN" in name):
-                    for i in range(1, n+1):
-                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 if ("股票" in name):
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]
-
+                if ("COIN" in name):
+                    for i in range(1, n+1):
+                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 trade_path = os.path.join(os.path.abspath("."), "资产交易细节")
                 if not os.path.exists(trade_path):
                     os.makedirs(trade_path)

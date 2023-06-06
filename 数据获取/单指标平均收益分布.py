@@ -4,6 +4,10 @@ import pandas as pd
 import numpy as np
 import datetime
 import os
+
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
 # 设置参数
 names = ["COIN", "股票", "指数", "行业", "ETF",]
 # names = ["ETF",]
@@ -18,7 +22,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file) & ("排名" not in file) & ("细节" not in file):
+        if (filename in file) & ("指标" in file):
             try:
                 print(f"{mubiao}")
                 # 获取文件名和扩展名
@@ -42,8 +46,9 @@ for file in files:
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                df = df.groupby(["代码"], group_keys=False).apply(
-                    choose.technology)
+                    df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                    df = pd.merge(df, pd.DataFrame(list(db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
+                    df = df.groupby("日期", group_keys=False).apply(choose.rank)
                 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
                 for n in range(1, 9):
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]

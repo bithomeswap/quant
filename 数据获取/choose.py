@@ -40,10 +40,10 @@ def choose(choosename, name, df):
         num = math.ceil(len(code)/100)
         print(name, "板块第一天的标的数量", len(code), "择股数量", num)
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
-            m = 0.005  # 设置手续费
+            m = 0.002  # 设置手续费
             n = 45  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
-            df = df.groupby(["日期"], group_keys=True).apply(
+            df = df.groupby("日期", group_keys=True).apply(
                 lambda x: x.nlargest(1, f"过去{1}日资金波动")).reset_index(drop=True)
             m = 0.005  # 设置手续费
             n = 45  # 设置持仓周期
@@ -51,7 +51,7 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[(df[f"开盘"] >= 0.00000200)].copy()  # 过滤垃圾股
                 df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-                df = df.groupby(["日期"], group_keys=True).apply(
+                df = df.groupby("日期", group_keys=True).apply(
                     lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
                 m = 0.01  # 设置手续费
                 n = 45  # 设置持仓周期
@@ -67,8 +67,8 @@ def choose(choosename, name, df):
                 df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
                 # for n in range(1,5):
                 #     df["score"] += df.groupby("日期")[f"过去{1}日资金波动_rank"].apply(lambda x: (x <= x.quantile(0.01)).astype(int))
-                # df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
-                df = df.groupby(["日期"], group_keys=True).apply(
+                # df = df.groupby("日期", group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+                df = df.groupby("日期", group_keys=True).apply(
                     lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
                 m = 0.000  # 设置手续费
                 n = 30  # 设置持仓周期
@@ -81,7 +81,7 @@ def choose(choosename, name, df):
         print(len(df), name)
     if choosename == "分布":
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
-            m = 0.005  # 设置手续费
+            m = 0.002  # 设置手续费
             n = 45  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
             m = 0.005  # 设置手续费
