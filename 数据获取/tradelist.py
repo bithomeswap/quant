@@ -2,11 +2,12 @@ import datetime
 import pandas as pd
 import os
 from pymongo import MongoClient
+import choose
 
 
 def technology(df):  # 定义计算技术指标的函数
     try:
-        # df = df.dropna()  # 删除缺失值，避免无效数据的干扰
+        df = df.dropna()  # 删除缺失值，避免无效数据的干扰
         df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
         df["涨跌幅"] = df["收盘"]/df["收盘"].copy().shift(1) - 1
         df["振幅"] = (df["最高"].copy()-df["最低"].copy())/df["开盘"].copy()
@@ -21,30 +22,36 @@ def technology(df):  # 定义计算技术指标的函数
     return df
 
 
-
 def tradelist(name):
     collection = db[f"{name}"]
     # # 获取数据并转换为DataFrame格式
     if "股票" in name:  # 数据截取
         watchtime = 2018
-        df = pd.DataFrame(list(collection.find({"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
+        df = pd.DataFrame(list(collection.find(
+            {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby(["代码"], group_keys=False).apply(technology)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
-    if "COIN" in name:  # 数据截取
-        watchtime = 2020
-        df = pd.DataFrame(list(collection.find({"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
-        # 按照“代码”列进行分组并计算技术指标
-        df = df.groupby(["代码"], group_keys=False).apply(technology)
-        # 连接MongoDB数据库并创建新集合
-        new_collection = db[f"{name}{watchtime}指标"]
-    else:
-        df = pd.DataFrame(list(collection.find()))
-        # 按照“代码”列进行分组并计算技术指标
-        df = df.groupby(["代码"], group_keys=False).apply(technology)
-        # 连接MongoDB数据库并创建新集合
-        new_collection = db[f"{name}指标"]
+    if "股票" not in name:  # 数据截取
+        if "COIN" in name:  # 数据截取
+            watchtime = 2020
+            df = pd.DataFrame(list(collection.find(
+                {"日期": {"$gt": datetime.datetime(watchtime, 1, 1).strftime("%Y-%m-%d")}})))
+            # 按照“代码”列进行分组并计算技术指标
+            df = df.groupby(["代码"], group_keys=False).apply(technology)
+            df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+            df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+            # 连接MongoDB数据库并创建新集合
+            new_collection = db[f"{name}{watchtime}指标"]
+        else:
+            df = pd.DataFrame(list(collection.find()))
+            # 按照“代码”列进行分组并计算技术指标
+            df = df.groupby(["代码"], group_keys=False).apply(technology)
+            df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
+            df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
+            # 连接MongoDB数据库并创建新集合
+            new_collection = db[f"{name}指标"]
     new_collection.drop()  # 清空集合中的所有文档
     # 获取当前.py文件的绝对路径
     file_path = os.path.abspath(__file__)
@@ -72,8 +79,9 @@ for name in names:
         # if ("分钟" not in name):
         # if ("分钟" in name):
         # if ("行业" in name) | ("指数" in name):
-        if ("COIN" in name):
-        # if ("股票" in name):
+        if ("ETF" in name):
+        # if ("COIN" in name):
+        # if ("股票30分钟" in name)| ("股票已拼接" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)

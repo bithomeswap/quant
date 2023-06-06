@@ -84,9 +84,3 @@ for name in names:
 #     ids_to_delete = [data["_id"] for data in oldest_data]
 #     collection.delete_many({"_id": {"$in": ids_to_delete}})
 # print("数据清理成功")
-
-# import tradelist
-# try:
-#     tradelist.tradelist(name)
-# except Exception as e:
-#     print(f"tradelist发生bug: {e}")

@@ -1,6 +1,7 @@
 import math
 import pandas as pd
 
+
 def technology(df):  # 定义计算技术指标的函数
     slippage = 0.001  # 设置滑点千分之一
     commission = 0.0013  # 设置滑点千分之一
@@ -33,22 +34,18 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 
 
 def choose(choosename, name, df):
-    m = 0.001  # 设置默认手续费
-    n = 6  # 设置默认持仓周期
     if choosename == "交易":
         code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
         num = math.ceil(len(code)/100)
         print(name, "板块第一天的标的数量", len(code), "择股数量", num)
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
-            for n in (2, 9):
-                df = df[(df[f"过去{n}日总涨跌_rank"] >= 0.5)].copy()
-            m = 0.001  # 设置手续费
-            n = 6  # 设置持仓周期
+            m = 0.005  # 设置手续费
+            n = 45  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
             df = df.groupby(["日期"], group_keys=True).apply(
                 lambda x: x.nlargest(1, f"过去{1}日资金波动")).reset_index(drop=True)
             m = 0.005  # 设置手续费
-            n = 30  # 设置持仓周期
+            n = 45  # 设置持仓周期
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[(df[f"开盘"] >= 0.00000200)].copy()  # 过滤垃圾股
@@ -83,11 +80,11 @@ def choose(choosename, name, df):
         print(len(df), name)
     if choosename == "分布":
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
-            m = 0.001  # 设置手续费
-            n = 6  # 设置持仓周期
+            m = 0.005  # 设置手续费
+            n = 45  # 设置持仓周期
         if ("指数" in name) | ("行业" in name):
             m = 0.005  # 设置手续费
-            n = 6  # 设置持仓周期
+            n = 45  # 设置持仓周期
         if ("COIN" in name):
             if ("分钟" not in name):
                 df = df[(df[f"开盘"] >= 0.00000200)].copy()  # 过滤垃圾股

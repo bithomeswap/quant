@@ -3,7 +3,8 @@ import numpy as np
 import choose
 import os
 import datetime
-names = ["COIN", "股票", "指数", "行业"]
+names = ["COIN", "股票", "指数", "行业", "ETF",]
+# names = ["ETF",]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -20,7 +21,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                watchtime = 1900
+                watchtime = 1990
                 if ("COIN" in name):
                     watchtime = 2021
                     start_date = datetime.datetime(watchtime, int(
@@ -37,13 +38,22 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 5, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
-                df = df.groupby(["代码"], group_keys=False).apply(choose.technology)
-                # 去掉噪音数据
-                for n in range(1, 9):
-                    df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
+
+                df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
+                df = df.groupby(["代码"], group_keys=False).apply(
+                    choose.technology)
+                # 分组并计算指标排名
+                df = df.groupby(["日期"], group_keys=False).apply(choose.rank)
                 df, m, n = choose.choose("分布", name, df)
+                if ("COIN" in name):
+                    for i in range(1, n+1):
+                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
+                if ("股票" in name):
+                    for i in range(1, n+1):
+                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]
+
                 # 将数据划分成a个等长度的区间
-                a = 50
+                a = 5
                 ranges = []
                 left = 0
                 right = 1

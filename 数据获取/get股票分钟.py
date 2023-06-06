@@ -10,16 +10,16 @@ client = MongoClient(
 db = client["wth000"]
 names = [("000", "001", "002", "600", "601", "603", "605")]
 
-# 获取当前日期
-start_date = "20190101"
-current_date = datetime.datetime.now()
-end_date = current_date.strftime("%Y%m%d")
-# 从akshare获取A股主板股票的代码和名称
+# # 获取当前日期
+# start_date = "20190101"
+# current_date = datetime.datetime.now()
+# end_date = current_date.strftime("%Y%m%d")
+# # 从akshare获取A股主板股票的代码和名称
 codes = ak.stock_zh_a_spot_em()
-# 过滤掉ST股票
-codes = codes[~codes["名称"].str.contains("ST")]
-# 过滤掉退市股票
-codes = codes[~codes["名称"].str.contains("退")]
+# # 过滤掉ST股票
+# codes = codes[~codes["名称"].str.contains("ST")]
+# # 过滤掉退市股票
+# codes = codes[~codes["名称"].str.contains("退")]
 for name in names:
     try:
         collection = db[f"股票30分钟{name}"]
@@ -33,7 +33,7 @@ for name in names:
             # print(latest)
             if len(latest) == 0:
                 upsert_docs = True
-                start_date_query = start_date
+                # start_date_query = start_date
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
@@ -87,9 +87,3 @@ for name in names:
 #     ids_to_delete = [data["_id"] for data in oldest_data]
 #     collection.delete_many({"_id": {"$in": ids_to_delete}})
 # print("数据清理成功")
-
-# import tradelist
-# try:
-#     tradelist.tradelist(name)
-# except Exception as e:
-#     print(f"tradelist发生bug: {e}")

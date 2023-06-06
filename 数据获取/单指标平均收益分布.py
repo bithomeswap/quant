@@ -5,7 +5,8 @@ import numpy as np
 import datetime
 import os
 # 设置参数
-names = ["COIN", "股票", "指数", "行业"]
+# names = ["COIN", "股票", "指数", "行业", "ETF",]
+names = ["ETF",]
 mubiao = f"开盘"
 a = 20  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
@@ -25,7 +26,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                watchtime = all
+                watchtime = 1990
                 if ("COIN" in name):
                     watchtime = 2021
                     start_date = datetime.datetime(
@@ -46,7 +47,8 @@ for file in files:
                 # 去掉n日后总涨跌幅大于百分之三百的噪音数据
                 for n in range(1, 9):
                     df = df[df[f"{n}日后总涨跌幅（未来函数）"] <= 3*(1+n*0.2)]
-                df["日期"] = pd.to_datetime(df["日期"], format="%Y-%m-%d")  # 转换日期格式
+                df["日期"] = pd.to_datetime(
+                    df["日期"], format="%Y-%m-%d")  # 转换日期格式
                 df, m, n = choose.choose("分布", name, df)
                 df = df.dropna()
                 # df.to_csv(f"实际统计数据{name}_{mubiao}_{watchtime}年.csv")

@@ -10,7 +10,7 @@ client = MongoClient(
     'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
 db = client['wth000']
 # 设置参数
-name = 'ETF分钟'
+name = 'ETF30分钟'
 collection = db[f"{name}"]
 # 获取当前日期
 # current_date = datetime.datetime.now()
@@ -34,7 +34,8 @@ for code in df["代码"]:
     else:
         upsert_docs = False
         latest_timestamp = latest[0]["timestamp"]
-        start_date_query = datetime.datetime.fromtimestamp(latest_timestamp).strftime("%Y%m%d")
+        start_date_query = datetime.datetime.fromtimestamp(
+            latest_timestamp).strftime("%Y%m%d")
     try:
         # 通过 akshare 获取目标指数的日K线数据
         k_data = ak.fund_etf_hist_min_em(symbol=code, period=30)
@@ -81,5 +82,5 @@ print('任务已经完成')
 #         collection.count_documents({})-limit)
 #     ids_to_delete = [data['_id'] for data in oldest_data]
 #     collection.delete_many({'_id': {'$in': ids_to_delete}})
-    # 往外读取数据的时候再更改索引吧
+# 往外读取数据的时候再更改索引吧
 # print('数据清理成功')

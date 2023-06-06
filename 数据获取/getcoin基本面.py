@@ -58,9 +58,3 @@ else:
 #     print("拼接数据插入完成")
 # except Exception as e:
 #     print(e, "拼接基本面数据失败")
-# import tradelist
-# try:
-#     tradelist.tradelist(name)
-# except Exception as e:
-#     print(f"tradelist发生bug: {e}")
-
