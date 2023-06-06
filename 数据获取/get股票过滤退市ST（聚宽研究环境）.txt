@@ -13,6 +13,7 @@ start_date = datetime.date.today()  # 结束日期为今天
 delta = datetime.timedelta(days=1)  # 时间间隔为一天
 date = start_date
 dates = collection.distinct("日期")
+collection.drop()
 print("已收录日期数据",dates)
 while date >= end_date:
     date -= delta
@@ -40,6 +41,7 @@ delta = datetime.timedelta(days=1)  # 时间间隔为一天
 date = start_date
 dates = collection.distinct("日期")
 print("已收录日期数据",dates)
+collection.drop()
 while date >= end_date:
     date -= delta
     df = get_all_securities(types=['stock'], date=date)
@@ -64,6 +66,7 @@ start_date = datetime.date.today()  # 结束日期为今天
 delta = datetime.timedelta(days=1)  # 时间间隔为一天
 date = start_date
 dates = collection.distinct("日期")
+collection.drop()
 print("已收录日期数据",dates)
 while date >= end_date:
     date -= delta
