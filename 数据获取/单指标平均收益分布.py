@@ -37,12 +37,6 @@ for file in files:
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                    df = df.groupby("代码", group_keys=False).apply(
-                        choose.technology)
-                    # df = pd.merge(df, pd.DataFrame(list(
-                    #     db[f"聚宽非ST股票('000', '001', '002', '600', '601', '603', '605')"].find())), on=['代码', '日期'], how='inner')
-                    df = df[~df[['代码', '日期']].duplicated()]
-                    df = df.groupby("日期", group_keys=False).apply(choose.rank)
                 if "股票" not in name:  # 数据截取
                     watchtime = 2021
                     start_date = datetime.datetime(
