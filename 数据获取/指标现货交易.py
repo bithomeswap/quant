@@ -9,7 +9,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # names = ["COIN", "股票", "指数", "行业", "ETF",]
-names = ["股票", ]
+names = ["股票",]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -30,13 +30,11 @@ for file in files:
                 df = pd.read_csv(path)
                 if "股票" in name:  # 数据截取
                     watchtime = 2017
-                    start_date = datetime.datetime(
-                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 if "股票" not in name:  # 数据截取
-                    watchtime = 2021
+                    watchtime = 2020
                     start_date = datetime.datetime(
                         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
@@ -45,7 +43,8 @@ for file in files:
                     df = df[df["日期"] <= end_date]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df, m, n = choose.choose("分布", name, df)
+                df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                df, m, n = choose.choose("交易", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]

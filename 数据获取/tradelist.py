@@ -30,7 +30,6 @@ def tradelist(name):
             watchtime, 1, 1).strftime("%Y-%m-%d")}}))).drop('_id', axis=1)
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby("代码", group_keys=False).apply(technology)
-        df = df.groupby("代码", group_keys=False).apply(choose.technology)
         df = df.groupby("日期", group_keys=False).apply(choose.rank)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}{watchtime}指标"]
@@ -38,7 +37,6 @@ def tradelist(name):
         df = pd.DataFrame(list(collection.find())).drop('_id', axis=1)
         # 按照“代码”列进行分组并计算技术指标
         df = df.groupby("代码", group_keys=False).apply(technology)
-        df = df.groupby("代码", group_keys=False).apply(choose.technology)
         df = df.groupby("日期", group_keys=False).apply(choose.rank)
         # 连接MongoDB数据库并创建新集合
         new_collection = db[f"{name}指标"]
@@ -70,7 +68,7 @@ for name in names:
         # if ("分钟" in name):
         # if ("行业" in name) | ("指数" in name):
         # if ("ETF" in name)|("COIN" in name)|("股票30分钟" in name):
-        if ("股票" in name)&("拼接" not in name):
+        if ("股票" in name):
             print(f"当前计算{name}")
             try:
                 tradelist(name)
