@@ -23,10 +23,10 @@ df = df[["代码", "日期"]]
 for idx, row in df.iterrows():
     code = row['代码']
     date = row['日期']
-    # dfst = pd.DataFrame(list(
-    #     db[f"聚宽ST股票('000', '001', '002', '600', '601', '603', '605')"].find({"代码": code, "日期": date})))
     dfst = pd.DataFrame(list(
-        db[f"股票除息除权('000', '001', '002', '600', '601', '603', '605')"].find({"代码": code, "除权日": date})))
+        db[f"聚宽ST股票('000', '001', '002', '600', '601', '603', '605')"].find({"代码": code, "日期": date})))
+    # dfst = pd.DataFrame(list(
+    #     db[f"股票除息除权('000', '001', '002', '600', '601', '603', '605')"].find({"代码": code, "除权日": date})))
 
     print(code, date, dfst)
     if not dfst.empty:
