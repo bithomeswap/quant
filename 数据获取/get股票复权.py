@@ -34,11 +34,13 @@ for name in names:
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
-                start_date_query = datetime.datetime.fromtimestamp(latest_timestamp).strftime("%Y%m%d")
+                start_date_query = datetime.datetime.fromtimestamp(
+                    latest_timestamp).strftime("%Y%m%d")
             try:
                 # 通过 akshare 获取目标指数的日K线数据
-                k_data = ak.stock_zh_a_hist(symbol=code, adjust="")
-                k_data = k_data[k_data["日期"] >= datetime.datetime(2017, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")]
+                k_data = ak.stock_zh_a_hist(symbol=code, adjust="qfq")
+                k_data = k_data[k_data["日期"] >= datetime.datetime(
+                    2017, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")]
                 k_data["代码"] = float(code)
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
                 k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
