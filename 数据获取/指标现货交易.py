@@ -8,8 +8,8 @@ from pymongo import MongoClient
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-# names = ["COIN", "股票", "指数", "行业", "ETF",]
-names = ["COIN",]
+names = ["COIN", "股票", "指数", "行业", "ETF",]
+# names = ["COIN",]
 
 moneyused = 0.9  # 设置资金利用率
 
