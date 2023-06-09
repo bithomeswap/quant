@@ -126,19 +126,24 @@ try:
     # 计算总共统计的股票数量
     df = df[df[f"日期"] == last_day].copy()
     code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
-    num=math.ceil(len(code)/100)
+    num = math.ceil(len(code)/100)
     df = df[(df[f"开盘"] >= 0.00000200)].copy()  # 过滤低价股
     df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-    df = df.groupby(["日期"], group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+    dfend = df.groupby(["日期"], group_keys=True).apply(
+        lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
     print(df)
     if len(df) < 200:
         # 发布到钉钉机器人
         df["市场"] = f"实盘{name}"
+        dfend["市场"] = f"实盘{name}"
         message = df[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
+        messageend = dfend[["市场", "代码", "日期", "开盘"]].copy().to_markdown()
         print(type(message))
         webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
         requests.post(webhook, json={"msgtype": "markdown", "markdown": {
             "title": f"{name}", "text": message}})
+        requests.post(webhook, json={"msgtype": "markdown", "markdown": {
+            "title": f"{name}低价股", "text": messageend}})
 except Exception as e:
     print(f"发生bug: {e}")
 buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
