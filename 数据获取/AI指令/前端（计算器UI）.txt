@@ -8,7 +8,8 @@
 
 二、规则说明
 1.整体界面颜色以绿色为主，UI组件参考钉钉UI（https://didi.github.io/cube-ui/#/zh-CN/docs/checkbox）、阿里UI（https://ant.design/components/overview-cn/）、饿了么UI（https://element.eleme.cn/#/zh-CN）
-2.动画设计参考
+2.动画设计参考https://animate.style/
+3.需要设计出来包含加、减、乘、除、幂运算、开方运算等功能的计算器
 
 参考代码：
 <!DOCTYPE html>
