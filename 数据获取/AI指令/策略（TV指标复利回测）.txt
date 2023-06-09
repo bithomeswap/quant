@@ -8,28 +8,21 @@
 // strategy("Up Buy Down Sell", overlay=true,calc_on_order_fills=true,commission_type=strategy.commission.percent, commission_value=0.1)
 strategy("Up Buy Down Sell", overlay=true,calc_on_order_fills=true)
 var m=1
-
-dump=(high-low)/open
-value=open*volume
-
-closeEMA=ta.ema(close, 30)
-volumeEMA = ta.ema(volume, 30)
-//定义买入和卖出条件
-buyCondition =(close[1]/close[1+m])-(close[2]/close[2+m])>0 
-// volumeEMA[1] > volumeEMA[1+m] and closeEMA[1] > closeEMA[1+m]
-// (close[1]/close[1+m])-(close[2]/close[2+m])>0 and (volume[1]/volume[1+m])-(volume[2]/volume[2+m])>0
-//  and 
-// (dump/value)>(dump[1]/value[1])
-sellCondition = (close[1]/close[1+m])-(close[2]/close[2+m])<0
-// volumeEMA[1] > volumeEMA[1+m] and closeEMA[1] > closeEMA[1+m]
-// (close[1]/close[1+m])-(close[2]/close[2+m])<0 and (volume[1]/volume[1+m])-(volume[2]/volume[2+m])<0
-//  and
-// (dump/value)<(dump[1]/value[1])
-
-var can_trade = true // 可以交易
-if buyCondition and sellCondition
-    can_trade := false  // 当日既决定买又决定卖，不进行交易
-if buyCondition and can_trade
+closeEMA=ta.ema(close, 30)// 加权移动平均值
+volumeEMA = ta.ema(volume, 30)// 加权移动平均值
+ATR=ta.atr(30)// 综合波动率
+[middle, upper, lower]=ta.bb(close,3,4)
+plot(middle, color=color.rgb(255, 2, 2))
+plot(upper, color=color.rgb(29, 26, 3))
+plot(lower, color=color.rgb(107, 85, 252))
+// 发出买卖信号
+buySignal = ta.crossover(high, upper)
+sellSignal = ta.crossunder(low, lower)
+// buySignal =  ATR[1]>ATR[2]
+//  and close[1]/closeEMA[1]>close[2]/closeEMA[2]
+// buySignal = ATR[1]<ATR[2]
+//  and close[1]/closeEMA[1]<close[2]/closeEMA[2]
+if buySignal
     strategy.entry("enter long", strategy.long)
-if sellCondition and can_trade
+if sellSignal
     strategy.close("enter long")

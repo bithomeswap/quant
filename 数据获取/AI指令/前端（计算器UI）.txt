@@ -1,0 +1,120 @@
+工作场景：
+你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，并且习惯使用较为舒适的色彩搭配以及较为严密的布局结构，能够制作现象级网站。
+
+一、注意事项：
+1.尽量使用基础的js语言，避免bug的存在
+2.直接给我完整代码
+3.批判使用参考代码
+
+二、规则说明
+1.计算真实的持仓：在买入日拿所属份数资金的余额（即当日待分配资金）除以标的数量确定每个标的的金额，确定每个标的的可用资金；
+2.对每一个标的根据购买日收盘价加上0.01元作为真实的购买价格，这个价格乘以100股即为最小下单金额，使用每个标的的可用资金模以最小下单金额作为无法买入资金，然后使用每个标的的可用资金减去无法买入资金，即为真实的下单金额。
+3.持有30日到卖出日的时候，在卖出价格上减去0.01的滑点再乘以100股/手作为购买金额（之后再扣除千分之一的印花税和万分之5的手续费），这样即为该标的的真实买入和卖出金额；
+3.每日的持仓标的尽量少一些，不然计算起来会非常麻烦。
+4.直接给我完整代码，辛苦你了，改天请你吃烧烤，谢谢。
+参考资料：https://github.com/bithomeswap/quant
+
+参考代码：
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Calculator Website</title>
+  <style>
+    #calculator {
+      width: 300px;
+      margin: auto;
+      background-color: #eee;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    #calculator-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 5px;
+      margin-bottom: 5px;
+    }
+
+    .calculator-key {
+      font-size: 20px;
+      padding: 10px;
+      background-color: #ccc;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .calculator-key:hover {
+      background-color: #ddd;
+    }
+
+    #calculator-screen {
+      display: block;
+      width: 100%;
+      height: 50px;
+      font-size: 30px;
+      text-align: right;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="calculator">
+    <div id="calculator-screen"></div>
+    <div id="calculator-keypad">
+      <button class="calculator-key" type="button" value="7">7</button>
+      <button class="calculator-key" type="button" value="8">8</button>
+      <button class="calculator-key" type="button" value="9">9</button>
+      <button class="calculator-key" type="button" value="/">÷</button>
+
+      <button class="calculator-key" type="button" value="4">4</button>
+      <button class="calculator-key" type="button" value="5">5</button>
+      <button class="calculator-key" type="button" value="6">6</button>
+      <button class="calculator-key" type="button" value="*">×</button>
+
+      <button class="calculator-key" type="button" value="1">1</button>
+      <button class="calculator-key" type="button" value="2">2</button>
+      <button class="calculator-key" type="button" value="3">3</button>
+      <button class="calculator-key" type="button" value="-">-</button>
+
+      <button class="calculator-key" type="button" value="0">0</button>
+      <button class="calculator-key" type="button" value=".">.</button>
+      <button class="calculator-key" type="button" onclick="clearScreen()">C</button>
+      <button class="calculator-key" type="button" value="+">+</button>
+
+      <button class="calculator-key" type="button" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <script>
+    function clearScreen() {
+      document.getElementById('calculator-screen').innerHTML = ''
+    }
+
+    function calculate() {
+      const expression = document.getElementById('calculator-screen').innerHTML
+      const result = eval(expression)
+      document.getElementById('calculator-screen').innerHTML = result
+    }
+
+    const keys = document.querySelectorAll('.calculator-key')
+    keys.forEach(function (key) {
+      key.addEventListener('click', function () {
+        const value = this.value
+        document.getElementById('calculator-screen').innerHTML += value
+      })
+    })
+  </script>
+</body>
+
+</html>
