@@ -14,4 +14,3 @@ https://www.desmos.com/scientific?lang=zh-CN（计算器UI）
 UI风格参考网站：
 https://www.sushi.com/swap（sushiswapUI）
 https://www.okx.com/cn/okx-api（okxUI）
-https://chat.jinshutuan.com/#/chat/1683885263735（chataiUI）

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科学计算器</title>
+    <!-- 引入样式文件 -->
+    <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="display">
+            <input type="text" class="input" v-model="inputValue" readonly>
+        </div>
+        <div class="button-box">
+            <div class="row">
+                <div class="button" @click="input('^')">x<sup>y</sup></div>
+                <div class="button" @click="sqrt()">√</div>
+                <div class="button" @click="clear()">AC</div>
+                <div class="button" @click="backspace()"><i class="iconfont icon-backspace"></i></div>
+            </div>
+            <div class="row">
+                <div class="button" @click="input('7')">7</div>
+                <div class="button" @click="input('8')">8</div>
+                <div class="button" @click="input('9')">9</div>
+                <div class="button" @click="input('/')">÷</div>
+            </div>
+            <div class="row">
+                <div class="button" @click="input('4')">4</div>
+                <div class="button" @click="input('5')">5</div>
+                <div class="button" @click="input('6')">6</div>
+                <div class="button" @click="input('*')">x</div>
+            </div>
+            <div class="row">
+                <div class="button" @click="input('1')">1</div>
+                <div class="button" @click="input('2')">2</div>
+                <div class="button" @click="input('3')">3</div>
+                <div class="button" @click="input('-')">-</div>
+            </div>
+            <div class="row">
+                <div class="button" @click="input('0')">0</div>
+                <div class="button" @click="input('.')">.</div>
+                <div class="button" @click="input('%')">%</div>
+                <div class="button" @click="input('+')">+</div>
+            </div>
+            <div class="row">
+                <div class="button" @click="calculate()">=</div>
+            </div>
+        </div>
+    </div>
+    <!-- 引入js文件 -->
+    <script src="./index.js"></script>
+    <script src="https://at.alicdn.com/t/font_2480482_7lbljyljo2.js"></script>
+</body>
+
+</html>
