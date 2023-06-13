@@ -1,5 +1,4 @@
 import os
-import talib
 import pandas as pd
 import requests
 import math
