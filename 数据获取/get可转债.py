@@ -8,7 +8,7 @@ import pytz
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-names = [("可转债")]
+names = ["可转债"]
 
 # 从akshare获取可转债的代码和名称
 df = ak.bond_zh_hs_cov_spot()
@@ -25,20 +25,22 @@ for name in names:
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
-                start_date_query = datetime.datetime.fromtimestamp(
-                    latest_timestamp).strftime("%Y%m%d")
             try:
                 k_data = ak.bond_zh_hs_cov_daily(symbol=code)
                 print(k_data)
-                time.sleep(60.0)
-
                 k_data["代码"] = code
+                k_data = k_data.rename(columns={"date": "日期", "open": "开盘",
+                                                "high": "最高", "low": "最低",
+                                                "close": "收盘", "volume": "成交量",
+                                                })
+                k_data["日期"] = k_data["日期"].apply(lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(
-                    x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+                k_data["成交额"] = k_data["成交量"]*k_data["开盘"]
+                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 k_data = k_data.sort_values(by=["代码", "日期"])
                 docs_to_update = k_data.to_dict("records")
+                time.sleep(60.0)
                 if upsert_docs:
                     # print(f"{name}({code}) 新增数据")
                     try:

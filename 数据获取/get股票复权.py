@@ -34,8 +34,6 @@ for name in names:
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
-                start_date_query = datetime.datetime.fromtimestamp(
-                    latest_timestamp).strftime("%Y%m%d")
             try:
                 # 通过 akshare 获取目标指数的日K线数据
                 k_data = ak.stock_zh_a_hist(symbol=code, adjust="qfq")

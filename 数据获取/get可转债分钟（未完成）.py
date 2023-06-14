@@ -8,7 +8,7 @@ import pytz
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-names = [("可转债分钟")]
+names = ["可转债分钟"]
 
 # 从akshare获取可转债的代码和名称
 df = ak.bond_zh_hs_cov_spot()
@@ -18,23 +18,27 @@ for name in names:
         collection = db[f"股票{name}"]
         # 遍历目标指数代码，获取其日K线数据
         for code in df["代码"]:
-            latest = list(collection.find({"代码": code}, {
-                          "timestamp": 1}).sort("timestamp", -1).limit(1))
+            latest = list(collection.find(
+                {"代码": code}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
             if len(latest) == 0:
                 upsert_docs = True
             else:
                 upsert_docs = False
                 latest_timestamp = latest[0]["timestamp"]
-                start_date_query = datetime.datetime.fromtimestamp(latest_timestamp).strftime("%Y%m%d")
             try:
-                k_data = ak.bond_zh_hs_cov_min(symbol=code,period=60)
+                k_data = ak.bond_zh_hs_cov_min(symbol=code, period=60)
                 print(k_data)
                 k_data["代码"] = code
+                k_data = k_data.rename(columns={"时间": "日期"})
+                # k_data["日期"] = k_data["日期"].apply(lambda x: datetime.datetime.strftime(x, "%Y-%m-%d %H:%M:%S"))
                 k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
+                k_data["成交额"] = k_data["成交量"]*k_data["开盘"]
                 # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
-                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+                k_data["timestamp"] = k_data["日期"].apply(lambda x: float(datetime.datetime.strptime(
+                    x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 k_data = k_data.sort_values(by=["代码", "日期"])
                 docs_to_update = k_data.to_dict("records")
+                time.sleep(60.0)
                 if upsert_docs:
                     # print(f"{name}({code}) 新增数据")
                     try:
