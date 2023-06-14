@@ -8,7 +8,7 @@ import pytz
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-names = ["可转债分钟"]
+names = ["可转债30分钟"]
 
 # 从akshare获取可转债的代码和名称
 df = ak.bond_zh_hs_cov_spot()
