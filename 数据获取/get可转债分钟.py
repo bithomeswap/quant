@@ -27,7 +27,6 @@ for name in names:
                 latest_timestamp = latest[0]["timestamp"]
             try:
                 k_data = ak.bond_zh_hs_cov_min(symbol=code, period=60)
-                print(k_data)
                 k_data["代码"] = code
                 k_data = k_data.rename(columns={"时间": "日期"})
                 # k_data["日期"] = k_data["日期"].apply(lambda x: datetime.datetime.strftime(x, "%Y-%m-%d %H:%M:%S"))
@@ -38,7 +37,6 @@ for name in names:
                     x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
                 k_data = k_data.sort_values(by=["代码", "日期"])
                 docs_to_update = k_data.to_dict("records")
-                time.sleep(60.0)
                 if upsert_docs:
                     # print(f"{name}({code}) 新增数据")
                     try:

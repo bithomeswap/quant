@@ -27,7 +27,6 @@ for name in names:
                 latest_timestamp = latest[0]["timestamp"]
             try:
                 k_data = ak.bond_zh_hs_cov_daily(symbol=code)
-                print(k_data)
                 k_data["代码"] = code
                 k_data = k_data.rename(columns={"date": "日期", "open": "开盘",
                                                 "high": "最高", "low": "最低",
