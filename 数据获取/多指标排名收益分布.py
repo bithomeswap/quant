@@ -41,6 +41,7 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
+                df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df, m, n = choose.choose("分布", name, df)
                 if ("COIN" in name):
                     for i in range(1, n+1):

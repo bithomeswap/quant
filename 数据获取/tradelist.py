@@ -15,8 +15,6 @@ def technology(df):  # 定义计算技术指标的函数
         for n in range(1, 5):
             df[f"过去{n}日资金波动"] = df["资金波动"].shift(n)
             df[f"过去{n}日总涨跌"] = df["开盘"]/(df["开盘"].copy().shift(n))
-        if "股票已拼接" in name:
-            df["营收市值比"] = df["营收"]/df["总市值"]
     except Exception as e:
         print(f"发生bug: {e}")
     return df
@@ -25,7 +23,7 @@ def technology(df):  # 定义计算技术指标的函数
 def tradelist(name):
     collection = db[f"{name}"]
     # # 获取数据并转换为DataFrame格式
-    if ("股票" in name)and ("可转债" not in name):  # 数据截取
+    if ("股票" in name) and ("可转债" not in name):  # 数据截取
         watchtime = 2017
         df = pd.DataFrame(list(collection.find({"日期": {"$gt": datetime.datetime(
             watchtime, 1, 1).strftime("%Y-%m-%d")}}))).drop('_id', axis=1)
@@ -52,8 +50,8 @@ def tradelist(name):
     file_path = os.path.join(dir_path, f"{name}指标.csv")
     df.to_csv(file_path, index=False)
     print(f"{name}准备插入数据")
-    # new_collection.insert_many(df.to_dict("records"))
-    # print(f"{name}数据插入结束")
+    new_collection.insert_many(df.to_dict("records"))
+    print(f"{name}数据插入结束")
 
 
 # 连接MongoDB数据库
