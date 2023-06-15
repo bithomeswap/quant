@@ -4,7 +4,6 @@ import os
 from pymongo import MongoClient
 import choose
 
-
 def technology(df):  # 定义计算技术指标的函数
     try:
         df = df.dropna()  # 删除缺失值，避免无效数据的干扰
@@ -18,7 +17,6 @@ def technology(df):  # 定义计算技术指标的函数
     except Exception as e:
         print(f"发生bug: {e}")
     return df
-
 
 def tradelist(name):
     collection = db[f"{name}"]

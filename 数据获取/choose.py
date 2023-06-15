@@ -86,7 +86,7 @@ def choose(choosename, name, df):
             df = df[(df["开盘"] <= 110)].copy()  # 过滤垃圾股
             df = df.groupby("日期", group_keys=True).apply(
                     lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
-            m = 0.0000  # 设置手续费
+            m = 0.0005  # 设置手续费
             n = 30  # 设置持仓周期
         print(len(df), name)
     if choosename == "分布":
@@ -118,7 +118,7 @@ def choose(choosename, name, df):
                 n = 30  # 设置持仓周期
         if ("可转债" in name):
             df = df[(df["开盘"] <= 110)].copy()  # 过滤垃圾股
-            m = 0.0000  # 设置手续费
+            m = 0.0005  # 设置手续费
             n = 30  # 设置持仓周期
         print(name, n)
         # 对目标列进行手续费扣除
