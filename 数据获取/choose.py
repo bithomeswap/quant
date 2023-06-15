@@ -83,11 +83,11 @@ def choose(choosename, name, df):
                 m = 0.0000  # 设置手续费
                 n = 30  # 设置持仓周期
         if ("可转债" in name):
-            df = df.groupby("日期", group_keys=True).apply(
-                lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
             df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
+            df = df.groupby("日期", group_keys=True).apply(
+                lambda x: x.nsmallest(1, f"开盘_rank")).reset_index(drop=True)
             m = 0.0005  # 设置手续费
-            n = 10  # 设置持仓周期
+            n = 30  # 设置持仓周期
         print(len(df), name)
     if choosename == "分布":
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
@@ -119,7 +119,7 @@ def choose(choosename, name, df):
         if ("可转债" in name):
             df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
             m = 0.0005  # 设置手续费
-            n = 10  # 设置持仓周期
+            n = 30  # 设置持仓周期
         print(name, n)
         # 对目标列进行手续费扣除
         df[f"{n}日后总涨跌幅（未来函数）"] = (df[f"{n}日后总涨跌幅（未来函数）"]+1)*(1-m)-1
