@@ -44,12 +44,12 @@ for file in files:
                     df = df[df["日期"] <= end_date]
                 df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df, m, n = choose.choose("分布", name, df)
-                if ("COIN" in name):
-                    for i in range(1, n+1):
-                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 if ("股票" in name):
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]
+                else:
+                    for i in range(1, n+1):
+                        df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 df = df.dropna()
                 # df.to_csv(f"实际统计数据{name}_{mubiao}_{watchtime}年.csv")
                 sorted_data = np.sort(df[f"{mubiao}"])

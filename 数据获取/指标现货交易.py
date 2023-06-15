@@ -28,13 +28,13 @@ for file in files:
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
-                if "股票" in name:  # 数据截取
+                if ("股票" in name) and ("可转债" not in name):  # 数据截取
                     watchtime = 2018
                     start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                if "股票" not in name:  # 数据截取
-                    watchtime = 2020
+                else:  # 数据截取
+                    watchtime = 2018
                     start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
@@ -47,7 +47,7 @@ for file in files:
                 if ("股票" in name):
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 3*(1+0.1*n)]
-                if ("COIN" in name):
+                else:
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 trade_path = os.path.join(os.path.abspath("."), "资产交易细节")
