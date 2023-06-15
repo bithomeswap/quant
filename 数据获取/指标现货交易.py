@@ -8,8 +8,8 @@ from pymongo import MongoClient
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-names = ["COIN", "股票", "指数", "行业", "ETF",]
-# names = ["COIN",]
+# names = ["可转债","COIN", "股票", "指数", "行业", "ETF",]
+names = ["可转债",]
 
 moneyused = 0.9  # 设置资金利用率
 
@@ -22,7 +22,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file) & ("分钟" not in file):
+        if (filename in file) & ("指标" in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
