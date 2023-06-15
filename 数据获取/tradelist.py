@@ -13,8 +13,6 @@ def technology(df):  # 定义计算技术指标的函数
         df["资金波动"] = df["振幅"] / df["成交额"]
         df["资金贡献"] = df["涨跌幅"] / df["成交额"]
         for n in range(1, 5):
-            df[f"过去{n}日振幅"] = df["振幅"].shift(n)
-            df[f"过去{n}日涨跌幅"] = df["涨跌幅"].shift(n)
             df[f"过去{n}日成交额"] = df["成交额"].shift(n)
             df[f"过去{n}日资金波动"] = df["资金波动"].shift(n)
             df[f"过去{n}日资金贡献"] = df["资金贡献"].shift(n)

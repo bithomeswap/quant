@@ -126,7 +126,6 @@ if not day.notna().empty:
         num = math.ceil(len(code)/100)
         df = df[(df["涨跌幅"] <= 0.09)].copy()
         df = df[(df[f"过去1日资金波动_rank"] <= 0.1)].copy()
-        df = df[(df["开盘"] <= 130)].copy()  # 过滤垃圾股
         dfend = df.groupby("日期", group_keys=True).apply(
             lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
         print(df)
