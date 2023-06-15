@@ -92,7 +92,7 @@ if not day.notna().empty:
             print("任务已经完成")
         except Exception as e:
             print(e)
-        limit = 50000
+        limit = 20000
         if collection.count_documents({}) >= limit:
             oldest_data = collection.find().sort([("日期", 1)]).limit(
                 collection.count_documents({})-limit)
