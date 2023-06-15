@@ -22,7 +22,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file):
+        if (filename in file) & ("指标" in file) & ("分钟"not in file):
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
@@ -30,19 +30,23 @@ for file in files:
                 df = pd.read_csv(path)
                 if ("股票" in name) and ("可转债" not in name):  # 数据截取
                     watchtime = 2018
-                    start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    start_date = datetime.datetime(watchtime, int(
+                        1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 else:  # 数据截取
                     watchtime = 2018
-                    start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    start_date = datetime.datetime(watchtime, int(
+                        1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 3, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[df["日期"] >= start_date]
                     df = df[df["日期"] <= end_date]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                df = df.groupby("代码", group_keys=False).apply(
+                    choose.technology)
                 df, m, n = choose.choose("交易", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):

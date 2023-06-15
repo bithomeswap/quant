@@ -84,12 +84,12 @@ def choose(choosename, name, df):
                 n = 30  # 设置持仓周期
         if ("可转债" in name):
             df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
-            for n in range(1, 5):
-                df = df[df[f"过去{n}日涨跌幅_rank"] > 0.02].copy()
-                df = df[df[f"过去{n}日成交额_rank"] > 0.02].copy()
-            df = df[(df[f"过去1日资金波动_rank"] <= 0.1)].copy()  # 过滤垃圾股
+            # for n in range(1, 5):
+            #     df = df[df[f"过去{n}日涨跌幅_rank"] > 0.02].copy()
+            #     df = df[df[f"过去{n}日成交额_rank"] > 0.02].copy()
+            df = df[(df[f"过去1日资金波动_rank"] <= 0.01)].copy()  # 过滤垃圾股
             df = df.groupby("日期", group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
-            df = df[(df["开盘"] <= 130)].copy()  # 过滤垃圾股
+            # df = df[(df["开盘"] <= 130)].copy()  # 过滤垃圾股
             m = 0.0005  # 设置手续费
             n = 30  # 设置持仓周期
         print(len(df), name)
