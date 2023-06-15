@@ -124,12 +124,9 @@ if not day.notna().empty:
         df = df[df[f"日期"] == last_day].copy()
         code = df[df["日期"] == df["日期"].min()]["代码"]  # 获取首日标的数量，杜绝未来函数
         num = math.ceil(len(code)/100)
-        df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
-        df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
+        df = df[(df["涨跌幅"] <= 0.09)].copy()
         dfend = df.groupby(["日期"], group_keys=True).apply(
             lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
-        dfshizhi = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"总市值")).reset_index(drop=True)
         print(df)
         if len(df) < 200:
             # 发布到钉钉机器人
