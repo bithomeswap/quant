@@ -8,7 +8,7 @@ def technology(df):  # 定义计算技术指标的函数
     try:
         df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
         if "换手率" in df.columns:
-            for n in range(1, 46):
+            for n in range(1, 81):
                 # 计算加滑点之后的收益，A股扣一分钱版本
                 df["买入（未来函数）"] = df["开盘"].apply(
                     lambda x: math.ceil(x * (1 + slippage) * 100) / 100)
@@ -17,7 +17,7 @@ def technology(df):  # 定义计算技术指标的函数
                 df[f"{n}日后总涨跌幅（未来函数）"] = (
                     df["卖出（未来函数）"].copy().shift(-n) / df["买入（未来函数）"]) - 1
         else:
-            for n in range(1, 46):
+            for n in range(1,81):
                 # 计算不加滑点的收益
                 df[f"{n}日后总涨跌幅（未来函数）"] = (
                     df["收盘"].copy().shift(-n) / df["收盘"]) - 1
@@ -84,13 +84,14 @@ def choose(choosename, name, df):
                 n = 30  # 设置持仓周期
         if ("可转债" in name):
             df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
-            # for n in range(1, 5):
-            #     df = df[df[f"过去{n}日成交额_rank"] > 0.5].copy()
-            #     df = df[df[f"过去{n}日资金波动_rank"] < 0.5].copy()
+            for n in range(1, 5):
+                df = df[df[f"过去{n}日成交额_rank"] > 0.5].copy()
+                df = df[df[f"过去{n}日资金波动_rank"] < 0.5].copy()
             df = df[(df[f"过去1日资金波动_rank"] <= 0.1)].copy()  # 过滤垃圾股
-            df = df.groupby("日期", group_keys=True).apply(lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
+            df = df.groupby("日期", group_keys=True).apply(
+                lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
             m = 0.0005  # 设置手续费
-            n = 30  # 设置持仓周期
+            n = 80  # 设置持仓周期
         print(len(df), name)
     if choosename == "分布":
         if ("股票" not in name) & ("COIN" not in name) & ("指数" not in name) & ("行业" not in name):
@@ -122,7 +123,7 @@ def choose(choosename, name, df):
         if ("可转债" in name):
             df = df[(df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
             m = 0.0005  # 设置手续费
-            n = 30  # 设置持仓周期
+            n = 190  # 设置持仓周期
         print(name, n)
         # 对目标列进行手续费扣除
         df[f"{n}日后总涨跌幅（未来函数）"] = (df[f"{n}日后总涨跌幅（未来函数）"]+1)*(1-m)-1

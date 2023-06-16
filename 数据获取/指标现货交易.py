@@ -36,7 +36,7 @@ for file in files:
                         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 else:  # 数据截取
-                    watchtime = 2018
+                    watchtime = 2021
                     start_date = datetime.datetime(
                         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
@@ -45,8 +45,7 @@ for file in files:
                     df = df[df["日期"] <= end_date]
                 df = df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
                 dates = df["日期"].copy().drop_duplicates().tolist()  # 获取所有不重复日期
-                df = df.groupby("代码", group_keys=False).apply(
-                    choose.technology)
+                df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df, m, n = choose.choose("交易", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
