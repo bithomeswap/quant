@@ -21,9 +21,6 @@ codes = ak.stock_board_industry_name_em()["板块名称"]
 try:
     # 遍历目标指数代码，获取其分钟K线数据
     for code in codes:
-        # code = codes[codes["板块名称"] == name]["板块代码"]
-
-        # print(code)
         latest = list(collection.find({"代码": str(code)}, {
                       "timestamp": 1}).sort("timestamp", -1).limit(1))
         # print(latest)
@@ -35,15 +32,13 @@ try:
             latest_timestamp = latest[0]["timestamp"]
             start_date_query = datetime.datetime.fromtimestamp(
                 latest_timestamp).strftime("%Y%m%d")
-
         # 通过 akshare 获取目标指数的日K线数据
         k_data = ak.stock_board_industry_hist_em(
             symbol=code, start_date=start_date_query, end_date=end_date, period="日k", adjust="hfq")
         k_data_true = ak.stock_board_industry_hist_em(
             symbol=code, start_date=start_date_query, end_date=end_date, period="日k", adjust="")
         try:
-            k_data_true = k_data_true[["日期", "开盘"]].rename(
-                columns={"开盘": "真实价格"})
+            k_data_true = k_data_true[["日期", "开盘"]].rename(columns={"开盘": "真实价格"})
             k_data = pd.merge(k_data, k_data_true, on="日期", how="left")
             k_data["代码"] = str(code)
             k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
