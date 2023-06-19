@@ -133,7 +133,7 @@ if not day.notna().empty:
             for mes in [dfend, dfshizhi, dfshijing, dfshiying]:
                 mes["名称"] = mes["市场"] 
                 mes["市场"] = f"实盘{name}"
-                message = mes[["名称","市场", "代码", "日期", "开盘", "总市值",
+                message = mes[["名称", "市场", "代码", "日期", "开盘", "总市值",
                                "市净率", "市盈率-动态"]].copy().to_markdown()
                 print(type(message))
                 webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
