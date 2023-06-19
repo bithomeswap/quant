@@ -125,7 +125,7 @@ if not day.notna().empty:
             lambda x: x.nsmallest(1, f"总市值")).reset_index(drop=True)[["代码", "日期",f"总市值"]]
         dfshijing = df.copy().groupby(["日期"], group_keys=True).apply(
             lambda x: x.nsmallest(1, f"市净率")).reset_index(drop=True)[["代码", "日期",f"市净率"]]
-        dfshiying = df.copy().groupby(["日期"], group_keys=True).apply(
+        dfshiying = df[(df[f"市盈率-动态"] >= 0)].copy().groupby(["日期"], group_keys=True).apply(
             lambda x: x.nsmallest(1, f"市盈率-动态")).reset_index(drop=True)[["代码", "日期",f"市盈率-动态"]]
         # print(df)
         if len(df) < 200:
