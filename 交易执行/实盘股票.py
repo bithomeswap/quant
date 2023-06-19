@@ -119,22 +119,26 @@ if not day.notna().empty:
         num = math.ceil(len(code)/100)
         df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()
         df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
-        dfend = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)
-        dfshizhi = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"总市值")).reset_index(drop=True)
-        dfshijing = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"市净率")).reset_index(drop=True)
-        dfshiying = df.groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"市盈率-动态")).reset_index(drop=True)
-        print(df)
+        dfend = df.copy().groupby(["日期"], group_keys=True).apply(
+            lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)[["代码", "日期","开盘",]]
+        dfshizhi = df.copy().groupby(["日期"], group_keys=True).apply(
+            lambda x: x.nsmallest(1, f"总市值")).reset_index(drop=True)[["代码", "日期",f"总市值"]]
+        dfshijing = df.copy().groupby(["日期"], group_keys=True).apply(
+            lambda x: x.nsmallest(1, f"市净率")).reset_index(drop=True)[["代码", "日期",f"市净率"]]
+        dfshiying = df.copy().groupby(["日期"], group_keys=True).apply(
+            lambda x: x.nsmallest(1, f"市盈率-动态")).reset_index(drop=True)[["代码", "日期",f"市盈率-动态"]]
+        # print(df)
         if len(df) < 200:
             # 发布到钉钉机器人
+            df["市场"] = f"实盘{name}"
+            message = df[["市场","代码","日期","开盘","总市值","市净率","市盈率-动态"]].copy().to_markdown()
+            print(type(message))
+            webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
+            requests.post(webhook, json={"msgtype": "markdown", "markdown": {"title": f"{name}", "text": message}})
+            
             for mes in [dfend, dfshizhi, dfshijing, dfshiying]:
-                mes["名称"] = str(mes)
                 mes["市场"] = f"实盘{name}"
-                message = mes[["名称", "市场", "代码", "日期", "开盘", "总市值",
-                               "市净率", "市盈率-动态"]].copy().to_markdown()
+                message = mes.copy().to_markdown()
                 print(type(message))
                 webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
                 requests.post(webhook, json={"msgtype": "markdown", "markdown": {
