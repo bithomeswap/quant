@@ -131,7 +131,7 @@ if not day.notna().empty:
         if len(df) < 200:
             # 发布到钉钉机器人
             for mes in [dfend, dfshizhi, dfshijing, dfshiying]:
-                mes["名称"] = mes["市场"] 
+                mes["名称"] = str(mes)
                 mes["市场"] = f"实盘{name}"
                 message = mes[["名称", "市场", "代码", "日期", "开盘", "总市值",
                                "市净率", "市盈率-动态"]].copy().to_markdown()
