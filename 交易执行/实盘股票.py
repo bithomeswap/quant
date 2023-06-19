@@ -131,13 +131,14 @@ if not day.notna().empty:
         if len(df) < 200:
             # 发布到钉钉机器人
             for mes in [dfend, dfshizhi, dfshijing, dfshiying]:
+                mes["名称"] = mes["市场"] 
                 mes["市场"] = f"实盘{name}"
-                message = mes[["市场", "代码", "日期", "开盘", "总市值",
+                message = mes[["名称","市场", "代码", "日期", "开盘", "总市值",
                                "市净率", "市盈率-动态"]].copy().to_markdown()
                 print(type(message))
                 webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
                 requests.post(webhook, json={"msgtype": "markdown", "markdown": {
-                    "title": f"{name}{str(mes)}", "text": message}})
+                    "title": f"{name}", "text": message}})
     except Exception as e:
         print(f"发生bug: {e}")
     buy_symbols = df["代码"].copy().drop_duplicates().tolist()  # 获取所有不重复的交易标的
