@@ -3,10 +3,10 @@ import os
 import json
 
 # In your terminal please set your environment variables by running the following lines of code.
-# export 'CONSUMER_KEY'='<oNX5ZPU2rc3Wp9yrCJRszguxk>'
-# export 'CONSUMER_SECRET'='<X5LGC2NN8vS7SJP8WKUxpx0OEk6CTe2Int0lKr3mzB49KsPyT8>'
+# export 'CONSUMER_KEY'='<Ima4phgp68S9IAF96ANuu1jtf>'
+# export 'CONSUMER_SECRET'='<79DOdZcoIUDA4xu2kwCDCzoaUT9agCSVbgqTvVt8S8PaYnVpCn>'
 # export 'oauth_token'='<QkVUS052T1NmeExJRlhIZWN6Z1o6MTpjaQ>'
-# export 'oauth_token_secret'='<nGybSvMRplwZvP3K3Qq4pk4s0Vat3jZE0T7my1_WNvdCuvp8nb>'
+# export 'oauth_token_secret'='<vw1j_TE2FK5DPxPGqtmIWjyUv3kX6pNwz7Tg8vsfKOy3e8OscU>'
 consumer_key = os.environ.get("CONSUMER_KEY")
 consumer_secret = os.environ.get("CONSUMER_SECRET")
 
