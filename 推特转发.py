@@ -10,12 +10,8 @@ access_token_secret = 'RNHtcnkVNss2OmFTpdq6ARn16EyX8mZblHwIvTzMAkMdn'
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
-# 获取今日头条内容
-# TODO: 在此处编写获取今日头条内容的代码，并将其存储在变量中
-# 发布到 Twitter
-# TODO: 在此处编写将今日头条内容转发到 Twitter 的代码
-# r = api.request('tweets', {'status': '转发今日头条内容'})
-r = api.update_status('转发今日头条内容')
+
+r = api.update_status('hellow world')
 if r.status_code == 200:
     print('转发成功！')
 else:
