@@ -7,8 +7,8 @@ import json
 # export 'CONSUMER_SECRET'='79DOdZcoIUDA4xu2kwCDCzoaUT9agCSVbgqTvVt8S8PaYnVpCn'
 # export 'oauth_token'='QkVUS052T1NmeExJRlhIZWN6Z1o6MTpjaQ'
 # export 'oauth_token_secret'='vw1j_TE2FK5DPxPGqtmIWjyUv3kX6pNwz7Tg8vsfKOy3e8OscU'
-consumer_key = os.environ.get("CONSUMER_KEY")
-consumer_secret = os.environ.get("CONSUMER_SECRET")
+consumer_key = "Ima4phgp68S9IAF96ANuu1jtf"
+consumer_secret = "79DOdZcoIUDA4xu2kwCDCzoaUT9agCSVbgqTvVt8S8PaYnVpCn"
 
 # Be sure to add replace the text of the with the text you wish to Tweet. You can also add parameters to post polls, quote Tweets, Tweet with reply settings, and Tweet to Super Followers in addition to other features.
 payload = {"text": "Hello world! This message from robot"}
