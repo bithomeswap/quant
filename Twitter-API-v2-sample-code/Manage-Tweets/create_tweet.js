@@ -13,9 +13,8 @@ const readline = require('readline').createInterface({
 // To set environment variables on macOS or Linux, run the export commands below from the terminal:
 // export CONSUMER_KEY='YOUR-KEY'
 // export CONSUMER_SECRET='YOUR-SECRET'
-const consumer_key = process.env.CONSUMER_KEY;
-const consumer_secret = process.env.CONSUMER_SECRET;
-
+const consumer_key = "EOgbeAAAAAABoaTQAAABiPaQhhk";
+const consumer_secret = "Rpb2GJKDsoprPKrxbgg3dOnFpJYiPZXJ";
 
 // Be sure to add replace the text of the with the text you wish to Tweet.
 // You can also add parameters to post polls, quote Tweets, Tweet with reply settings, and Tweet to Super Followers in addition to other features.
