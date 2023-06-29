@@ -38,60 +38,72 @@ def rank(df):  # 计算每个标的的各个指标在当日的排名，并将排
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-name = ("000", "001", "002", "600", "601", "603", "605")
+name = ("行业")
 collection = db[f"实盘{name}"]
 # 获取当前日期，并通过akshare访问当日A股指数是否有数据，如果有数据则说明今日A股开盘，进行下一步的操作
-start_date = datetime.datetime.now().strftime("%Y-%m-%d")
+# start_date = datetime.datetime.now().strftime("%Y-%m-%d")
+start_date = (datetime.datetime.now() - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 day = ak.index_zh_a_hist(
     symbol="000002", start_date=start_date, period="daily")
 print(day)
 if not day.notna().empty:
     timestamp = datetime.datetime.strptime(
         start_date, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()
-    k_data = ak.stock_zh_a_spot_em()
-    k_data = k_data[~k_data["名称"].str.contains("ST")]    # 过滤掉ST股票
-    k_data = k_data[~k_data["名称"].str.contains("退")]    # 过滤掉退市股票
+    code = ak.stock_board_industry_name_em()["板块名称"]
     try:
-        k_data = k_data[k_data["代码"].str.startswith(name)]
-        k_data["开盘"] = k_data["今开"]
-        k_data["收盘"] = k_data["最新价"]
-        k_data["代码"] = k_data["代码"].apply(lambda x: float(x))
-        k_data["总市值"] = k_data["成交额"]/(k_data["换手率"]/100)
-        latest = list(collection.find({"timestamp": timestamp}, {
-                      "timestamp": 1}).sort("timestamp", -1).limit(1))
+        latest = list(collection.find({"代码": str(code)}, {"timestamp": 1}).sort("timestamp", -1).limit(1))
+        # print(latest)
         if len(latest) == 0:
             upsert_docs = True
             start_date_query = start_date
-            print(latest)
         else:
             upsert_docs = False
             latest_timestamp = latest[0]["timestamp"]
             start_date_query = datetime.datetime.fromtimestamp(
-                latest_timestamp).strftime("%Y-%m-%d")
+                latest_timestamp).strftime("%Y%m%d")
+        # 通过 akshare 获取目标指数的日K线数据
+        k_data = ak.stock_board_industry_hist_em(
+            symbol=code, start_date=start_date_query, period="日k", adjust="hfq")
+        k_data_true = ak.stock_board_industry_hist_em(
+            symbol=code, start_date=start_date_query, period="日k", adjust="")
         try:
-            k_data["timestamp"] = timestamp
-            k_data["日期"] = start_date
-            k_data["代码"] = k_data["代码"].apply(lambda x: float(x))
+            k_data_true = k_data_true[["日期", "开盘"]].rename(columns={"开盘": "真实价格"})
+            k_data = pd.merge(k_data, k_data_true, on="日期", how="left")
+            k_data["代码"] = str(code)
             k_data["成交量"] = k_data["成交量"].apply(lambda x: float(x))
-            k_data = k_data.to_dict("records")
+            k_data["timestamp"] = k_data["日期"].apply(lambda x: float(
+                datetime.datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+            # k_data["timestamp"] = k_data["日期"].apply(lambda x: float(
+            #     datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.timezone("Asia/Shanghai")).timestamp()))
+
+            k_data = k_data.sort_values(by=["代码", "日期"])
+            docs_to_update = k_data.to_dict("records")
             if upsert_docs:
-                collection.insert_many(k_data)
+                # print(f"{name}({code}) 新增数据")
+                try:
+                    collection.insert_many(docs_to_update)
+                except Exception as e:
+                    pass
             else:
                 bulk_insert = []
-                for doc in k_data:
-                    print(doc["代码"], "数据更新")
+                for doc in docs_to_update:
                     if doc["timestamp"] > latest_timestamp:
                         # 否则，加入插入列表
                         bulk_insert.append(doc)
                     if doc["timestamp"] == float(latest_timestamp):
-                        collection.update_many({"代码": doc["代码"], "timestamp": float(timestamp)}, {
-                                               "$set": doc}, upsert=True)
+                        try:
+                            collection.update_many({"代码": doc["代码"], "日期": doc["日期"]}, {
+                                "$set": doc}, upsert=True)
+                        except Exception as e:
+                            pass
                 # 执行批量插入操作
                 if bulk_insert:
-                    collection.insert_many(bulk_insert)
-            print("任务已经完成")
+                    try:
+                        collection.insert_many(bulk_insert)
+                    except Exception as e:
+                        pass
         except Exception as e:
-            print(e)
+            print(e, f"因为{code}停牌")
         limit = 20000
         if collection.count_documents({}) >= limit:
             oldest_data = collection.find().sort([("日期", 1)]).limit(
@@ -121,22 +133,15 @@ if not day.notna().empty:
         df = df[(df[f"过去{1}日资金波动_rank"] <= 0.01)].copy()
         dfend = df.copy().groupby(["日期"], group_keys=True).apply(
             lambda x: x.nsmallest(1, f"开盘")).reset_index(drop=True)[["代码", "日期","开盘",]]
-        dfshizhi = df.copy().groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"总市值")).reset_index(drop=True)[["代码", "日期",f"总市值"]]
-        dfshijing = df.copy().groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"市净率")).reset_index(drop=True)[["代码", "日期",f"市净率"]]
-        dfshiying = df[(df[f"市盈率-动态"] >= 0)].copy().groupby(["日期"], group_keys=True).apply(
-            lambda x: x.nsmallest(1, f"市盈率-动态")).reset_index(drop=True)[["代码", "日期",f"市盈率-动态"]]
-        # print(df)
         if len(df) < 200:
             # 发布到钉钉机器人
             df["市场"] = f"实盘{name}"
-            message = df[["市场","代码","日期","开盘","总市值","市净率","市盈率-动态"]].copy().to_markdown()
+            message = df[["市场","代码","日期","开盘"]].copy().to_markdown()
             print(type(message))
             webhook = "https://oapi.dingtalk.com/robot/send?access_token=f5a623f7af0ae156047ef0be361a70de58aff83b7f6935f4a5671a626cf42165"
             requests.post(webhook, json={"msgtype": "markdown", "markdown": {"title": f"{name}", "text": message}})
             
-            for mes in [dfend, dfshizhi, dfshijing, dfshiying]:
+            for mes in [dfend]:
                 mes["市场"] = f"实盘{name}"
                 message = mes.copy().to_markdown()
                 print(type(message))
