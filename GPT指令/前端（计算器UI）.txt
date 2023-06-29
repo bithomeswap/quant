@@ -7,7 +7,9 @@
 二、规则说明：
 1.UI组件参考钉钉UI（https://didi.github.io/cube-ui/#/zh-CN/docs/checkbox）、阿里UI（https://ant.design/components/overview-cn/）、饿了么UI（https://element.eleme.cn/#/zh-CN）；
 2.动画设计参考https://animate.style/；
-3.需要设计出来包含加、减、乘、除、幂运算、开方运算等功能的计算器；
-4.js文件名叫index.js,css文件名叫index.css；
+3.需要设计出来一个单纯依靠账号密码的登录界面，点击确认登录核对账号密码无误后，
+显示为<iframe>https://chat.wuguokai.cn/的标签的内容
+账号密码缓存在用户本地，只要这个缓存正确再次登录时就无需重新输入；
+4.生成一个包含<template><css><js lang="ts">三个部分的vue文件；
 参考网站：
-https://www.desmos.com/scientific?lang=zh-CN（计算器UI）
+http://bithome.top/#/login
