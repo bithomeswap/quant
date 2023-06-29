@@ -1,0 +1,22 @@
+!wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+!bash Miniconda3-latest-Linux-x86_64.sh -bfp /usr/local > /dev/null
+!import sys
+!sys.path.append('/usr/local/lib/python3.10/site-packages/')
+
+!git clone https://github.com/TigerResearch/TigerBot
+!cd TigerBot
+!pip install -r /content/TigerBot/requirements.txt
+
+!git clone https://github.com/microsoft/DeepSpeed/
+!cd DeepSpeed
+!rm -rf build
+# !TORCH_CUDA_ARCH_LIST="8.0" DS_BUILD_CPU_ADAM=1 DS_BUILD_UTILS=1 pip install . \
+# 实际检验结果上其实是7.5版本
+!TORCH_CUDA_ARCH_LIST="7.5" DS_BUILD_CPU_ADAM=1 DS_BUILD_UTILS=1 pip install . \
+!--global-option="build_ext" --global-option="-j8" --no-cache -v \
+!--disable-pip-version-check 2>&1 | tee build.log
+
+!conda create --name tigerbot python=3.8
+!conda activate tigerbot
+!conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+!CUDA_VISIBLE_DEVICES=0 python -c "import torch; print(torch.cuda.get_device_capability())"
