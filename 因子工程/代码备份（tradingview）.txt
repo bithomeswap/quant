@@ -33,8 +33,8 @@ high30=ta.highest(close,30)[1]//高点30
 newlow3=high>ta.lowest(close,3)[1]//新低3
 low3=ta.lowest(close,3)[1]//低点3
 low30=ta.lowest(close,30)[1]//低点30
-nothighopen=open/close[1]>0.98//不低开
-notlowopen=open/close[1]<1.02//不高开
+nothighopen=open/open[1]>0.98//不低开
+notlowopen=open/open[1]<1.02//不高开
 plot(high3, title='high3', color=color.new(#ff2200, 60), linewidth=2, trackprice=true)
 plot(low3, title='low3', color=color.new(#00ff44, 0), linewidth=2, trackprice=true)
 // plot(low30, title='low30', color=color.new(#ff2200, 8), linewidth=2, trackprice=true)
