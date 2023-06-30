@@ -22,7 +22,7 @@ stop= open==low and open==high and close==low and close==high//停牌
 up = close > open// 阳线
 down = close < open// 阴线
 lastup = ta.barssince(high/close[1] >= 1.09)// 上次涨停距离
-lastdown = ta.barssince(low/close[1]<= 0.99)// 上次跌停距离
+lastdown = ta.barssince(low/close[1]<= 0.91)// 上次跌停距离
 
 rate3=((open/close[5])-1)/3//三日斜率
 shock=(high-low)/open//振幅
