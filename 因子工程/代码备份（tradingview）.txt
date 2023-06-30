@@ -33,8 +33,8 @@ high30=ta.highest(close,30)[1]//高点30
 newlow3=high>ta.lowest(close,3)[1]//新低3
 low3=ta.lowest(close,3)[1]//低点3
 low30=ta.lowest(close,30)[1]//低点30
-nothighopen=open/open[1]>0.98//不低开
-notlowopen=open/open[1]<1.02//不高开
+nothighopen=open/close[1]>0.98//不低开
+notlowopen=open/close[1]<1.02//不高开
 plot(high3, title='high3', color=color.new(#ff2200, 60), linewidth=2, trackprice=true)
 plot(low3, title='low3', color=color.new(#00ff44, 0), linewidth=2, trackprice=true)
 // plot(low30, title='low30', color=color.new(#ff2200, 8), linewidth=2, trackprice=true)
@@ -54,35 +54,24 @@ if strategy.position_size>0
     buyprice:=buyprice[1]
 // plot(buybars, title='buybars', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
 // plot(buyprice, title='buyprice', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
+profitline=ta.highest(high,buybars)//盈利线
+lossline=open[buybars]>(open[buybars]+buyprice*0.002)?open[buybars]:open[buybars]+buyprice*0.002//止损线
+plot(profitline, title='profit', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
 allrate = ((close / buyprice) - 1)/buybars // 整体斜率
 allrateup = allrate > allrate[1]// 整体斜率递增
 highreturn = 1-(low/ta.highest(high,buybars))// 最高点回撤
 highreturnrate = highreturn / ta.highestbars(buybars)//最高点回撤斜率
 highestprofit=(ta.highest(high,buybars)- buyprice) / buyprice//最高点盈利
-highestprofitrate= highestprofit / buybars//盈利斜率
+highestprofitrate= highestprofit / (buybars-ta.highestbars(buybars))//盈利斜率
 
-profitline=ta.highest(high,buybars)
-//盈利线
-lossline=open[buybars]>(open[buybars]+buyprice*0.002)?open[buybars]:open[buybars]+buyprice*0.002
-//止损线
-plot(profitline, title='profit', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
-
-
-// // if strategy.position_size>0
-// duanqizhisun= ta.barssince(buy)<5 and low<strategy.position_avg_price*(0.95)
-// plotchar(duanqizhisun, text="duanqizhisun", color=color.rgb(255, 255, 255))
-// changqizhisun= ta.barssince(buy)>=5 and low<strategy.position_avg_price+ta.barssince(buy)*0.002
-// plotchar(changqizhisun, text="changqizhisun", color=color.rgb(255, 255, 255))
-// // zhisun=strategy.openprofit<-0.05// 未平仓位当前损益
-// zhiying= ta.barssince(buy)>25 and nowgain <0.002*ta.barssince(buy)
-// // huitiao= ta.barssince(buy)>5 and ta.barssince(rate3day<0) 
-// // and 
-// powei= ta.barssince(rate30day>0)>10
-// // if strategy.position_size>0
-// ganding= ta.barssince(close/close[1]>1.09)<10 and close/close[1]<1.05 and ta.highest(high,ta.highestbars(ta.barssince(buy)))
-
-// sell =  duanqizhisun or changqizhisun or ganding or newlow3
-// plotchar(sell, text="sell", color=color.purple)
-// if sell and (not stop)
-//     strategy.close_all()
-//     alert("触发卖出信号", alert.freq_once_per_bar)
+highestloss=0.95//最大亏损
+stoploss=low<open[buyprice]*highestloss//止损
+shortstoploss= buybars>3 and low<open[buybars]+buyprice*0.002 and rate3<0//中期止损
+longstoploss= buybars>5 and low<open[buybars]*(highestloss+buybars*highestprofitrate[1])//短期止损
+plotchar(stoploss, text="stoploss", color=color.rgb(10, 4, 4))
+ganding= ta.barssince(close/close[1]>1.09)<5 and highreturn>0.2//赶顶
+huitiao= ta.barssince(close/close[1]>1.09)>=5 and (allrate<math.abs(rate3) and rate3<0)//回调
+sellsignal=stoploss or shortstoploss or ganding or huitiao
+if sellsignal and (not stop)
+    strategy.close_all()
+    alert("触发卖出信号", alert.freq_once_per_bar)
