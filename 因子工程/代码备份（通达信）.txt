@@ -24,6 +24,7 @@ STICKLINE(1=1,OPEN,CLOSE,1,0),COLORBLACK;
 进场:=新高3;
 进场确认:=NOT(停牌);
 BUY(目标
+AND 小市值
 AND 进场
 AND 进场确认
 AND 不高开
