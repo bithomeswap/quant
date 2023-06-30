@@ -1,5 +1,6 @@
 资金贡献：（最高-最低）/（开盘*成交额），向前取一天取值最大的说明主力控盘程度强；
 基本面：从上海板块116只和160只的对比来看，A股市值在100亿以下对基本面有提升；
+横截面策略中昨日资金贡献大的标的当中，市值最小的那批目前来看势头比较猛。
 Alpha1: (rank(Ts_ArgMax(SignedPower(((returns < 0) ? stddev(returns, 20) : close), 2.), 5)) - 0.5) Alpha‘#2: (-1 * correlation(rank(delta(log(volume), 2)), rank(((close - open) / open)), 6))
 Alpha3: (-1 * correlation(rank(open), rank(volume), 10))
 Alpha4: (-1 * Ts_Rank(rank(low), 9))
