@@ -45,15 +45,15 @@ def after_trading_end(context):
     df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
                                         "market_cap":"总市值","pe_ratio":"市盈率",
                                         "total_equity":"净资产"})
-    df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
-    df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
-    df_balance["净资产"] = df_balance["总资产"] - df_balance["总负债"]
+    # df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
+    # df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
+    # df_balance["净资产"] = df_balance["总资产"] - df_balance["总负债"]
     df= pd.merge(df, df_price, on='代码')
-    df= pd.merge(df, df_balance, on='代码')
-    df = df[df['总市值'] <= 100]
+    # df= pd.merge(df, df_balance, on='代码')
     # df = df[(df['总市值']*100000000/df['营收'] <= 20)&(df['总市值']*100000000/df['营收'] >0)]
     # df = df[(df['总市值']*100000000/df['净资产'] <= 3)&(df['总市值']*100000000/df['净资产'] >0)]
     # df = df[(df['总资产']/df['总负债'])>=1]    # 资产大于负债
+    df = df[df['总市值'] <= 100]
     df = df.nsmallest(1, '总市值')
     df=df.loc[:, ["代码", "总市值", "总资产", "市盈率", "营收", "净资产"]]
     print(df)

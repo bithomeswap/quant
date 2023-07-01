@@ -1,0 +1,111 @@
+import pandas as pd
+# 设置回测 ID
+backtest_id = 'a22b44b06d28478c3abbb9491eca0c0c'
+# 获取回测报告
+gt = get_backtest(backtest_id)
+df=gt.get_orders(start_date=None, end_date=None)
+df=pd.DataFrame(df)
+df = df.rename(columns={'time': '时间','action': '开平仓', 
+                        'amount': '数量', 'commission':'手续费','filled': '已成交量', 
+                        'gains': '收益', 'price':'成交价','security': '标的代码', 
+                        'status': '订单状态', 'type':'委托方式'})
+df.to_csv(f"{backtest_id}.csv")
+print(df)
+
+
+import pandas as pd
+from pymongo import MongoClient
+import datetime
+client = MongoClient(
+    "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+db = client["wth000"]
+name = ("000", "001", "002", "600", "601", "603", "605")
+
+# collection = db[f"聚宽ST股票{name}"]
+# end_date= datetime.date(2018, 1, 1)
+# start_date = datetime.date.today()  # 结束日期为今天
+# delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# date = start_date
+# dates = collection.distinct("日期")
+# print("已收录日期数据",dates)
+# collection.drop()
+# while date >= end_date:
+#     date -= delta
+#     df = get_all_securities(types=['stock'], date=date)
+#     df = df[df['display_name'].str.contains("S")|df["display_name"].str.contains("退")]
+#     df = df[df.index.str.startswith(name)].copy()
+#     df.rename_axis('代码', inplace=True)
+#     df.reset_index(inplace=True)
+#     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+#     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+#     df['日期']=today
+#     df=df[['日期','代码']]
+#     if today not in dates:
+#         collection.insert_many(df.to_dict("records"))
+#         print(df)
+#     df = pd.DataFrame()
+# print("获取ST股票完毕")
+
+# collection = db[f"聚宽非ST股票{name}"]
+# end_date= datetime.date(2018, 1, 1)
+# start_date = datetime.date.today()  # 结束日期为今天
+# delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# date = start_date
+# dates = collection.distinct("日期")
+# collection.drop()
+# print("已收录日期数据",dates)
+# while date >= end_date:
+#     date -= delta
+#     df = get_all_securities(types=['stock'], date=date)
+#     df = df[~df['display_name'].str.contains("S")]
+#     df = df[~df['display_name'].str.contains("退")]
+#     df = df[df.index.str.startswith(name)].copy()
+#     df.rename_axis('代码', inplace=True)
+#     df.reset_index(inplace=True)
+#     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)    
+#     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+#     df['日期']=today
+#     df=df[['日期','代码']]
+#     if today not in dates:
+#         collection.insert_many(df.to_dict("records"))
+#         print(df)
+#     df = pd.DataFrame()
+# print("获取非ST股票完毕")
+
+# collection = db[f"聚宽基本面股票{name}"]
+# end_date= datetime.date(2018, 1, 1)
+# start_date = datetime.date.today()  # 结束日期为今天
+# delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# date = start_date
+# dates = collection.distinct("日期")
+# collection.drop()
+# print("已收录日期数据",dates)
+# while date >= end_date:
+#     date -= delta
+#     df = get_fundamentals(query(
+#         valuation.code, valuation.market_cap, valuation.pe_ratio, income.total_operating_revenue
+#     ), date=date)
+#     df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
+#     df = df[df["代码"].str.startswith(name)]
+#     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+#     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+#     df['日期']=today
+#     if today not in dates:
+#         collection.insert_many(df.to_dict("records"))
+#         print(df)
+# print("获取基本面数据完毕")
+collection=db[f"聚宽可转债"]
+codes=get_all_securities(types=['conbond'])
+codes.rename_axis("代码", inplace=True)
+codes.reset_index(inplace=True)
+start_date= datetime.date(2018, 1, 1)
+end_date = datetime.date.today()
+collection.drop()
+print(codes)
+for code in codes["代码"]:
+    print(code)
+    df=get_price(code)
+    df['代码']=code
+    df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+    print(df)
+    collection.insert_many(df.to_dict("records"))
