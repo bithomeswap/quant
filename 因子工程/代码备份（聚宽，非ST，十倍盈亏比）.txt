@@ -9,8 +9,8 @@ def initialize(context):
     # 初始化函数，在此处添加打印语句
     print('任务已经开始')
     # 设定沪深300、中证1000、上证指数作为基准
-    # set_benchmark('000300.XSHG')
-    set_benchmark('000852.XSHG')
+    set_benchmark('000300.XSHG')
+    # set_benchmark('000852.XSHG')
     # set_benchmark('000001.XSHG')
     
     # 开启动态复权模式(真实价格)
@@ -65,10 +65,15 @@ def after_trading_end(context):
     # df = df[(df['市净率'] <= 3)&(df['市净率'] >0)]
     # df = df[()>=1]    # 资产大于负债
     
-    # df = df[df['总市值'] <= 100]
-    # df = df.nsmallest(1, '总市值')
-    # df = df.nsmallest(1, '开盘')
-    df = df.nsmallest(1, '市净率')
+    df = df[df['总市值'] <= 100]
+    df = df.nsmallest(1, '总市值') # 好指标效果最好
+    # df = df.nsmallest(1, '开盘') # 好指标效果其次
+    # df = df.nlargest(1, '资产负债率') # 磨损严重，效果不如前两者
+    # df = df.nsmallest(1, '市净率') # 市净率不是好指标，回测亏损比较严重
+    # df = df.nlargest(1, '市销率') # 还没测试，但是最小的是负值，估计不好用
+    # df = df.nsmallest(1, '资产负债率') # 指标做反了，收益不大稳定
+
+
     df=df.loc[:, ["代码",'开盘','收盘', "总市值","资产负债率", "市销率", "市净率"]]
     print(df)
     g.stocks=df['代码']
