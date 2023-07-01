@@ -8,8 +8,11 @@ def initialize(context):
     context.day_counter = 0
     # 初始化函数，在此处添加打印语句
     print('任务已经开始')
-    # 设定沪深300作为基准
-    set_benchmark('000300.XSHG')
+    # 设定沪深300、中证1000、上证指数作为基准
+    # set_benchmark('000300.XSHG (HS300)')
+    set_benchmark('000852.XSHG (ZZ1000)')
+    # set_benchmark('000001.XSHG (SZZS)')
+    
     # 开启动态复权模式(真实价格)
     set_option('use_real_price', True)
     # 开启避免未来函数模式
@@ -52,15 +55,19 @@ def after_trading_end(context):
                                         "total_equity":"净资产"})
     # df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
     # df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
-    # df_balance["净资产"] = df_balance["总资产"] - df_balance["总负债"]
     df= pd.merge(df, df_price, on='代码')
+    # df["净资产"] = df["总资产"] - df["总负债"]
+    # df['市销率']=df['总市值']*100000000/df['营收']
+    # df['市净率']=df['总市值']*100000000/df['净资产']
+    # df['资产负债率']=df['总资产']/df['总负债']
     # df= pd.merge(df, df_balance, on='代码')
-    # df = df[(df['总市值']*100000000/df['营收'] <= 20)&(df['总市值']*100000000/df['营收'] >0)]
-    # df = df[(df['总市值']*100000000/df['净资产'] <= 3)&(df['总市值']*100000000/df['净资产'] >0)]
-    # df = df[(df['总资产']/df['总负债'])>=1]    # 资产大于负债
+    # df = df[(df['市销率'] <= 20)&(df['市销率'] >0)]
+    # df = df[(df['市净率'] <= 3)&(df['市净率'] >0)]
+    # df = df[()>=1]    # 资产大于负债
     # df = df[df['总市值'] <= 100]
-    df = df.nsmallest(1, '总市值')
-    df=df.loc[:, ["代码", "总市值", "总资产", "市盈率", "营收", "净资产"]]
+    # df = df.nsmallest(1, '总市值')
+    df = df.nsmallest(1, '开盘')
+    df=df.loc[:, ["代码",'开盘','收盘', "总市值","资产负债率", "市销率", "市净率"]]
     print(df)
     g.stocks=df['代码']
          
