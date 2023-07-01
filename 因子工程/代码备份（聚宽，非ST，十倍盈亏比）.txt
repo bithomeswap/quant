@@ -80,8 +80,8 @@ def handle_data(context, data):
     print(buy_list)
     # 卖出持仓超过30个交易日的股票
     for stock in context.portfolio.positions:
-        held_days = (today - context.portfolio.positions[stock].init_time.date()).days
-        if held_days >= 30:
+        hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
+        if hold_days >= 30:
             order_target_value(stock, 0)
             log.info("Selling %s", stock)
     # 如果有符合条件的股票，则平均买入
