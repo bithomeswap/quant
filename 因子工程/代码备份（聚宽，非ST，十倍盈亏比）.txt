@@ -21,10 +21,9 @@ def initialize(context):
     # 股票类每笔交易时的手续费是：买入时佣金万分之三，卖出时佣金万分之三加千分之一印花税, 每笔交易佣金最低扣5块钱
     set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0003, close_commission=0.0003, min_commission=5), type='stock')
     
-    # 11:00定时运行
-    run_daily(sell, time='14:00')     
-    # 14:00定时运行
+    # 定时运行买入卖出函数
     run_daily(buy, time='9:35') 
+    run_daily(sell, time='14:00')     
     
     g.stocks=[]
 def after_trading_end(context):
