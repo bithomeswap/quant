@@ -1,4 +1,5 @@
 import math
+import pandas as pd
 
 def initialize(context):
     # 设置初始资金
@@ -23,8 +24,12 @@ def initialize(context):
 def after_trading_end(context):
     today = context.current_dt.date()
     name = ("000", "001", "002", "600", "601", "603", "605")
-    import pandas as pd
-    df = get_all_securities(types=['stock']).index
+    
+    # df = get_all_securities(types=['stock']).index
+    
+    df = get_all_securities(types=['stock'])
+    df = df[~(df['display_name'].str.contains("S")|df["display_name"].str.contains("退"))].index
+    
     stocks = df[df.str.startswith(name)].tolist()
     df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
     df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
@@ -49,15 +54,14 @@ def after_trading_end(context):
     df= pd.merge(df, df_price, on='代码')
     df= pd.merge(df, df_balance, on='代码')
     df = df[df['总市值'] <= 100]
-    df = df[(df['总市值']*100000000/df['营收'] <= 20)&(df['总市值']*100000000/df['营收'] >0)]
-    df = df[(df['总市值']*100000000/df['净资产'] <= 3)&(df['总市值']*100000000/df['净资产'] >0)]
-    df = df[(df['总资产']/df['总负债'])>=1]    # 资产大于负债
+    # df = df[(df['总市值']*100000000/df['营收'] <= 20)&(df['总市值']*100000000/df['营收'] >0)]
+    # df = df[(df['总市值']*100000000/df['净资产'] <= 3)&(df['总市值']*100000000/df['净资产'] >0)]
+    # df = df[(df['总资产']/df['总负债'])>=1]    # 资产大于负债
+    df = df.nsmallest(1, '总市值')
     df=df.loc[:, ["代码", "总市值", "总资产", "市盈率", "营收", "净资产"]]
     print(df)
     g.stocks=df['代码']
 def handle_data(context, data):
-
-    
     today = context.current_dt.date()
     print(g.stocks)
     # 如果股票满足以下条件则进入交易池
