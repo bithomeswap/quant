@@ -1,6 +1,10 @@
 import math
 
 def initialize(context):
+    # 设置初始资金
+    context.init_cash = 10000000
+    # 设置交易日计数器
+    context.day_counter = 0
     # 初始化函数，在此处添加打印语句
     print('任务已经开始')
     # 设定沪深300作为基准
@@ -14,17 +18,15 @@ def initialize(context):
     # 过滤掉order系列API产生的比error级别低的log
     log.set_level('order', 'error')
     # 股票类每笔交易时的手续费是：买入时佣金万分之三，卖出时佣金万分之三加千分之一印花税, 每笔交易佣金最低扣5块钱
-    set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0001, close_commission=0.0001, min_commission=5), type='stock')
-
+    set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0003, close_commission=0.0003, min_commission=5), type='stock')
+    g.stocks=[]
 def after_trading_end(context):
     today = context.current_dt.date()
-    yestoday = context.previous_date
-     
-    # 获取所有A股股票列表
     name = ("000", "001", "002", "600", "601", "603", "605")
+    import pandas as pd
     df = get_all_securities(types=['stock']).index
     stocks = df[df.str.startswith(name)].tolist()
-    df = get_price(stocks, start_date=yestoday,end_date=yestoday, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
+    df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
     df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
     df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
     df['资金波动'] = df['振幅'] / df['成交额']
@@ -32,50 +34,66 @@ def after_trading_end(context):
     df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
     df=df[df['资金波动_rank']<0.01]
     df=df[df['收盘']>=4]# 限制购买4元以下的个股
-    print(df)
-    # 过滤市值小于一百亿的股票
+    # 过滤市值小于一百亿的股票、市盈率不在0-20之间的股票、市净率不在0-3之间的股票
     df_price = get_fundamentals(query(
-        valuation.code, valuation.market_cap, valuation.pe_ratio, income.total_operating_revenue
-    ), date=yestoday)
-    df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
-    # df = df[df["代码"].str.startswith(name)]
-    import pandas as pd
-    df_price = df_price[df_price['总市值'] <= 100]
-    print(df_price)
+        valuation.code, valuation.market_cap, valuation.pe_ratio,
+        income.total_operating_revenue
+    ), date=today)
+    df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
+                                        "market_cap":"总市值","pe_ratio":"市盈率",
+                                        "total_equity":"净资产"})
+    df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability
+    ), date=today)
+    df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
+    df_balance["净资产"] = df_balance["总资产"] - df_balance["总负债"]
     df= pd.merge(df, df_price, on='代码')
+    df= pd.merge(df, df_balance, on='代码')
+    df = df[df['总市值'] <= 100]
+    df = df[(df['总市值']*100000000/df['营收'] <= 20)&(df['总市值']*100000000/df['营收'] >0)]
+    df = df[(df['总市值']*100000000/df['净资产'] <= 3)&(df['总市值']*100000000/df['净资产'] >0)]
+    df = df[(df['总资产']/df['总负债'])>=1]    # 资产大于负债
+    df=df.loc[:, ["代码", "总市值", "总资产", "市盈率", "营收", "净资产"]]
     print(df)
+    g.stocks=df['代码']
+def handle_data(context, data):
 
-
-
-    # # 如果股票满足以下条件则进入交易池
-    # buy_list = []
-    # for stock in lowest_open:
-    #     # 获取股票的当前价格和前一天的价格
-    #     price = attribute_history(stock, 2, '1d', ['open'], df=False)['open']
-    #     # 判断股票是否在停牌状态，昨天或今天的开盘价为0
-    #     if price[0] == 0 or price[1] == 0:
-    #         continue
-    #     # 判断是否涨跌停
-    #     close_price = attribute_history(stock, 2, '1d', ['close'], df=False)['close']
-    #     if close_price[0]*0.99 > price[1] :
-    #         continue
-    #     if close_price[0]*1.08 <= price[1] :
-    #         continue
-    #     # 如果符合条件，则将股票加入买入列表中
-    #     buy_list.append(stock)
-    # print(buy_list)
     
-    # # 卖出持仓超过15个交易日的股票
-    # for stock in context.portfolio.positions:
-    #     held_days = (today - context.portfolio.positions[stock].init_time.date()).days
-    #     if held_days >= 15:
-    #         order_target_value(stock, 0)
-    #         log.info("Selling %s", stock)
+    today = context.current_dt.date()
+    print(g.stocks)
+    # 如果股票满足以下条件则进入交易池
+    buy_list = []
+    for stock in g.stocks:
+        # 获取股票的当前价格和前一天的价格
+        price = attribute_history(stock, 2, '1d', ['open'], df=False)['open']
+        # 判断股票是否在停牌状态，昨天或今天的开盘价为0
+        if price[0] == 0 or price[1] == 0:
+            continue
+        # 判断是否涨跌停
+        close_price = attribute_history(stock, 2, '1d', ['close'], df=False)['close']
+        if close_price[0]*0.99 > price[1] :
+            continue
+        if close_price[0]*1.08 <= price[1] :
+            continue
+        # 如果符合条件，则将股票加入买入列表中
+        buy_list.append(stock)
+    print(buy_list)
+    # 卖出持仓超过30个交易日的股票
+    for stock in context.portfolio.positions:
+        held_days = (today - context.portfolio.positions[stock].init_time.date()).days
+        if held_days >= 30:
+            order_target_value(stock, 0)
+            log.info("Selling %s", stock)
+    # 如果有符合条件的股票，则平均买入
+    if len(buy_list) > 0:
+        if context.day_counter < 30:
+            target_value = context.init_cash * (1/30)*0.98
+        else:
+            target_value = context.portfolio.portfolio_value * 0.98
+        value_per_stock = target_value / len(buy_list)
+        for stock in buy_list:
+            order_target_value(stock, value_per_stock)
+            log.info("Buying %s", stock)
+                # 前30个交易日每天买入初始资金的三十分之一
 
-    # # 如果有符合条件的股票，则平均买入
-    # if len(buy_list) > 0:
-    #     target_value = context.portfolio.portfolio_value * 0.98
-    #     value_per_stock = target_value / len(buy_list)
-    #     for stock in buy_list:
-    #         order_target_value(stock, value_per_stock)
-    #         log.info("Buying %s", stock)
+    # 交易日计数器增加1
+    context.day_counter += 1
