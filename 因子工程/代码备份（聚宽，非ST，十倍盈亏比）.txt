@@ -26,7 +26,6 @@ def after_trading_end(context):
     name = ("000", "001", "002", "600", "601", "603", "605")
     
     # df = get_all_securities(types=['stock']).index
-    
     df = get_all_securities(types=['stock'])
     df = df[~(df['display_name'].str.contains("S")|df["display_name"].str.contains("退"))].index
     
@@ -42,13 +41,11 @@ def after_trading_end(context):
     # 过滤市值小于一百亿的股票、市盈率不在0-20之间的股票、市净率不在0-3之间的股票
     df_price = get_fundamentals(query(
         valuation.code, valuation.market_cap, valuation.pe_ratio,
-        income.total_operating_revenue
-    ), date=today)
+        income.total_operating_revenue), date=today)
     df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
                                         "market_cap":"总市值","pe_ratio":"市盈率",
                                         "total_equity":"净资产"})
-    df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability
-    ), date=today)
+    df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
     df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
     df_balance["净资产"] = df_balance["总资产"] - df_balance["总负债"]
     df= pd.merge(df, df_price, on='代码')
@@ -97,7 +94,5 @@ def handle_data(context, data):
         for stock in buy_list:
             order_target_value(stock, value_per_stock)
             log.info("Buying %s", stock)
-                # 前30个交易日每天买入初始资金的三十分之一
-
     # 交易日计数器增加1
     context.day_counter += 1
