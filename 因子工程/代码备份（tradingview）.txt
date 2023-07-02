@@ -49,29 +49,30 @@ if buysignal and nothighopen and (not stop)and close[30]>0// 上市时间超三�
         buyprice:=high3
     strategy.entry("buy", strategy.long,limit=buyprice,stop=buyprice*0.95)
 //买入距离（数据是对的）
-buybars=strategy.opentrades > 0 ? bar_index - strategy.opentrades.entry_bar_index(strategy.opentrades - 1) : na
-if strategy.position_size>0
-    buyprice:=buyprice[1]
-// plot(buybars, title='buybars', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
-// plot(buyprice, title='buyprice', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
+show=strategy.opentrades > 0
+buybars=show ? bar_index - strategy.opentrades.entry_bar_index(strategy.opentrades - 1) : na
+buyprice:=show?buyprice[1]:buyprice
+plot(buybars?buybars:na, title='buybars', color=color.new(#b8f880, 0), linewidth=2, trackprice=true)
+plot(buyprice, title='buyprice', color=color.new(#f87e7e, 0), linewidth=2, trackprice=true)
 profitline=ta.highest(high,buybars)//盈利线
-lossline=open[buybars]>(open[buybars]+buyprice*0.002)?open[buybars]:open[buybars]+buyprice*0.002//止损线
-plot(profitline, title='profit', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
-allrate = ((close / buyprice) - 1)/buybars // 整体斜率
-allrateup = allrate > allrate[1]// 整体斜率递增
-highreturn = 1-(low/ta.highest(high,buybars))// 最高点回撤
-highreturnrate = highreturn / ta.highestbars(buybars)//最高点回撤斜率
-highestprofit=(ta.highest(high,buybars)- buyprice) / buyprice//最高点盈利
-highestprofitrate= highestprofit / (buybars-ta.highestbars(buybars))//盈利斜率
+// plot(profitline?profitline:na, title='profitline', color=color.new(#0a0605, 40), linewidth=2, trackprice=true)
 
-highestloss=0.95//最大亏损
-stoploss=low<open[buyprice]*highestloss//止损
-shortstoploss= buybars>3 and low<open[buybars]+buyprice*0.002 and rate3<0//中期止损
-longstoploss= buybars>5 and low<open[buybars]*(highestloss+buybars*highestprofitrate[1])//短期止损
-plotchar(stoploss, text="stoploss", color=color.rgb(10, 4, 4))
-ganding= ta.barssince(close/close[1]>1.09)<5 and highreturn>0.2//赶顶
-huitiao= ta.barssince(close/close[1]>1.09)>=5 and (allrate<math.abs(rate3) and rate3<0)//回调
-sellsignal=stoploss or shortstoploss or ganding or huitiao
-if sellsignal and (not stop)
-    strategy.close_all()
-    alert("触发卖出信号", alert.freq_once_per_bar)
+// lossline=open[buybars]>(open[buybars]+buyprice*0.002)?open[buybars]:open[buybars]+buyprice*0.002//止损线
+// allrate = ((close / buyprice) - 1)/buybars // 整体斜率
+// allrateup = allrate > allrate[1]// 整体斜率递增
+// highreturn = 1-(low/ta.highest(high,buybars))// 最高点回撤
+// highreturnrate = highreturn / ta.highestbars(buybars)//最高点回撤斜率
+// highestprofit=(ta.highest(high,buybars)- buyprice) / buyprice//最高点盈利
+// highestprofitrate= highestprofit / (buybars-ta.highestbars(buybars))//盈利斜率
+
+// highestloss=0.95//最大亏损
+// stoploss=low<open[buyprice]*highestloss//止损
+// shortstoploss= buybars>3 and low<open[buybars]+buyprice*0.002 and rate3<0//中期止损
+// longstoploss= buybars>5 and low<open[buybars]*(highestloss+buybars*highestprofitrate[1])//短期止损
+// plotchar(stoploss, text="stoploss", color=color.rgb(10, 4, 4))
+// ganding= ta.barssince(close/close[1]>1.09)<5 and highreturn>0.2//赶顶
+// huitiao= ta.barssince(close/close[1]>1.09)>=5 and (allrate<math.abs(rate3) and rate3<0)//回调
+// sellsignal=stoploss or shortstoploss or ganding or huitiao
+// if sellsignal and (not stop)
+//     strategy.close_all()
+//     alert("触发卖出信号", alert.freq_once_per_bar)
