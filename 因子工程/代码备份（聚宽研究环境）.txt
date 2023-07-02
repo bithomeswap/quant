@@ -12,6 +12,21 @@ df = df.rename(columns={'time': '时间','action': '开平仓',
 df.to_csv(f"backtest{backtest_id}.csv")
 print(df)
 
+# # 获取ETF
+# end_date= datetime.date(2018, 1, 1)
+# start_date = datetime.date.today()  # 结束日期为今天
+# delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# date = start_date
+# df = get_all_securities(types=['etf'], date=date)
+# df = df[df['display_name'].str.contains("S")|df["display_name"].str.contains("退")]
+# df.rename_axis('代码', inplace=True)
+# df.reset_index(inplace=True)
+# df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+# today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+# df['日期']=today
+# df=df[['日期','代码']]
+# print(df)
+
 # import pandas as pd
 # from pymongo import MongoClient
 # import datetime
