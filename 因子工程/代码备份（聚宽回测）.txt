@@ -1,39 +1,5 @@
 import math
 import pandas as pd
-
-
-# # 过滤股票
-# def filter_stocks(context, n=120):
-#     # type: (Context, int) -> list
-#     """
-#     过滤掉：1）三停：涨停、跌停、停牌；2）三特：st, *st, 退；3）科创、创业; 4）次新；
-#     适用于开盘前选股，如果是盘中，用curr_data[security].last_price替代curr_data[stock].day_open
-#     :param n: 获取n个交易日之前上市的股票
-#     """
-#     # 获取交易日
-#     trd_days = get_trade_days(end_date=context.current_dt, count=n)
-#     # 获取n个交易日之前前上市股票【即过滤掉次新股】
-#     stock_list = get_all_securities('stock', trd_days[0]).index.tolist()
-#     #
-#     curr_data = get_current_data()
-#     stock_list = [stock for stock in stock_list if not (
-#             (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
-#             (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
-#             curr_data[stock].paused or  # 停牌
-#             curr_data[stock].is_st or  # ST
-#             ('ST' in curr_data[stock].name) or
-#             ('*' in curr_data[stock].name) or
-#             ('退' in curr_data[stock].name) 
-#             or
-#             (stock.startswith('300')) or  # 创业
-#             (stock.startswith('301')) or
-#             (stock.startswith('688')) or  # 科创
-#             (stock.startswith('689'))
-#     )]
-#     #
-#     return stock_list
-    
-    
 def initialize(context):
     # 设置初始资金
     context.init_cash = 10000000
@@ -42,9 +8,9 @@ def initialize(context):
     # 初始化函数，在此处添加打印语句
     print('任务已经开始')
     # 设定沪深300、中证1000、上证指数作为基准
-    set_benchmark('000300.XSHG')
+    # set_benchmark('000300.XSHG')
     # set_benchmark('000852.XSHG')
-    # set_benchmark('000001.XSHG')
+    set_benchmark('000001.XSHG')
     
     # 开启动态复权模式(真实价格)
     set_option('use_real_price', True)
@@ -60,12 +26,11 @@ def initialize(context):
     run_daily(buy, time='9:35') 
     run_daily(sell, time='14:00')     
     g.stocks=[]
-    g.road='11'
+    g.road='CTA'
+    # g.road='no'
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
     # g.name=("ETF")
-    
-    
 def after_trading_end(context):
     today = context.current_dt.date()
     if "ETF" in g.name:
@@ -85,7 +50,6 @@ def after_trading_end(context):
         df=df.loc[:, ["代码",'开盘','收盘', "总市值","资产负债率", "市销率", "市净率"]]
         print(df)
         g.stocks=df['代码']
-
     if "300" in g.name:
         # df = get_all_securities(types=['stock']).index
         # stocks = df[df.str.startswith(name)].tolist()
@@ -134,15 +98,14 @@ def after_trading_end(context):
         # df = df.nlargest(1, '资产负债率') # 收益不高,牛市盈亏比不到3
         # df = df.nlargest(1, '市净率') # 收益过低,牛市盈亏比不到5
         # 小市值策略
-        df = df[df['总市值'] <= 100]
-        df = df.nsmallest(1, '总市值') # 2021年至今盈亏比2.20（有bug需要重新跑）
+        # df = df[df['总市值'] <= 100]
+        # df = df.nsmallest(1, '总市值') # 2021年至今盈亏比2.20（有bug需要重新跑）
         # df = df.nsmallest(1, '开盘') # # 2015年至今盈亏比1.56，熊市回撤大
         # # 高资金波动策略
         # df = df.nsmallest(1, '资金波动_rank') # 2021年至今盈亏比1.599
         df=df.loc[:, ["代码",'开盘','收盘', "总市值","资产负债率", "市销率", "市净率"]]
         print(df)
         g.stocks=df['代码']
-        
     if  "000" in g.name:
         # df = get_all_securities(types=['stock']).index
         # stocks = df[df.str.startswith(name)].tolist()
@@ -191,20 +154,39 @@ def after_trading_end(context):
         # df = df.nlargest(1, '资产负债率') # 收益不高,牛市盈亏比不到3
         # df = df.nlargest(1, '市净率') # 收益过低,牛市盈亏比不到5
         # 小市值策略
-        df = df[df['总市值'] <= 100]
-        df = df.nsmallest(1, '总市值') # 2021年至今盈亏比2.20（有bug需要重新跑）
+        # df = df[df['总市值'] <= 100]
+        # df = df.nsmallest(1, '总市值') # 2021年至今盈亏比2.20（有bug需要重新跑）
         # df = df.nsmallest(1, '开盘') # # 2015年至今盈亏比1.56，熊市回撤大
         # # 高资金波动策略
         # df = df.nsmallest(1, '资金波动_rank') # 2021年至今盈亏比1.599
         df=df.loc[:, ["代码",'开盘','收盘', "总市值","资产负债率", "市销率", "市净率"]]
         print(df)
         g.stocks=df['代码']
-        
-
-# 固定时间交易（不含CTA）
+# 固定时间交易
 def buy(context):
     if 'CTA' in g.road:
+        获取交易日
+        trd_days = get_trade_days(end_date=context.current_dt)
+        print(trd_days)
         today = context.current_dt.date()
+        start_date=today-datetime.timedelta(days=5)
+        print(today,start_date)
+        buy_list=g.stocks
+        df = get_price(buy_list, start_date=start_date,end_date=today,
+            fields=['open', 'high', 'low', 'close', 'money'],panel=False)
+        # df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
+        print(df)
+
+        # df = df[df['开盘']]
+        # if len(buy_list) > 0:
+        #     if context.day_counter < 30:
+        #         target_value = context.init_cash * (1/30)*0.98
+        #     else:
+        #         target_value = context.portfolio.portfolio_value * 0.98
+        #     value_per_stock = target_value / len(buy_list)
+        #     for stock in buy_list:
+        #         order_target_value(stock, value_per_stock)
+        #         log.info("Buying %s", stock)
     if 'CTA' not in g.road:
         today = context.current_dt.date()
         # 如果有符合条件的股票，则平均买入
@@ -230,6 +212,9 @@ def sell(context):
             if hold_days >= 30:
                 order_target_value(stock, 0)
                 log.info("Selling %s", stock)
+
+
+
 
 # # 开盘交易
 # def handle_data(context, data):
@@ -271,4 +256,38 @@ def sell(context):
 #     # 交易日计数器增加1
 #     context.day_counter += 1
 
+
+
+
+# # 过滤股票
+# def filter_stocks(context, n=120):
+#     # type: (Context, int) -> list
+#     """
+#     过滤掉：1）三停：涨停、跌停、停牌；2）三特：st, *st, 退；3）科创、创业; 4）次新；
+#     适用于开盘前选股，如果是盘中，用curr_data[security].last_price替代curr_data[stock].day_open
+#     :param n: 获取n个交易日之前上市的股票
+#     """
+#     # 获取交易日
+#     trd_days = get_trade_days(end_date=context.current_dt, count=n)
+#     # 获取n个交易日之前前上市股票【即过滤掉次新股】
+#     stock_list = get_all_securities('stock', trd_days[0]).index.tolist()
+#     #
+#     curr_data = get_current_data()
+#     stock_list = [stock for stock in stock_list if not (
+#             (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
+#             (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
+#             curr_data[stock].paused or  # 停牌
+#             curr_data[stock].is_st or  # ST
+#             ('ST' in curr_data[stock].name) or
+#             ('*' in curr_data[stock].name) or
+#             ('退' in curr_data[stock].name) 
+#             or
+#             (stock.startswith('300')) or  # 创业
+#             (stock.startswith('301')) or
+#             (stock.startswith('688')) or  # 科创
+#             (stock.startswith('689'))
+#     )]
+#     #
+#     return stock_list
+    
        
