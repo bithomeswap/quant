@@ -32,6 +32,7 @@ def initialize(context):
     # g.road='CTA'
     g.road='no'
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
+    g.name = ("000", "600") # 老股
     # g.name = ("300", "688") # 创业板
     # g.name=("ETF")
 def after_trading_end(context):
@@ -105,9 +106,9 @@ def buy(context):
     if(len(buy_list))>0:
         for stock in buy_list:
             if context.day_counter < 30:
-                target_value = context.init_cash*(1/30)
+                target_value = context.init_cash*(1/30)*0.999
             else: # 用全部余额买入
-                target_value = context.portfolio.available_cash
+                target_value = context.portfolio.available_cash*0.999
             value_per_stock = target_value/len(buy_list)
             order=order_target_value(stock, value_per_stock)
             if order!=None:
