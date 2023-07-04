@@ -1,6 +1,7 @@
 import math
 from jqdata import *
 import pandas as pd
+import json
 def initialize(context):
     # 设置初始资金
     context.init_cash = 10000000
@@ -51,7 +52,7 @@ def after_trading_end(context):
         df=df.loc[:, ["代码",'开盘','收盘', "总市值","资产负债率", "市销率", "市净率"]]
         print(df)
         g.stocks=df['代码']
-    if  "0" in g.name:
+    if  "000" or "300" in g.name:
         name=g.name
         # df = get_all_securities(types=['stock']).index
         # stocks = df[df.str.startswith(name)].tolist()
@@ -70,8 +71,6 @@ def after_trading_end(context):
             )]
         df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
         df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
-        # df = df[(df['开盘']!=df['收盘'])and(df['最低']!=df['最高'])and(df['开盘']!=df['最高'])and(df['收盘']!=df['最高'])] # 没有停牌
-        
         df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
         df['资金波动'] = df['振幅'] / df['成交额']
         df = df.sort_values(by=['资金波动'], ascending=False)
@@ -85,82 +84,48 @@ def after_trading_end(context):
                                             "market_cap":"总市值","pe_ratio":"市盈率",
                                             "total_equity":"净资产"})
         df= pd.merge(df, df_price, on='代码')
-        df = df[df['收盘']>=4] # 限制购买4元以下的个股
         # 小市值策略
         df = df[df['总市值'] <= 100]
-        df = df.nsmallest(10, '总市值') # 2021年至今盈亏比2.20（有bug需要重新跑）
+        df = df.nsmallest(1, '总市值') # 2021年至今盈亏比2.20（有bug需要重新跑）
         # df = df.nsmallest(5, '资金波动_rank') # 2021年至今盈亏比1.599
         # 基本面过滤
+        df = df[df['收盘']>=4] # 限购低价股
         df['市销率']=df['营收']/(df['总市值']*10000000)
         df = df[(df['市销率']>0) & (df['市销率']<2)] # 市销率为1有1600+股票，为1.5有2000+股票
         g.stocks=df['代码']
+        print(df)
 # 固定时间交易
 def buy(context):
     if 'CTA' in g.road:
         today = context.current_dt.date()
-        # # 获取交易日
-        # trd_days = get_trade_days(end_date=today,count=10)
-        # print(trd_days)
-        # start_date=trd_days[0]
-        print(today)
-        buy_lists=g.stocks
-        buy_list=[]
-        if(len(buy_lists))>0:
-            n=3
-            for stock in buy_lists:
-                df = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,
-                    fields=['open'],panel=False)
-                if (df['open'][n-1]>df['open'][0])and(df['open'][n-1]/df['open'][n-2]<1.02):
-                    # 突破n日前高买入且比前一日开盘幅度不超过百分之二
-                    buy_list.append(stock)
-            print(buy_list)
-        if(len(buy_list))>0:
+        # 如果有符合条件的股票，则平均买入
+        buy_list=g.stocks
+        if len(buy_list) > 0:
+            if context.day_counter < 30:
+                target_value = context.init_cash * (1/30)
+            else:
+                target_value = context.portfolio.available_cash
+            value_per_stock = target_value / len(buy_list)
             for stock in buy_list:
-                if context.day_counter < 30:
-                    target_value = context.init_cash*(1/5)
-                else: # 用全部余额买入
-                    target_value = context.portfolio.available_cash
-                value_per_stock = target_value/len(buy_list)
                 order=order_target_value(stock, value_per_stock)
-                log.info("Buying %s", order)
+                log.info("Buying", order,type(order))
+                g.buy.append(pd.DataFrame(order.__dict__))
+                print(g.buy)
     if 'CTA' not in g.road:
-        # today = context.current_dt.date()
-        # # 如果有符合条件的股票，则平均买入
-        # buy_list=g.stocks
-        # if len(buy_list) > 0:
-        #     if context.day_counter < 30:
-        #         target_value = context.init_cash * (1/30)*0.98
-        #     else:
-        #         target_value = context.portfolio.available_cash*0.98
-        #     value_per_stock = target_value / len(buy_list)
-        #     for stock in buy_list:
-        #         order=order_target_value(stock, value_per_stock)
-        #         log.info("Buying", order,type(order))
         today = context.current_dt.date()
-        # # 获取交易日
-        # trd_days = get_trade_days(end_date=today,count=10)
-        # print(trd_days)
-        # start_date=trd_days[0]
-        print(today)
-        buy_lists=g.stocks
-        buy_list=[]
-        if(len(buy_lists))>0:
-            for stock in buy_lists:
-                df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
-                    fields=['open'],panel=False)
-                if (df['open'][2]>df['open'][0])and(df['open'][2]/df['open'][1]<1.02):
-                    # 突破五日前高买入且比前一日开盘幅度不超过百分之二
-                    buy_list.append(stock)
-            print(buy_list)
-        if(len(buy_list))>0:
+        # 如果有符合条件的股票，则平均买入
+        buy_list=g.stocks
+        if len(buy_list) > 0:
+            if context.day_counter < 30:
+                target_value = context.init_cash * (1/30)
+            else:
+                target_value = context.portfolio.available_cash
+            value_per_stock = target_value / len(buy_list)
             for stock in buy_list:
-                if context.day_counter < 30:
-                    target_value = context.init_cash*(1/30)
-                else:
-                    target_value = context.portfolio.available_cash
-                value_per_stock = target_value/len(buy_list)
                 order=order_target_value(stock, value_per_stock)
-                log.info("Buying %s", order)
+                log.info("Buying", order,type(order))
+                g.buy.append(pd.DataFrame(order.__dict__))
+                print(g.buy)
     # 交易日计数器增加1
     context.day_counter += 1
 def sell(context):
@@ -168,31 +133,24 @@ def sell(context):
         today = context.current_dt.date()
         if len(g.buy)>0:
             print(g.buy)
-            # # 解析 JSON 数据
-            # orders = json.loads(g.buy)
-            # # # 寻找 security 为 "002633.XSHE" 的订单对应的 price
-            # for order in orders:
-            #     if order['security'] == '002633.XSHE':
-            #         price = order['price']
-            #         print('Price:',price,order['security'])
-
-        for stock in context.portfolio.positions:
-            hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
-            # 持仓时间
-            if hold_days >= 30:
-                buy_lists=g.stocks
-                buy_list=[]
-                if(len(buy_lists))>0:
-                    for stock in buy_lists:
-                        df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
-                            fields=['open'],panel=False)
-                        if (df['open'][2]>df['open'][0])and(df['open'][2]/df['open'][1]<1.02):
-                            # 突破五日前高买入且比前一日开盘幅度不超过百分之二
-                            buy_list.append(stock)
-                    print(buy_list)
-        for sell in g.sell:
-                order=order_target_value(stock, 0)
-                log.info("selling", order)
+        # 未完成
+        # for stock in context.portfolio.positions:
+        #     hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
+        #     # 持仓时间
+        #     if hold_days >= 30:
+        #         buy_lists=g.stocks
+        #         buy_list=[]
+        #         if(len(buy_lists))>0:
+        #             for stock in buy_lists:
+        #                 df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
+        #                     fields=['open'],panel=False)
+        #                 if (df['open'][2]>df['open'][0])and(df['open'][2]/df['open'][1]<1.02):
+        #                     # 突破五日前高买入且比前一日开盘幅度不超过百分之二
+        #                     buy_list.append(stock)
+        #             print(buy_list)
+        # for sell in g.sell:
+        #         order=order_target_value(stock, 0)
+        #         log.info("selling", order)
     if 'CTA' not in g.road:
         today = context.current_dt.date()
         for stock in context.portfolio.positions:
@@ -200,8 +158,6 @@ def sell(context):
             if hold_days >= 30:
                 order=order_target_value(stock, 0)
                 log.info("selling", order)
-
-
 
 
 # # 开盘交易
@@ -244,9 +200,6 @@ def sell(context):
 #     # 交易日计数器增加1
 #     context.day_counter += 1
 
-
-
-
 # # 过滤股票
 # def filter_stocks(context, n=120):
 #     # type: (Context, int) -> list
@@ -277,5 +230,3 @@ def sell(context):
 #     )]
 #     #
 #     return stock_list
-    
-       
