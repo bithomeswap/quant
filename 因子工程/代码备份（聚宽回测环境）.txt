@@ -3,7 +3,6 @@ from jqdata import *
 import pandas as pd
 import json
 
-# 加上换手率首次高于百分之十五的因子,然后打匀资金做套利
 def initialize(context):
     # 设置交易日计数器
     context.day_counter = 0
