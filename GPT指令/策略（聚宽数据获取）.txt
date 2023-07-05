@@ -1,10 +1,189 @@
-工作场景：
-你是一名非常优秀的计算机工程师，注重代码的简洁性和可维护性，熟练使用聚宽API进行量化交易及回测
-同时你的代码当中很少有bug存在。此外，你在任务开始时，习惯性添加一句print（'任务已经开始'），以方便测试
+# from jqdata import *
+# import pandas as pd
+# # 设置回测 ID
+# backtest_id = '9bb76fdf888e19c7ec46f602a804311d'
+# # 获取回测报告
+# gt = get_backtest(backtest_id)
+# df=gt.get_orders(start_date=None, end_date=None)
+# df=pd.DataFrame(df)
+# df = df.rename(columns={'time': '时间','action': '开平仓', 
+#                         'amount': '数量', 'commission':'手续费','filled': '已成交量', 
+#                         'gains': '收益', 'price':'成交价','security': '标的代码', 
+#                         'status': '订单状态', 'type':'委托方式'})
+# df.to_csv(f"回测{backtest_id}.csv")
+# df2=gt.get_positions(start_date=None, end_date=None)
+# df2=pd.DataFrame(df2)
+# df2.to_csv(f"持仓{backtest_id}.csv")
+# print(df,df2)
 
-工作任务:
-1.在聚宽平台回测环境上获取当前持仓数据；
-聚宽API：
-https://www.joinquant.com/help/api/help#name:api
+# 获取股票基本面
+import pandas as pd
+name = ("000", "001", "002", "600", "601", "603", "605")
+today= datetime.date(2018, 1, 3)
+df = get_all_securities(types=['stock'],date=today).index
+stocks = df[df.str.startswith(name)].tolist()
+# curr_data = get_current_data()
+# stocks=[stock for stock in df if not (
+#     # (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
+#     # (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
+#     curr_data[stock].paused or  # 停牌
+#     curr_data[stock].is_st or  # ST
+#     ('ST' in curr_data[stock].name) or
+#     ('*' in curr_data[stock].name) or
+#     ('退' in curr_data[stock].name) 
+# )]
+df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
+df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
+print(df)
+# 增加设置基本面因子
+df_fundamentals = get_fundamentals(query(
+    valuation.code, valuation.market_cap, valuation.pe_ratio,income.total_operating_revenue,
+    balance.total_assets, balance.total_liability), date=today)
+df_fundamentals = df_fundamentals.rename(columns={"code": "代码", "market_cap":"总市值","pe_ratio":"市盈率",
+                                    "total_operating_revenue":"营收","total_assets": "总资产", "total_liability": "总负债"})
+# df_valuation= get_valuation(stocks,end_date=today,count=30,fields=['capitalization', 'market_cap','turnover_ratio'])
+# df_valuation = df_valuation.rename(columns={'code': '代码','turnover_ratio': '换手率'})
+# 增加设置cta因子
+# df_cta = get_price(stocks,count=5,end_date=today, frequency='daily',skip_paused=True,fields=['open'],panel=False)
+# df_cta = df_cta[(df['open'][4]>df['open'][0])&(df['open'][4]/df['open'][3]<1.02)]
+df= pd.merge(df, df_fundamentals, on='代码') # 增加设置基本面因子
+# df= pd.merge(df, df_valuation, on='代码') # 增加设置换手率因子
+# df= pd.merge(df, df_cta, on='代码') # 增加设置cta因子
 
-参考资料:
+# 基本面市销率因子(反映成长性)加不加区别不大
+# df=df[df['换手率']<1] # 换手率低说明标的相对安全
+df['净资产'] = df['总资产'] - df['总负债']
+df['市销率']=(df['总市值']*10000000)/df['营收']
+df['市净率']=(df['总市值']*10000000)/df['净资产']
+df['市盈率']=1/df['市盈率']
+df = df[(df['市销率']>(1/1))] # 市销率为1有1600+股票，为1.5有2000+股票
+# df = df[(df['市净率']>(1/3))] # 市销率为1有1600+股票，为1.5有2000+股票
+df = df[(df['市盈率']>(1/50))] # 市销率为1有1600+股票，为1.5有2000+股票
+# df= df.nsmallest(1, f"总市值")
+# df= df.nsmallest(1, f"收盘")
+print(df)
+
+# # 获取stock
+# today= datetime.date(2018, 1, 3)
+# df = get_all_securities(types=['stock'],date=today)
+# df = df[~(df['display_name'].str.contains("S")|df["display_name"].str.contains("退"))].index
+# stocks = df[df.str.startswith('000')].tolist()
+# # df = get_price(stocks, start_date=today,end_date=today,panel=False )
+# # df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
+# df_value= get_valuation(stocks,end_date=today,count=3,fields=['capitalization', 'market_cap','turnover_ratio'])
+# df_value = df_value.rename(columns={'code': '代码','capitalization': '总股本', 'turnover_ratio': '换手率'})
+# df=df_value
+# df=df[df['代码']=='000001.XSHE']
+# print(df)
+
+# # 获取ETF
+# end_date= datetime.date(2018, 1, 1)
+# start_date = datetime.date.today()  # 结束日期为今天
+# delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# date = start_date
+# df = get_all_securities(types=['etf'], date=date)
+# df = df[df['display_name'].str.contains("S")|df["display_name"].str.contains("退")]
+# df.rename_axis('代码', inplace=True)
+# df.reset_index(inplace=True)
+# df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+# today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+# df['日期']=today
+# df=df[['日期','代码']]
+# print(df)
+
+# import pandas as pd
+# from pymongo import MongoClient
+# import datetime
+# client = MongoClient(
+#     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
+# db = client["wth000"]
+# name = ("000", "001", "002", "600", "601", "603", "605")
+
+# # collection = db[f"聚宽ST股票{name}"]
+# # end_date= datetime.date(2018, 1, 1)
+# # start_date = datetime.date.today()  # 结束日期为今天
+# # delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# # date = start_date
+# # dates = collection.distinct("日期")
+# # print("已收录日期数据",dates)
+# # collection.drop()
+# # while date >= end_date:
+# #     date -= delta
+# #     df = get_all_securities(types=['stock'], date=date)
+# #     df = df[df['display_name'].str.contains("S")|df["display_name"].str.contains("退")]
+# #     df = df[df.index.str.startswith(name)].copy()
+# #     df.rename_axis('代码', inplace=True)
+# #     df.reset_index(inplace=True)
+# #     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+# #     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+# #     df['日期']=today
+# #     df=df[['日期','代码']]
+# #     if today not in dates:
+# #         collection.insert_many(df.to_dict("records"))
+# #         print(df)
+# #     df = pd.DataFrame()
+# # print("获取ST股票完毕")
+
+# # collection = db[f"聚宽非ST股票{name}"]
+# # end_date= datetime.date(2018, 1, 1)
+# # start_date = datetime.date.today()  # 结束日期为今天
+# # delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# # date = start_date
+# # dates = collection.distinct("日期")
+# # collection.drop()
+# # print("已收录日期数据",dates)
+# # while date >= end_date:
+# #     date -= delta
+# #     df = get_all_securities(types=['stock'], date=date)
+# #     df = df[~df['display_name'].str.contains("S")]
+# #     df = df[~df['display_name'].str.contains("退")]
+# #     df = df[df.index.str.startswith(name)].copy()
+# #     df.rename_axis('代码', inplace=True)
+# #     df.reset_index(inplace=True)
+# #     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)    
+# #     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+# #     df['日期']=today
+# #     df=df[['日期','代码']]
+# #     if today not in dates:
+# #         collection.insert_many(df.to_dict("records"))
+# #         print(df)
+# #     df = pd.DataFrame()
+# # print("获取非ST股票完毕")
+
+# # collection = db[f"聚宽基本面股票{name}"]
+# # end_date= datetime.date(2018, 1, 1)
+# # start_date = datetime.date.today()  # 结束日期为今天
+# # delta = datetime.timedelta(days=1)  # 时间间隔为一天
+# # date = start_date
+# # dates = collection.distinct("日期")
+# # collection.drop()
+# # print("已收录日期数据",dates)
+# # while date >= end_date:
+# #     date -= delta
+# #     df = get_fundamentals(query(
+# #         valuation.code, valuation.market_cap, valuation.pe_ratio, income.total_operating_revenue
+# #     ), date=date)
+# #     df = df.rename(columns={"code": "代码", "total_operating_revenue": "营收","market_cap":"总市值","pe_ratio":"市盈率"})
+# #     df = df[df["代码"].str.startswith(name)]
+# #     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+# #     today = datetime.datetime.combine(date, datetime.datetime.min.time()).strftime('%Y-%m-%d')
+# #     df['日期']=today
+# #     if today not in dates:
+# #         collection.insert_many(df.to_dict("records"))
+# #         print(df)
+# # print("获取基本面数据完毕")
+# collection=db[f"聚宽可转债"]
+# codes=get_all_securities(types=['conbond'])
+# codes.rename_axis("代码", inplace=True)
+# codes.reset_index(inplace=True)
+# start_date= datetime.date(2018, 1, 1)
+# end_date = datetime.date.today()
+# collection.drop()
+# print(codes)
+# for code in codes["代码"]:
+#     print(code)
+#     df=get_price(code)
+#     df['代码']=code
+#     df['代码'] = df['代码'].str.extract('(\d+)').astype(float)
+#     print(df)
+#     collection.insert_many(df.to_dict("records"))

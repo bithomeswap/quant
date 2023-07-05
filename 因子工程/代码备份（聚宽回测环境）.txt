@@ -75,42 +75,50 @@ def after_trading_end(context):
         df = df.sort_values(by=['资金波动'], ascending=False)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         df=df[df['资金波动_rank']<0.01]
-
-        # 增加设置市值因子
-        df_price = get_fundamentals(query(
-            valuation.code, valuation.market_cap, valuation.pe_ratio,
-            income.total_operating_revenue), date=today)
-        df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
-                                            "market_cap":"总市值","pe_ratio":"市盈率",
-                                            "total_equity":"净资产"})
-        df= pd.merge(df, df_price, on='代码')
-        # 基本面市销率因子(反映成长性)加不加区别不大
-        df= df.nsmallest(1, f"总市值")
-        # df= df.nsmallest(1, f"收盘")
-        # df['市销率']=(df['总市值']*10000000)/df['营收']
-        # df = df[(df['市销率']>1.5)] # 市销率为1有1600+股票，为1.5有2000+股票
-
-        # 换手率判断强弱
-        # codes=df['代码'].tolist()
-        # df_value= get_valuation(codes,end_date=today,count=1,fields=['day','capitalization', 'market_cap','turnover_ratio'])
-        # df_value = df_value.rename(columns={'code': '代码','day':'日期','capitalization': '总股本','market_cap':'总市值', 'turnover_ratio': '换手率'})
-        # df_value=df_value[df_value['换手率']<1] # 换手率低说明标的相对安全
-        # df= pd.merge(df, df_value, on='代码')
+        # 增加设置基本面因子
+        df_fundamentals = get_fundamentals(query(
+            valuation.code, valuation.market_cap, valuation.pe_ratio,income.total_operating_revenue,
+            balance.total_assets, balance.total_liability), date=today)
+        df_fundamentals = df_fundamentals.rename(columns={"code": "代码", "market_cap":"总市值","pe_ratio":"市盈率",
+                                            "total_operating_revenue":"营收","total_assets": "总资产", "total_liability": "总负债"})
+        # df_valuation= get_valuation(stocks,end_date=today,count=30,fields=['capitalization', 'market_cap','turnover_ratio'])
+        # df_valuation = df_valuation.rename(columns={'code': '代码','turnover_ratio': '换手率'})
+        # 增加设置cta因子
+        # df_cta = get_price(stocks,count=5,end_date=today, frequency='daily',skip_paused=True,fields=['open'],panel=False)
+        # df_cta = df_cta[(df['open'][4]>df['open'][0])&(df['open'][4]/df['open'][3]<1.02)]
+        df= pd.merge(df, df_fundamentals, on='代码') # 增加设置基本面因子
+        # df= pd.merge(df, df_valuation, on='代码') # 增加设置换手率因子
+        # df= pd.merge(df, df_cta, on='代码') # 增加设置cta因子
         
+        # 基本面市销率因子(反映成长性)加不加区别不大
+        # df=df[df['换手率']<1] # 换手率低说明标的相对安全
+        df['净资产']= df['总资产'] - df['总负债']
+        df['市销率']=(df['总市值']*10000000)/df['营收']
+        df['市净率']=(df['总市值']*10000000)/df['净资产']
+        df['市盈率']=1/df['市盈率']
+        df = df[(df['市销率']>(1/1))] # 市销率为1有1600+股票，为1.5有2000+股票
+        # df = df[(df['市净率']>(1/3))] # 市销率为1有1600+股票，为1.5有2000+股票
+        df = df[(df['市盈率']>(1/50))] # 市销率为1有1600+股票，为1.5有2000+股票
+        # df= df.nsmallest(1, f"总市值")
+        # df= df.nsmallest(1, f"收盘")
+        # df= df.nlargest(1, f"市盈率")
+
         g.stocks=df['代码'] # 将拟购买标的赋值给全局变量
-        # print(g.stocks,type(g.stocks))
+        print(g.stocks,type(g.stocks))
         for newstock in df['代码']:
-            # 加上计算形态好的占据总股票观察池的比例（低于多少就不开单）
+            # 加上计算形态好的占据总股票观察池的比例(低于多少就不开单)
+            
             position=context.portfolio.positions.keys()
             i=0
             df = pd.DataFrame(columns=['security','price','acc_avg_cost','avg_cost','Time','transact_time','total_amount',\
                 'closeable_amount','today_amount','locked_amount','value','side'])
             for stock in position:
                 if context.portfolio.positions[stock].security==newstock:
-                    if (context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>0.05*context.portfolio.available_cash:
+                    if (context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>0.05*0.05*context.portfolio.total_value:
                         # g.stocks.append(context.portfolio.positions[stock].security) # 添加元素
                         g.stocks=g.stocks[g.stocks!=context.portfolio.positions[stock].security] # 删除元素
-                        print('仓位过中，不宜买入')
+                        print(g.stocks,type(g.stocks))
+                        # print('仓位过重，不宜买入')
                 # df.loc[i,'security']=context.portfolio.positions[stock].security # 代码（str）
                 # df.loc[i,'price'] = context.portfolio.positions[stock].price # 最新行情价格（float）
                 # df.loc[i,'acc_avg_cost'] = context.portfolio.positions[stock].acc_avg_cost # 累计持仓成本，减仓、加仓均更新
@@ -126,7 +134,8 @@ def after_trading_end(context):
                 # i=i+1
             # df.set_index('Time',drop=True,inplace=True)
             # print(df)
-        
+        print(g.stocks,type(g.stocks))
+
         
 # 固定时间交易
 def buy(context):
