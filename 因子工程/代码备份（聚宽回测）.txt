@@ -76,6 +76,7 @@ def after_trading_end(context):
         df = df.sort_values(by=['资金波动'], ascending=False)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         df=df[df['资金波动_rank']<0.01]
+
         # 增加设置市值因子
         # df_price = get_fundamentals(query(
         #     valuation.code, valuation.market_cap, valuation.pe_ratio,
@@ -89,8 +90,16 @@ def after_trading_end(context):
         # df= df.nsmallest(1, f"收盘")
         # df['市销率']=(df['总市值']*10000000)/df['营收']
         # df = df[(df['市销率']>1.5)] # 市销率为1有1600+股票，为1.5有2000+股票
+
+        # 换手率判断强弱（三十日内首次破15）
+        codes=df['代码'].tolist()
+        df_value= get_valuation(codes,end_date=today,count=1,fields=['day','capitalization', 'market_cap','turnover_ratio'])
+        df_value = df_value.rename(columns={'code': '代码','day':'日期','capitalization': '总股本','market_cap':'总市值', 'turnover_ratio': '换手率'})
+        df_value=df_value[df['换手率']>1]
+        df= pd.merge(df, df_value, on='代码')
+
+        g.stocks=df['代码'] # 将拟购买标的赋值给全局变量
         print(df)
-        g.stocks=df['代码'] # 赋值给全局变量
         
 # 固定时间交易
 def buy(context):
@@ -126,13 +135,11 @@ def buy(context):
                 # 开盘价过滤低价股
                 df = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,
                     fields=['open'],panel=False)
-                # 换手率判断强弱（三十日内首次破15）
-                # df_value= get_valuation(stocks,end_date=today,count=15,fields=['capitalization', 'market_cap','turnover_ratio'])
-                # df_value = df_value.rename(columns={'code': '代码','capitalization': '总股本', 'turnover_ratio': '换手率'})
-                # df= pd.merge(df, df_value, on='代码')
+
+                
+                
                 if df['open'][n-1]>4: # 开盘价高于4元
                     buy_list.append(stock)
-            # print(buy_list)
         if(len(buy_list))>0:
             for stock in buy_list:
                 if context.day_counter < 30:
@@ -205,28 +212,29 @@ def sell(context):
                 order=order_target_value(stock, 0)
                 log.info("selling", order)
                 
-        orders = get_orders()
-        i=0
-        df = pd.DataFrame(
-            columns=['order_id','status','security','price','amount',
-                'avg_cost','Time','is_buy','filled','side','action'])
-        for _orders in orders.values():
-            if str(_orders.status)!='canceled': # 去掉未成交订单
-                df.loc[i,'order_id'] = _orders.order_id
-                df.loc[i,'status'] = str(_orders.status) # 订单状态
-                df.loc[i, 'security'] = _orders.security # 代码（str）
-                df.loc[i,'price'] = _orders.price # 委托价格（float）
-                df.loc[i,'amount'] = _orders.amount # 委托数量(int)
-                df.loc[i,'avg_cost'] = _orders.avg_cost # 交易均价（float）
-                df.loc[i, 'Time'] = _orders.add_time # 委托时间(datetime.datetime)
-                df.loc[i, 'filled'] = _orders.filled # 已成交量(int)
-                df.loc[i, 'side'] = _orders.side # 多头还是空头(str)
-                df.loc[i, 'action'] = _orders.action # 开仓还是平仓（进场还是出场）(str)
-                i=i+1
-        g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-        # 买卖冲抵
-        g.allorders=g.allorders
-        print(g.allorders)
+        # orders = get_orders()
+        # i=0
+        # df = pd.DataFrame(
+        #     columns=['order_id','status','security','price','amount',
+        #         'avg_cost','Time','is_buy','filled','side','action'])
+        # for _orders in orders.values():
+        #     if str(_orders.status)!='canceled': # 去掉未成交订单
+        #         df.loc[i,'order_id'] = _orders.order_id
+        #         df.loc[i,'status'] = str(_orders.status) # 订单状态
+        #         df.loc[i, 'security'] = _orders.security # 代码（str）
+        #         df.loc[i,'price'] = _orders.price # 委托价格（float）
+        #         df.loc[i,'amount'] = _orders.amount # 委托数量(int)
+        #         df.loc[i,'avg_cost'] = _orders.avg_cost # 交易均价（float）
+        #         df.loc[i, 'Time'] = _orders.add_time # 委托时间(datetime.datetime)
+        #         df.loc[i, 'filled'] = _orders.filled # 已成交量(int)
+        #         df.loc[i, 'side'] = _orders.side # 多头还是空头(str)
+        #         df.loc[i, 'action'] = _orders.action # 开仓还是平仓（进场还是出场）(str)
+        #         i=i+1
+        # g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+        
+        # # 买卖冲抵
+        # g.allorders=g.allorders
+        # print(g.allorders)
         
 # # 净资产代码
 # df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
