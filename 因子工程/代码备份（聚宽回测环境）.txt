@@ -78,15 +78,15 @@ def after_trading_end(context):
         df=df[df['资金波动_rank']<0.01]
 
         # 增加设置市值因子
-        # df_price = get_fundamentals(query(
-        #     valuation.code, valuation.market_cap, valuation.pe_ratio,
-        #     income.total_operating_revenue), date=today)
-        # df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
-        #                                     "market_cap":"总市值","pe_ratio":"市盈率",
-        #                                     "total_equity":"净资产"})
-        # df= pd.merge(df, df_price, on='代码')
+        df_price = get_fundamentals(query(
+            valuation.code, valuation.market_cap, valuation.pe_ratio,
+            income.total_operating_revenue), date=today)
+        df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
+                                            "market_cap":"总市值","pe_ratio":"市盈率",
+                                            "total_equity":"净资产"})
+        df= pd.merge(df, df_price, on='代码')
         # 基本面市销率因子(反映成长性)加不加区别不大
-        # df= df.nsmallest(1, f"总市值")
+        df= df.nsmallest(1, f"总市值")
         # df= df.nsmallest(1, f"收盘")
         # df['市销率']=(df['总市值']*10000000)/df['营收']
         # df = df[(df['市销率']>1.5)] # 市销率为1有1600+股票，为1.5有2000+股票
@@ -156,18 +156,6 @@ def sell(context):
         #     for stock in context.portfolio.positions:
                 # 亏损百五止损
                 # Context
-                # long_positions_dict=context.portfolio.long_positions
-                # positions= pd.DataFrame({})
-                # for position in list(long_positions_dict.values()):
-                #     positions=pd.concat([positions, 
-                #     pd.DataFrame({
-                #     '代码':[position.security], 
-                #     '总仓位':[position.total_amount],
-                #     '持仓成本':[position.avg_cost], 
-                #     '标的价值':[position.value], 
-                #     '建仓时间':[position.init_time]})
-                #     ], ignore_index=True)
-                # print(positions)
                 # for stock in context.portfolio.positions:
                 #     # 亏损百五止损
                 #     # Context
@@ -185,23 +173,6 @@ def sell(context):
                 #                 if (df['open'][2]>df['open'][0]): # 突破五日前高
                 #                     g.sell.append(stock)
                 #             print(g.sell)
-        #         hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
-        #         hold_price= context.portfolio.positions[stock].avg_cost
-        #         print(stock,'开仓均价',hold_price)
-        #         # 持仓时间
-        #         if hold_days >= 30:
-        #             buy_lists=g.stocks
-        #             buy_list=[]
-        #             if(len(buy_lists))>0:
-        #                 for stock in buy_lists:
-        #                     df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
-        #                         fields=['open'],panel=False)
-        #                     if (df['open'][2]>df['open'][0]): # 突破五日前高
-        #                         g.sell.append(stock)
-        #                 print(g.sell)
-        #     for sell in g.sell:
-        #             order=order_target_value(stock, 0)
-        #             # log.info("selling", order)
         if 'CTA' not in g.road:
             today = context.current_dt.date()
             orders = get_orders()
@@ -223,27 +194,18 @@ def sell(context):
                     i=i+1
             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
             print(g.allorders)
-
             for order_id in g.allorders['order_id']:
                 df=g.allorders[g.allorders['order_id'] == order_id]
-                stock=df['security']
-                starttime=df['Time'].at[0].date()
-                print(starttime,today,type(today))
-                # if today != starttime:
-                #     hold_days = (today - starttime).days
-                #     if hold_days >= 30:
-                #         order=order_target_value(stock, 0)
-                #         log.info("selling", order)
-                #     print(hold_days)
-                
-            # for stock in context.portfolio.positions:
-            #     print(g.allorders)
-            #     hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
-            #     if hold_days >= 30:
-            #         order=order_target_value(stock, 0)
-            #         log.info("selling", order)
-            
-            
+                stock=df['security'].values[0]
+                starttime=df['Time'].values[0].date()
+                hold_days = (today - starttime).days
+                # if hold_days >= 2: # test
+                if hold_days >= 30:
+                    sellvalues=order(stock,df['filled'].values[0])
+                    log.info("selling", sellvalues)
+                    g.allorders = g.allorders[g.allorders['order_id'] != order_id]
+                    # print(hold_days,order_id)
+
 # # 净资产代码
 # df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
 # df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
