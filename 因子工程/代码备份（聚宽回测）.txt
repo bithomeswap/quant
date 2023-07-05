@@ -5,8 +5,6 @@ import json
 
 # 加上换手率首次高于百分之十五的因子,然后打匀资金做套利
 def initialize(context):
-    # 设置初始资金(容量小于一亿的时候效果不好,大部分标的买不到)
-    context.init_cash = 100000000
     # 设置交易日计数器
     context.day_counter = 0
     # 初始化函数，在此处添加打印语句
@@ -15,7 +13,10 @@ def initialize(context):
     # set_benchmark('000300.XSHG')
     # set_benchmark('000852.XSHG')
     set_benchmark('000001.XSHG')
-    
+    # 设置成交量比例
+    set_option('order_volume_ratio', 0.1)
+    # # 开启盘口撮合模式
+    # set_option('match_with_order_book', True)
     # 开启动态复权模式(真实价格)
     set_option('use_real_price', True)
     # 开启避免未来函数模式
@@ -29,13 +30,15 @@ def initialize(context):
     # 定时运行买入卖出函数
     run_daily(buy, time='9:35')
     run_daily(sell, time='14:00')
-    g.stocks=[]
-    g.sell=[]
+    g.stocks=[] # 储存拟买入的标的
+    g.allorders=pd.DataFrame() # 储存历史订单
     # g.road='CTA'
     g.road='no'
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
-    # g.name=("ETF")
+    # g.name = ("ETF")
+    g.sell=[]
+    
 def after_trading_end(context):
     today = context.current_dt.date()
     if "ETF" in g.name:
@@ -53,8 +56,6 @@ def after_trading_end(context):
         g.stocks=df['代码']
     if  "000" or "300" in g.name:
         name=g.name
-        # df = get_all_securities(types=['stock']).index
-        # stocks = df[df.str.startswith(name)].tolist()
         df = get_all_securities(types=['stock'],date=today).index
         df = df[df.str.startswith(name)].tolist()
         curr_data = get_current_data()
@@ -62,11 +63,10 @@ def after_trading_end(context):
             # (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
             # (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
             curr_data[stock].paused or  # 停牌
-            curr_data[stock].is_st 
-            # or  # ST
-            # ('ST' in curr_data[stock].name) or
-            # ('*' in curr_data[stock].name) or
-            # ('退' in curr_data[stock].name)
+            curr_data[stock].is_st or  # ST
+            ('ST' in curr_data[stock].name) or
+            ('*' in curr_data[stock].name) or
+            ('退' in curr_data[stock].name)
             )]
         df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
         df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
@@ -77,18 +77,21 @@ def after_trading_end(context):
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         df=df[df['资金波动_rank']<0.01]
         # 增加设置市值因子
-        df_price = get_fundamentals(query(
-            valuation.code, valuation.market_cap, valuation.pe_ratio,
-            income.total_operating_revenue), date=today)
-        df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
-                                            "market_cap":"总市值","pe_ratio":"市盈率",
-                                            "total_equity":"净资产"})
-        df= pd.merge(df, df_price, on='代码')
+        # df_price = get_fundamentals(query(
+        #     valuation.code, valuation.market_cap, valuation.pe_ratio,
+        #     income.total_operating_revenue), date=today)
+        # df_price = df_price.rename(columns={"code": "代码", "total_operating_revenue": "营收",
+        #                                     "market_cap":"总市值","pe_ratio":"市盈率",
+        #                                     "total_equity":"净资产"})
+        # df= pd.merge(df, df_price, on='代码')
         # 基本面市销率因子(反映成长性)加不加区别不大
-        # df['市销率']=df['营收']/(df['总市值']*10000000)
-        # df = df[(df['市销率']>0) & (df['市销率']<2)] # 市销率为1有1600+股票，为1.5有2000+股票
-        # print(df)
+        # df= df.nsmallest(1, f"总市值")
+        # df= df.nsmallest(1, f"收盘")
+        # df['市销率']=(df['总市值']*10000000)/df['营收']
+        # df = df[(df['市销率']>1.5)] # 市销率为1有1600+股票，为1.5有2000+股票
+        print(df)
         g.stocks=df['代码'] # 赋值给全局变量
+        
 # 固定时间交易
 def buy(context):
     today = context.current_dt.date()
@@ -102,16 +105,15 @@ def buy(context):
                     fields=['open'],panel=False)
                 if df['open'][n-1]>df['open'][0]: # 突破n日突破前高
                     buy_list.append(stock)
-                    
             print(buy_list)
         if(len(buy_list))>0:
             for stock in buy_list:
                 if context.day_counter < 30:
-                    target_value = context.init_cash*(1/30)
+                    target_value = context.portfolio.starting_cash*(1/30)
                 else: # 用全部余额买入
                     target_value = context.portfolio.available_cash
                 value_per_stock = target_value/len(buy_list)
-                order=order_target_value(stock, value_per_stock)
+                order=order_value(stock, value_per_stock)
                 if order!=None:
                     log.info("Buying", order,type(order),str(order))
         context.day_counter += 1
@@ -121,80 +123,80 @@ def buy(context):
         if(len(buy_lists))>0:
             n=3
             for stock in buy_lists:
+                # 开盘价过滤低价股
                 df = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,
                     fields=['open'],panel=False)
+                # 换手率判断强弱（三十日内首次破15）
+                # df_value= get_valuation(stocks,end_date=today,count=15,fields=['capitalization', 'market_cap','turnover_ratio'])
+                # df_value = df_value.rename(columns={'code': '代码','capitalization': '总股本', 'turnover_ratio': '换手率'})
+                # df= pd.merge(df, df_value, on='代码')
                 if df['open'][n-1]>4: # 开盘价高于4元
                     buy_list.append(stock)
             # print(buy_list)
         if(len(buy_list))>0:
             for stock in buy_list:
                 if context.day_counter < 30:
-                    target_value = context.init_cash*(1/30)*0.999
+                    target_value = context.portfolio.starting_cash*(1/30)
                 else: # 用全部余额买入
-                    target_value = context.portfolio.available_cash*0.999
+                    target_value = context.portfolio.available_cash
                 value_per_stock = target_value/len(buy_list)
-                order=order_target_value(stock, value_per_stock)
+                order=order_value(stock, value_per_stock)
                 # if order!=None:
                 #     log.info("Buying", order,type(order),str(order))
         context.day_counter += 1
-        # # 换手率因子二次过滤
-        # df_value= get_valuation(stocks,end_date=today,count=1,fields=['capitalization', 'market_cap','turnover_ratio'])
-        # df_value = df_value.rename(columns={'code': '代码','capitalization': '总股本', 'turnover_ratio': '换手率'})
-        # df= pd.merge(df, df_value, on='代码')
         
-        
-        # long_positions_dict=context.portfolio.long_positions
-        # positions= pd.DataFrame({})
-        # for position in list(long_positions_dict.values()):
-        #     positions=pd.concat([positions, 
-        #     pd.DataFrame({
-        #     '代码':[position.security], 
-        #     '总仓位':[position.total_amount],
-        #     '持仓成本':[position.avg_cost], 
-        #     '标的价值':[position.value], 
-        #     '建仓时间':[position.init_time]})
-        #     ], ignore_index=True)
-        # print(positions)
-        # for stock in context.portfolio.positions:
-        #     # 亏损百五止损
-        #     # Context
-        #     hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
-        #     hold_price= context.portfolio.positions[stock].avg_cost
-        #     print(stock,'开仓均价',hold_price)
-        #     # 持仓时间
-        #     if hold_days >= 30:
-        #         buy_lists=g.stocks
-        #         buy_list=[]
-        #         if(len(buy_lists))>0:
-        #             for stock in buy_lists:
-        #                 df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
-        #                     fields=['open'],panel=False)
-        #                 if (df['open'][2]>df['open'][0]): # 突破五日前高
-        #                     g.sell.append(stock)
-        #             print(g.sell)
 def sell(context):
-    if 'CTA' in g.road:
-        today = context.current_dt.date()
-        for stock in context.portfolio.positions:
+    # if 'CTA' in g.road:
+    #     today = context.current_dt.date()
+    #     for stock in context.portfolio.positions:
             # 亏损百五止损
             # Context
-            hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
-            hold_price= context.portfolio.positions[stock].avg_cost
-            print(stock,'开仓均价',hold_price)
-            # 持仓时间
-            if hold_days >= 30:
-                buy_lists=g.stocks
-                buy_list=[]
-                if(len(buy_lists))>0:
-                    for stock in buy_lists:
-                        df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
-                            fields=['open'],panel=False)
-                        if (df['open'][2]>df['open'][0]): # 突破五日前高
-                            g.sell.append(stock)
-                    print(g.sell)
-        for sell in g.sell:
-                order=order_target_value(stock, 0)
-                # log.info("selling", order)
+            # long_positions_dict=context.portfolio.long_positions
+            # positions= pd.DataFrame({})
+            # for position in list(long_positions_dict.values()):
+            #     positions=pd.concat([positions, 
+            #     pd.DataFrame({
+            #     '代码':[position.security], 
+            #     '总仓位':[position.total_amount],
+            #     '持仓成本':[position.avg_cost], 
+            #     '标的价值':[position.value], 
+            #     '建仓时间':[position.init_time]})
+            #     ], ignore_index=True)
+            # print(positions)
+            # for stock in context.portfolio.positions:
+            #     # 亏损百五止损
+            #     # Context
+            #     hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
+            #     hold_price= context.portfolio.positions[stock].avg_cost
+            #     print(stock,'开仓均价',hold_price)
+            #     # 持仓时间
+            #     if hold_days >= 30:
+            #         buy_lists=g.stocks
+            #         buy_list=[]
+            #         if(len(buy_lists))>0:
+            #             for stock in buy_lists:
+            #                 df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
+            #                     fields=['open'],panel=False)
+            #                 if (df['open'][2]>df['open'][0]): # 突破五日前高
+            #                     g.sell.append(stock)
+            #             print(g.sell)
+    #         hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
+    #         hold_price= context.portfolio.positions[stock].avg_cost
+    #         print(stock,'开仓均价',hold_price)
+    #         # 持仓时间
+    #         if hold_days >= 30:
+    #             buy_lists=g.stocks
+    #             buy_list=[]
+    #             if(len(buy_lists))>0:
+    #                 for stock in buy_lists:
+    #                     df = get_price(stock,count=5,end_date=today, frequency='daily',skip_paused=True,
+    #                         fields=['open'],panel=False)
+    #                     if (df['open'][2]>df['open'][0]): # 突破五日前高
+    #                         g.sell.append(stock)
+    #                 print(g.sell)
+    #     for sell in g.sell:
+    #             order=order_target_value(stock, 0)
+    #             # log.info("selling", order)
     if 'CTA' not in g.road:
         today = context.current_dt.date()
         for stock in context.portfolio.positions:
@@ -203,7 +205,29 @@ def sell(context):
                 order=order_target_value(stock, 0)
                 log.info("selling", order)
                 
-                
+        orders = get_orders()
+        i=0
+        df = pd.DataFrame(
+            columns=['order_id','status','security','price','amount',
+                'avg_cost','Time','is_buy','filled','side','action'])
+        for _orders in orders.values():
+            if str(_orders.status)!='canceled': # 去掉未成交订单
+                df.loc[i,'order_id'] = _orders.order_id
+                df.loc[i,'status'] = str(_orders.status) # 订单状态
+                df.loc[i, 'security'] = _orders.security # 代码（str）
+                df.loc[i,'price'] = _orders.price # 委托价格（float）
+                df.loc[i,'amount'] = _orders.amount # 委托数量(int)
+                df.loc[i,'avg_cost'] = _orders.avg_cost # 交易均价（float）
+                df.loc[i, 'Time'] = _orders.add_time # 委托时间(datetime.datetime)
+                df.loc[i, 'filled'] = _orders.filled # 已成交量(int)
+                df.loc[i, 'side'] = _orders.side # 多头还是空头(str)
+                df.loc[i, 'action'] = _orders.action # 开仓还是平仓（进场还是出场）(str)
+                i=i+1
+        g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+        # 买卖冲抵
+        g.allorders=g.allorders
+        print(g.allorders)
+        
 # # 净资产代码
 # df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
 # df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
@@ -213,75 +237,3 @@ def sell(context):
 # df['市销率']=df['营收']/(df['总市值']*100000000)
 # df['市净率']=df['净资产']/(df['总市值']*100000000)
 # df['资产负债率']=df['净资产']/df['总负债']
-
-
-# # 开盘交易
-# def handle_data(context, data):
-#     today = context.current_dt.date()
-#     print(g.stocks)
-#     # 如果股票满足以下条件则进入交易池
-#     buy_list = []
-#     for stock in g.stocks:
-#         # 获取股票的当前价格和前一天的价格
-#         price = attribute_history(stock, 2, '1d', ['open'], df=False)['open']
-#         # 判断股票是否在停牌状态，昨天或今天的开盘价为0
-#         if price[0] == 0 or price[1] == 0:
-#             continue
-#         # 判断是否涨跌停
-#         close_price = attribute_history(stock, 2, '1d', ['close'], df=False)['close']
-#         if close_price[0]*0.99 > price[1] :
-#             continue
-#         if close_price[0]*1.08 <= price[1] :
-#             continue
-#         # 如果符合条件，则将股票加入买入列表中
-#         buy_list.append(stock)
-#     print(buy_list)
-#     # 卖出持仓超过30个交易日的股票
-#     for stock in context.portfolio.positions:
-#         hold_days = (today - context.portfolio.positions[stock].init_time.date()).days
-#         if hold_days >= 30:
-#             order_target_value(stock, 0)
-#             log.info("Selling %s", stock)
-#     # 如果有符合条件的股票，则平均买入
-#     if len(buy_list) > 0:
-#         if context.day_counter < 30:
-#             target_value = context.init_cash * (1/30)*0.98
-#         else:
-#             target_value = context.portfolio.portfolio_value * 0.98
-#         value_per_stock = target_value / len(buy_list)
-#         for stock in buy_list:
-#             order_target_value(stock, value_per_stock)
-#             log.info("Buying %s", stock)
-#     # 交易日计数器增加1
-#     context.day_counter += 1
-
-# # 过滤股票
-# def filter_stocks(context, n=120):
-#     # type: (Context, int) -> list
-#     """
-#     过滤掉：1）三停：涨停、跌停、停牌；2）三特：st, *st, 退；3）科创、创业; 4）次新；
-#     适用于开盘前选股，如果是盘中，用curr_data[security].last_price替代curr_data[stock].day_open
-#     :param n: 获取n个交易日之前上市的股票
-#     """
-#     # 获取交易日
-#     trd_days = get_trade_days(end_date=context.current_dt, count=n)
-#     # 获取n个交易日之前前上市股票【即过滤掉次新股】
-#     stock_list = get_all_securities('stock', trd_days[0]).index.tolist()
-#     #
-#     curr_data = get_current_data()
-#     stock_list = [stock for stock in stock_list if not (
-#             (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
-#             (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
-#             curr_data[stock].paused or  # 停牌
-#             curr_data[stock].is_st or  # ST
-#             ('ST' in curr_data[stock].name) or
-#             ('*' in curr_data[stock].name) or
-#             ('退' in curr_data[stock].name) 
-#             or
-#             (stock.startswith('300')) or  # 创业
-#             (stock.startswith('301')) or
-#             (stock.startswith('688')) or  # 科创
-#             (stock.startswith('689'))
-#     )]
-#     #
-#     return stock_list
