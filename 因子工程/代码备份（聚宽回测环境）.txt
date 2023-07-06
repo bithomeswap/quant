@@ -110,11 +110,17 @@ def after_trading_end(context):
         # if len(df)>len(dfall)*0.1:
         #     g.buystocks=df # 将拟购买标的赋值给全局变量
         # else:
-        #     g.buystocks=pd.DataFrame() #市场普遍估值过高，不宜建仓 
+        #     g.buystocks=pd.DataFrame() #市场普遍估值过高，不宜建仓
+        
         g.buystocks=df
         # CTA确认
-        for newstock in df['代码']:
-            
+        # for newstock in df['代码']:
+        #     n=3
+        #     df = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,fields=['open'],panel=False)
+        #     if not(any(df[n-1] > df.iloc[:, :n-1].values)): # 破n日高点买入,否则去掉
+        #         g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+        #         print(newstock,f'未突破{n}日前高')
+        # 持仓权重不超过百分之五确认
         if not g.buystocks.empty:
             for newstock in df['代码']:
                 position=context.portfolio.positions.keys()
@@ -124,7 +130,7 @@ def after_trading_end(context):
                 for stock in position:
                     if context.portfolio.positions[stock].security==newstock:
                         if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/10):
-                            g.buystocks=g.buystocks[g.buystocks['代码']!=context.portfolio.positions[stock].security] # 删除元素
+                            g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
                             print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
                     # df.loc[i,'security']=context.portfolio.positions[stock].security # 代码（str）
                     # df.loc[i,'price'] = context.portfolio.positions[stock].price # 最新行情价格（float）
@@ -190,7 +196,6 @@ def buy(context):
                     buyorder=order_value(stock, value_per_stock)
                     # log.info("Buying", buyorder)
             context.day_counter += 1
-        
 def sell(context):
     if  "000" or "300" in g.name:
         today = context.current_dt.date()
