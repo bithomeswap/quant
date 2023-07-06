@@ -1,0 +1,44 @@
+1、conda环境复制conda env update --file conda.yaml
+0、服务器定时任务与当前时间的差距大概是在七个小时。
+1、QQ邮箱
+smtp设置
+成功开启POP3/SMTP服务,在第三方客户端登录时，密码框请输入以下授权码：
+tfspjbixhevlihfi
+2、清理所有占用443端口的程序
+sudo kill $(sudo lsof -t -i:443)
+3、pnpm安装
+先安装nvm，然后在nvm中安装目标node版本，然后配置环境变量，再安装pnpm
+npm i -g pnpm
+#修改配置以免无法执行部分install指令
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
+pnpm install
+3、okx登录api配置格式
+api_key = "657f94c2-8bc6-4ff3-ba2a-b24995996602"
+secret_key = "918DD5983403D0270942B03B1EC07DD9"
+passphrase = "wthWTH00."
+4、币安的api配置格式
+api_key = "0jmNVvNZusoXKGkwnGLBghPh8Kmc0klh096VxNS9kn8P0nkAEslVUlsuOcRoGrtm"
+api_secret = "PbSWkno1meUckhmkLyz8jQ2RRG7KgmZyAWhIF0qPdCJrmDSFxoxGdMG5gZeYYCgy"
+币安python框架安装：pip install python-binance
+更新dateparser库版本：Codepip install --upgrade dateparser
+dateparser库的依赖项：Codepip install python-dateutil pytz regex
+服务器不挂起执行：nohup /root/miniconda3/bin/python /root/test/quant/交易执行/实盘COIN.py
+5、数据库配置
+client = MongoClient(
+    'mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000')
+db = client['wth000']
+name = 'COIN'
+collection = db[f'{name}']
+6、ipsec服务器设置
+docker run \
+    --name ipsec-vpn-server \
+    --restart=always \
+    -e VPN_IPSEC_PSK=wth000 \
+    -e VPN_USER=wth000 \
+    -e VPN_PASSWORD=wth000 \
+    -p 500:500/udp \
+    -p 4500:4500/udp \
+    -v ikev2-vpn-data:/etc/ipsec.d \
+    -v /lib/modules:/lib/modules:ro \
+    -d --privileged \
+    hwdsl2/ipsec-vpn-server
