@@ -12,8 +12,8 @@ def initialize(context):
     # set_benchmark('000300.XSHG')
     # set_benchmark('000852.XSHG')
     set_benchmark('000001.XSHG')
-    # 设置成交量比例
-    set_option('order_volume_ratio', 0.1)
+    # # 设置成交量比例
+    # set_option('order_volume_ratio', 0.1)
     # # 开启盘口撮合模式
     # set_option('match_with_order_book', True)
     # 开启动态复权模式(真实价格)
@@ -51,7 +51,6 @@ def after_trading_end(context):
         df = df.sort_values(by=['资金波动'], ascending=False)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         df=df[df['资金波动_rank']<0.01]
-        print(df)
         g.stocks=df
     if  "000" or "300" in g.name:
         name=g.name
@@ -105,7 +104,7 @@ def after_trading_end(context):
         # df= df.nlargest(1, f"市盈率")
         
         g.stocks=df # 将拟购买标的赋值给全局变量
-        print(g.stocks,type(g.stocks))
+        # print(g.stocks,type(g.stocks))
         for newstock in df['代码']:
             # 加上计算形态好的占据总股票观察池的比例(低于多少就不开单)
             
@@ -116,10 +115,9 @@ def after_trading_end(context):
                 'closeable_amount','today_amount','locked_amount','value','side'])
             for stock in position:
                 if context.portfolio.positions[stock].security==newstock:
-                    if (context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>0.05*0.05*context.portfolio.total_value:
+                    if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/10):
                         g.stocks=g.stocks[g.stocks['代码']!=context.portfolio.positions[stock].security] # 删除元素
-                        print(g.stocks,type(g.stocks))
-                        print('仓位过重，不宜买入')
+                        print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
                 # df.loc[i,'security']=context.portfolio.positions[stock].security # 代码（str）
                 # df.loc[i,'price'] = context.portfolio.positions[stock].price # 最新行情价格（float）
                 # df.loc[i,'acc_avg_cost'] = context.portfolio.positions[stock].acc_avg_cost # 累计持仓成本，减仓、加仓均更新
@@ -154,10 +152,10 @@ def buy(context):
             print(buy_list)
         if(len(buy_list))>0:
             for stock in buy_list:
-                if context.day_counter < 30:
-                    target_value = context.portfolio.starting_cash*(1/30)
-                else: # 用全部余额买入
-                    target_value = context.portfolio.available_cash
+                if(context.portfolio.available_cash)<(context.portfolio.total_value/30):
+                    target_value =context.portfolio.available_cash
+                else:
+                    target_value =context.portfolio.total_value/30
                 value_per_stock = target_value/len(buy_list)
                 order=order_value(stock, value_per_stock)
                 log.info("Buying", order)
@@ -174,10 +172,10 @@ def buy(context):
                     buy_list.append(stock)
         if(len(buy_list))>0:
             for stock in buy_list:
-                if context.day_counter < 30:
-                    target_value = context.portfolio.starting_cash*(1/30)
-                else: # 用全部余额买入
-                    target_value = context.portfolio.available_cash
+                if(context.portfolio.available_cash)<((context.portfolio.total_value)/30):
+                    target_value =(context.portfolio.available_cash)
+                else:
+                    target_value =((context.portfolio.total_value)/30)
                 value_per_stock = target_value/len(buy_list)
                 buyorder=order_value(stock, value_per_stock)
                 # log.info("Buying", buyorder)
@@ -199,7 +197,7 @@ def sell(context):
                 df.loc[i,'amount'] = _orders.amount # 委托数量(int)
                 df.loc[i,'avg_cost'] = _orders.avg_cost # 交易均价（float）
                 df.loc[i, 'Time'] = _orders.add_time # 委托时间(datetime.datetime)
-                df.loc[i, 'filled'] = _orders.filled # 已成交量(int)
+                df.loc[i, 'filled'] = _orders.filled # 已成交量(int)，可能是手数
                 df.loc[i, 'side'] = _orders.side # 多头还是空头(str)
                 df.loc[i, 'action'] = _orders.action # 开仓还是平仓（进场还是出场）(str)
                 i=i+1
@@ -211,9 +209,9 @@ def sell(context):
             starttime=df['Time'].values[0].date()
             hold_days = (today - starttime).days
             if hold_days >= 30:
-                sellorder=order(stock,df['filled'].values[0])
-                # log.info("selling", sellorder)
-                g.allorders = g.allorders[g.allorders['order_id']!= order_id]
+                sellorder=order(stock,-df['filled'].values[0])
+                log.info("selling", sellorder)
+                g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
 # # 净资产代码
 # df_balance = get_fundamentals(query(balance.code, balance.total_assets, balance.total_liability), date=today)
 # df_balance = df_balance.rename(columns={"code": "代码", "total_assets": "总资产", "total_liability": "总负债"})
