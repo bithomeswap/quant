@@ -255,8 +255,8 @@ def sell(context):
                         break
                 if not(get_current_data()[stock].paused):
                     df_lastrate = df_cta['open']/df_cta['open'].shift(1)
-                    # lastindex=pd.Index(df_lastrate > 1.09).where(df_lastrate>1.09).tolist()
-                    lastindex=pd.Index(df_lastrate > 1.01).where(df_lastrate>1.01).tolist()
+                    lastindex=pd.Index(df_lastrate > 1.09).where(df_lastrate>1.09).tolist()
+                    # lastindex=pd.Index(df_lastrate > 1.01).where(df_lastrate>1.01).tolist()
                     last=list(filter(lambda x: not math.isnan(x), lastindex))
                     if len(last)>0: # 判断持仓期间是否有涨停
                         index=len(lastindex)-lastindex[::-1].index(True)
