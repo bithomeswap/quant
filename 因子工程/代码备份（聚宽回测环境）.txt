@@ -117,14 +117,15 @@ def buy(context):
                     skip_paused=True,fields=['open','pre_close'],panel=False)
         df = df.rename(columns={'code':'代码','open': '开盘','pre_close':'前收'})
         df['开盘幅']=df['开盘']/df['前收']
-        # df['abs涨跌幅']=abs(df['涨跌幅'])
+        df['abs涨跌幅']=abs(df['涨跌幅'])
         # df= df.nsmallest(10, "abs涨跌幅")
         # df= df.nsmallest(10, f"总市值")
-        # df = df.nsmallest(10, f"开盘幅")
-        df= df.nlargest(10, f"开盘幅")
+        df = df.nsmallest(10, f"开盘幅")
+        # df= df.nlargest(10, f"开盘幅")
         # df = df.sort_values(by=['abs涨跌幅'], ascending=False)
         # df = df.sort_values(by=['振幅'], ascending=False)
-        df= df.sort_values(by=['开盘幅'], ascending=False)
+        # df= df.sort_values(by=['开盘幅'], ascending=False) # 从大到小排序
+        df= df.sort_values(by=['开盘幅'], ascending=True) # 从小到大排序
         df=df[df['开盘']>4]
         print(len(df),len(dfall))
         # 观察目标股票占整体候选股票的比例，如果比较高说明比较安全可以交易，比较低就比较危险，需要谨慎。
