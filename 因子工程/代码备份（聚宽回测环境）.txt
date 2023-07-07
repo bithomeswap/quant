@@ -96,10 +96,9 @@ def after_trading_end(context):
         # # 截面因子（标的排名因子）
         df = df.sort_values(by=['资金波动'], ascending=False)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        
         # dfall=df[df['资金波动_rank']<0.03] # 资金波动0.03可以加上基本面因子之后单独作为策略
-        
         dfall=df[df['资金波动_rank']<0.1]
+        
         # df = df.sort_values(by=['资金贡献'], ascending=False)
         # df['资金波动_rank'] = df['资金贡献'].rank(ascending=False)/len(df)
         # dfall=df[df['资金贡献_rank']<0.1]
