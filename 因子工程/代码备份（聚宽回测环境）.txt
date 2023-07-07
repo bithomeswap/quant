@@ -48,7 +48,7 @@ def after_trading_end(context):
         df['资金波动'] = df['振幅'] / df['成交额']
         df = df.sort_values(by=['资金波动'], ascending=False)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        df=df[df['资金波动_rank']<0.01]
+        df=df[df['资金波动_rank']<0.1]
         g.buystocks=df
     if  "000" or "300" in g.name:
         name=g.name
@@ -56,8 +56,8 @@ def after_trading_end(context):
         df = df[df.str.startswith(name)].tolist()
         curr_data = get_current_data()
         stocks=[stock for stock in df if not (
-            # (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
-            # (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
+            (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
+            (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
             curr_data[stock].paused or  # 停牌
             curr_data[stock].is_st 
             # or  # ST
@@ -65,41 +65,47 @@ def after_trading_end(context):
             # ('*' in curr_data[stock].name) or
             # ('退' in curr_data[stock].name)
             )]
-        df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
-        df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
-        
+        df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 
+            'close','pre_close','money'],panel=False )
+        df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 
+            'close': '收盘','pre_close':'前收','money': '成交额'})
         # 增加基本面数据
         df_fundamentals = get_fundamentals(query(
             valuation.code, valuation.market_cap, valuation.pe_ratio,income.total_operating_revenue,
             balance.total_assets, balance.total_liability), date=today)
         df_fundamentals = df_fundamentals.rename(columns={"code": "代码", "market_cap":"总市值","pe_ratio":"市盈率",
                                             "total_operating_revenue":"营收","total_assets": "总资产", "total_liability": "总负债"})
-        # df_valuation= get_valuation(stocks,end_date=today,count=30,fields=['capitalization', 'market_cap','turnover_ratio'])
-        # df_valuation = df_valuation.rename(columns={'code': '代码','turnover_ratio': '换手率'})
-        
         df= pd.merge(df, df_fundamentals, on='代码') # 增加设置基本面因子
+        # df_valuation= get_valuation(stocks,end_date=today,count=1,fields=['capitalization', 'market_cap','turnover_ratio'])
+        # df_valuation = df_valuation.rename(columns={'code': '代码','turnover_ratio': '换手率'})
         # df= pd.merge(df, df_valuation, on='代码') # 增加设置换手率因子
-
         # 资金波动因子(反映控盘程度)
         df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
         df['资金波动'] = df['振幅'] / df['成交额']
-        df = df.sort_values(by=['资金波动'], ascending=False)
-        df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        dfall=df[df['资金波动_rank']<0.01]
-        df=dfall
+        df['涨跌幅'] = df['收盘'] / df['前收']
+        df['资金贡献'] = (df['涨跌幅'] / df['成交额'])-1 # 也可能不用减一，回测试一试
+        
         # 基本面市销率因子(反映成长性)加不加区别不大
-        # df=df[df['换手率']<1] # 换手率低说明标的相对安全
         df['净资产']= df['总资产'] - df['总负债']
         df['市销率']=(df['总市值']*10000000)/df['营收']
         df['市净率']=(df['总市值']*10000000)/df['净资产']
         df['市盈率']=1/df['市盈率']
+        # # 股票筛选（放后面在行情好的时候效果好）
+        # df = df[(df['市销率']>(1/3))] # 市销率为1有1600+股票，为1.5有2000+股票
+        # # df = df[(df['市净率']>(1/3))] # 市销率为1有1600+股票，为1.5有2000+股票
+        # df = df[(df['市盈率']>(1/50))] # 市销率为1有1600+股票，为1.5有2000+股票
+        # # 截面因子（标的排名因子）
+        df = df.sort_values(by=['资金波动'], ascending=False)
+        df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
+        dfall=df[df['资金波动_rank']<0.1]
+        # 股票筛选（放后面在行情好的时候牛市效果好）
         df = df[(df['市销率']>(1/3))] # 市销率为1有1600+股票，为1.5有2000+股票
         # df = df[(df['市净率']>(1/3))] # 市销率为1有1600+股票，为1.5有2000+股票
         df = df[(df['市盈率']>(1/50))] # 市销率为1有1600+股票，为1.5有2000+股票
-        # df= df.nsmallest(1, f"总市值")
-        # df= df.nlargest(1, f"市盈率")
-        # df= df.nsmallest(1, f"收盘")
-        
+        df=dfall
+        df= df.nsmallest(10, f"总市值")
+        # df= df.nsmallest(10, f"开盘")
+
         # print(len(df),len(dfall))
         # 2014.6:0.25-0.5
         # 2015.6:0.1-0.25
@@ -130,6 +136,10 @@ def after_trading_end(context):
                     'closeable_amount','today_amount','locked_amount','value','side'])
                 for stock in position:
                     if context.portfolio.positions[stock].security==newstock:
+                        # # 已有持仓不买入，效果不好
+                        # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+                        # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
+                        # 持仓过重不买入，效果不好
                         if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/10):
                             g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
                             print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
@@ -165,13 +175,15 @@ def buy(context):
                     if df['open'][n-1]>df['open'][0]: # 突破n日突破前高
                         buy_list.append(stock)
                 print(buy_list)
-            if((len(buy_list))>0) and ((context.day_counter% 250)>10): # 有数据便交易，每250交易日平一次仓
+            # if((len(buy_list))>0) and ((context.day_counter% 250)>10): # 有数据便交易，每250交易日平一次仓
+            if((len(buy_list))>0): # CTA无需刻意平仓
                 context.day_counter
                 for stock in buy_list:
-                    if(context.portfolio.available_cash)<(context.portfolio.total_value/30):
+                    m=30 # 设置建仓周期
+                    if(context.portfolio.available_cash)<(context.portfolio.total_value/m):
                         target_value =context.portfolio.available_cash
                     else:
-                        target_value =context.portfolio.total_value/30
+                        target_value =context.portfolio.total_value/m
                     value_per_stock = target_value/len(buy_list)
                     order=order_value(stock, value_per_stock)
                     # log.info("Buying", order)
@@ -189,13 +201,14 @@ def buy(context):
                         buy_list.append(stock)
             if(len(buy_list))>0:
                 for stock in buy_list:
-                    if(context.portfolio.available_cash)<((context.portfolio.total_value)/30):
-                        target_value =(context.portfolio.available_cash)
+                    m=30 # 设置建仓周期（30天一周期的话大概百分之二十收益率）
+                    if(context.portfolio.available_cash)<(context.portfolio.total_value/m):
+                        target_value =context.portfolio.available_cash
                     else:
-                        target_value =((context.portfolio.total_value)/30)
+                        target_value =context.portfolio.total_value/m
                     value_per_stock = target_value/len(buy_list)
-                    buyorder=order_value(stock, value_per_stock)
-                    # log.info("Buying", buyorder)
+                    order=order_value(stock, value_per_stock)
+                    # log.info("Buying", order)
             context.day_counter += 1
 def sell(context):
     if  "000" or "300" in g.name:
@@ -223,14 +236,6 @@ def sell(context):
             stock=df['security'].values[0]
             starttime=df['Time'].values[0].date()
             hold_days = (today - starttime).days
-            # if (hold_days >= 3) and not(get_current_data()[stock].paused):
-            #         if not(any(df_cta['open'][2] > df_cta['open'].iloc[:2].values)): # 破三日新低卖出
-            #             take='破位'
-            #             sellorder=order(stock,-df['filled'].values[0])
-            #             log.info("selling",take,sellorder)
-            #             if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-            #                 g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-            #             break
             if (hold_days >= 1) and not(get_current_data()[stock].paused): # 持仓大于一天且当日不停牌
                 n=hold_days # 设置趋势观察周期
                 df_cta = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,fields=['open'],panel=False)
@@ -241,6 +246,14 @@ def sell(context):
                     if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
                         g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                     break
+                # if (hold_days >= 3):
+                #     if not(any(df_cta['open'][2] > df_cta['open'].iloc[:2].values)): # 破三日新低卖出
+                #         take='破位'
+                #         sellorder=order(stock,-df['filled'].values[0])
+                #         log.info("selling",take,sellorder)
+                #         if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                #             g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+                #         break
                 if (hold_days >= 10) and not(get_current_data()[stock].paused):
                     divisors = np.arange(1, len(df_cta)+1) 
                     df_rate = ((df_cta/(df['avg_cost'].values[0]))-1).div(divisors, axis=0)
@@ -256,11 +269,9 @@ def sell(context):
                 if not(get_current_data()[stock].paused):
                     df_lastrate = df_cta['open']/df_cta['open'].shift(1)
                     lastindex=pd.Index(df_lastrate > 1.09).where(df_lastrate>1.09).tolist()
-                    # lastindex=pd.Index(df_lastrate > 1.01).where(df_lastrate>1.01).tolist()
                     last=list(filter(lambda x: not math.isnan(x), lastindex))
-                    if len(last)>0: # 判断持仓期间是否有涨停
+                    if (len(last)>0): # 判断持仓期间是否有涨停
                         index=len(lastindex)-lastindex[::-1].index(True)
-                        print(n,index,df_lastrate,lastindex)
                         if index<5: # 上次涨停位置<5 且 最高点回撤>0.2
                             if df_cta['open'][n-1]<df_cta['open'].max()*0.8:
                                 take='赶顶'
@@ -269,17 +280,16 @@ def sell(context):
                                 if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
                                     g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                                 break
-                        if (hold_days >= 10) and index>10: # 上次涨停位置>5 且 (盈利斜率<ABS(斜率3日) 且 斜率3日<0)
-                            if df_rate<((df_cta['open'][n-1]/df_cta['open'][n-4])-1)and (df_cta['open'][n-1]<0):
-                                take='回调'
-                                sellorder=order(stock,-df['filled'].values[0])
-                                log.info("selling",take,sellorder)
-                                if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                                    g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                                break
+                    if (hold_days >= 10) and ((len(last)==0) or ((len(last)>0) and (index>10))):
+                        if df_rate<((df_cta['open'][n-1]/df_cta['open'][n-4])-1)and (df_cta['open'][n-1]<0):
+                            take='回调'
+                            sellorder=order(stock,-df['filled'].values[0])
+                            log.info("selling",take,sellorder)
+                            if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                                g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+                            break
             # if hold_days >= 30:
             #     sellorder=order(stock,-df['filled'].values[0])
             #     # log.info("selling", sellorder)
             #     if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
             #         g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-            
