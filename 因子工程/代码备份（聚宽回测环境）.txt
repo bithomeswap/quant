@@ -28,7 +28,6 @@ def initialize(context):
     # 定时运行买入卖出函数
     run_daily(buy, time='9:35')
     run_daily(sell, time='13:35')
-    g.buystocks=pd.DataFrame() # 储存拟买入的标的
     g.allorders=pd.DataFrame() # 储存历史订单
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
@@ -48,7 +47,6 @@ def buy(context):
         df = df.sort_values(by=['资金波动'], ascending=False)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         df=df[df['资金波动_rank']<0.1]
-        g.buystocks=df
     if  "000" or "300" in g.name:
         name=g.name
         df = get_all_securities(types=['stock'],date=today).index
@@ -135,28 +133,28 @@ def buy(context):
         # 2016.6:0.2-0.3
         # 2017.6:0.1-0.25
         # 2018.6:0.25-0.35
-        g.buystocks=df
+        buystocks=df
         # if len(df)>len(dfall)*0.1:
-        #     g.buystocks=df # 将拟购买标的赋值给全局变量
+        #     buystocks=df # 将拟购买标的赋值给全局变量
         # else:
-        #     g.buystocks=pd.DataFrame() #市场危险，不宜建仓
-        if not g.buystocks.empty: # 持仓权重确认（不超过百分之五）
-            for newstock in g.buystocks['代码']:
+        #     buystocks=pd.DataFrame() #市场危险，不宜建仓
+        if not buystocks.empty: # 持仓权重确认（不超过百分之五）
+            for newstock in buystocks['代码']:
                 position=context.portfolio.positions.keys()
                 for stock in position:
                     if context.portfolio.positions[stock].security==newstock:
                         # # 已有持仓不买入
-                        # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+                        # buystocks=buystocks[buystocks['代码']!=newstock] # 删除元素
                         # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
                         # 持仓过重不买入
                         if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/10):
-                            g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+                            buystocks=buystocks[buystocks['代码']!=newstock] # 删除元素
                             print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
-        if not g.buystocks.empty:
-            print(g.buystocks['代码'],type(g.buystocks['代码']))            
-        buy_list=g.buystocks['代码'].tolist()
-        if(len(buy_list))>0:
-            for stock in buy_list:
+        if not buystocks.empty:
+            print(buystocks['代码'],type(buystocks['代码']))            
+        buystock=buystocks['代码'].tolist()
+        if(len(buystock))>0:
+            for stock in buystock:
                 m=50 # 固定滚仓模式（每笔下单不超过百分之五，适合小资金）
                 if(context.portfolio.available_cash)>(context.portfolio.total_value/m):
                     target_value =context.portfolio.total_value/m
