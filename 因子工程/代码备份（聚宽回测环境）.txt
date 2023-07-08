@@ -100,8 +100,8 @@ def buy(context):
         # df=df[df['涨跌幅_rank']>0.1]
         # df=df[df['换手率_rank']>0.5]
         # df=df[df['资金波动_rank']<0.1]
-        df=df[df['资金波动_rank']<0.03]
-        df=df[df['资金贡献_rank']<0.03]
+        df=df[df['资金波动_rank']<0.02]
+        df=df[df['资金贡献_rank']<0.02]
         # df=df[df['市销率_rank']>0.5]
         # df=df[df['市盈率_rank']>0.5]
         # df=df[df['市净率_rank']>0.5]
@@ -178,9 +178,10 @@ def buy(context):
                         target_value =context.portfolio.total_value/m
                     value_per_stock = target_value/len(buystock)
                     buyorder=order_value(stock, value_per_stock)
+                    if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                        g.value+=buyorder.filled*buyorder.price
                     log.info("Buying", buyorder)
                     g.value+=buyorder.filled*buyorder.price
-
         context.day_counter += 1
 def sell(context):
     if  "000" or "300" in g.name:
@@ -225,8 +226,8 @@ def sell(context):
                     take='止损'
                     sellorder=order(stock,-df['filled'].values[0])
                     log.info("selling",take,sellorder)
-                    g.value+=sellorder.filled*sellorder.price
                     if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                        g.value+=sellorder.filled*sellorder.price
                         g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                     break
                 # if (hold_days >= 3):
@@ -234,12 +235,12 @@ def sell(context):
                 #         take='破位'
                 #         sellorder=order(stock,-df['filled'].values[0])
                 #         log.info("selling",take,sellorder)
-                #         g.value+=sellorder.filled*sellorder.price
                 #         if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                #             g.value+=sellorder.filled*sellorder.price
                 #             g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                 #         break
                 if (hold_days >= 10) and not(get_current_data()[stock].paused):
-                    divisors = np.arange(1, len(df_cta)+1) 
+                    divisors = np.arange(1, len(df_cta)+1)
                     df_rate = ((df_cta/(df['avg_cost'].values[0]))-1).div(divisors, axis=0)
                     df_rate=df_rate['open'].max() # 定义历史斜率最大值为盈利斜率
                     # 止损线上移，每日上移一个盈利斜率
@@ -247,8 +248,8 @@ def sell(context):
                         take='长期止损'
                         sellorder=order(stock,-df['filled'].values[0])
                         log.info("selling",take,sellorder)
-                        g.value+=sellorder.filled*sellorder.price
                         if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                            g.value+=sellorder.filled*sellorder.price
                             g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                         break
                 if not(get_current_data()[stock].paused):
@@ -262,8 +263,8 @@ def sell(context):
                                 take='赶顶'
                                 sellorder=order(stock,-df['filled'].values[0])
                                 log.info("selling",take,sellorder)
-                                g.value+=sellorder.filled*sellorder.price
                                 if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                                    g.value+=sellorder.filled*sellorder.price
                                     g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                                 break
                     if (hold_days >= 10) and ((len(last)==0) or ((len(last)>0) and (index>10))):
@@ -271,7 +272,7 @@ def sell(context):
                             take='回调'
                             sellorder=order(stock,-df['filled'].values[0])
                             log.info("selling",take,sellorder)
-                            g.value+=sellorder.filled*sellorder.price
                             if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+                                g.value+=sellorder.filled*sellorder.price
                                 g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
                             break
