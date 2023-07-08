@@ -94,12 +94,7 @@ def buy(context):
         # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
         # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
         # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
-        # df=df[df['总市值_rank']>0.8]
-        # df=df[df['成交额_rank']>0.8]
-        # df=df[df['振幅_rank']>0.1]
-        # df=df[df['涨跌幅_rank']>0.1]
-        # df=df[df['换手率_rank']>0.5]
-        # df=df[df['资金波动_rank']<0.1]
+        # df=df[df['资金波动_rank']<0.01至0.1均可]
         df=df[df['资金波动_rank']<0.02]
         df=df[df['资金贡献_rank']<0.02]
         # df=df[df['市销率_rank']>0.5]
@@ -107,13 +102,10 @@ def buy(context):
         # df=df[df['市净率_rank']>0.5]
         df=df[(df['市销率']>(1/3))]
         df=df[(df['市盈率']>(1/50))]
-        dfall=df
-        
         # 昨日波动小（不清楚适合什么行情）
         # df['abs涨跌幅']=abs(df['涨跌幅'])
         # df= df.nsmallest(10, "abs涨跌幅")
         # df = df.sort_values(by=['abs涨跌幅'], ascending=False) # 从大到小排序
-
         # # 小市值适合震荡上行的行情，进场是固定每日进场（年底20天不建仓），出场是三十天轮换
         # df= df.nsmallest(10, f"总市值")
         # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
@@ -129,13 +121,6 @@ def buy(context):
             # df = df.nsmallest(10, f"开盘幅") # 低开选股，过于弱势，有行情也赚不到钱
             # df= df.sort_values(by=['开盘幅'], ascending=True) # 从小到大排序
             df=df[df['开盘']>4]
-            print(len(df),len(dfall))
-            # 观察目标股票占整体候选股票的比例，如果比较高说明比较安全可以交易，比较低就比较危险，需要谨慎。
-            # 2014.6:0.25-0.5
-            # 2015.6:0.1-0.25
-            # 2016.6:0.2-0.3
-            # 2017.6:0.1-0.25
-            # 2018.6:0.25-0.35
         buystocks=df
         # if len(df)>len(dfall)*0.1:
         #     buystocks=df # 将拟购买标的赋值给全局变量
@@ -180,8 +165,7 @@ def buy(context):
                     buyorder=order_value(stock, value_per_stock)
                     if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
                         g.value+=buyorder.filled*buyorder.price
-                    log.info("Buying", buyorder)
-                    g.value+=buyorder.filled*buyorder.price
+                        log.info("Buying", buyorder)
         context.day_counter += 1
 def sell(context):
     if  "000" or "300" in g.name:
