@@ -29,6 +29,10 @@ def initialize(context):
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
+    
+    write_file('非ST股票（日k）.csv',pd.DataFrame(columns=
+    ['日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=True)
+
 # 固定时间交易
 def buy(context):
     today = context.current_dt.date()
@@ -87,8 +91,8 @@ def buy(context):
         df['市净率']=df['净资产']/(df['总市值']*100000000)
         df['市盈率']=1/df['市盈率']
         df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']]
-        # write_file('非ST股票（日k）.csv',df.to_csv(),append=True)
-        
+        write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
+
         # # 截面因子（标的排名因子）
         # df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
         # df['成交额_rank'] = df['成交额'].rank(ascending=False)/len(df)
@@ -101,8 +105,8 @@ def buy(context):
         # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
         # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
         # df=df[df['资金波动_rank']<0.01至0.1都是好的范围]
-        df=df[df['资金波动_rank']<0.1]
-        df=df[df['资金贡献_rank']<0.1]
+        df=df[df['资金波动_rank']<0.05]
+        df=df[df['资金贡献_rank']<0.05]
         # df=df[df['市销率_rank']>0.5]
         # df=df[df['市盈率_rank']>0.5]
         # df=df[df['市净率_rank']>0.5]
