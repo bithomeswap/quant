@@ -9,7 +9,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # names = ["可转债","COIN", "股票", "指数", "行业", "ETF",]
-names = ["可转债", ]
+names = ["股票", ]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -26,21 +26,22 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                if ("股票" in name) and ("可转债" not in name):  # 数据截取
-                    watchtime = 2017
-                    start_date = datetime.datetime(
-                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                else:  # 数据截取
-                    watchtime = 2018
-                    start_date = datetime.datetime(
-                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[df["日期"] >= start_date]
-                    df = df[df["日期"] <= end_date]
+                watchtime = 1995
+                # if ("股票" in name) and ("可转债" not in name):  # 数据截取
+                #     watchtime = 2017
+                #     start_date = datetime.datetime(
+                #         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     end_date = datetime.datetime(datetime.datetime.strptime(
+                #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
+                # else:  # 数据截取
+                #     watchtime = 2018
+                #     start_date = datetime.datetime(
+                #         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     end_date = datetime.datetime(datetime.datetime.strptime(
+                #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     df = df[df["日期"] >= start_date]
+                #     df = df[df["日期"] <= end_date]
                 df = df.groupby("代码", group_keys=False).apply(
                     choose.technology)
                 df, m, n = choose.choose("分布", name, df)
