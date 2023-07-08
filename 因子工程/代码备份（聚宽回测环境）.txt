@@ -12,7 +12,6 @@ def initialize(context):
     # set_benchmark('000300.XSHG')
     # set_benchmark('000852.XSHG')
     set_benchmark('000001.XSHG')
-    
     # set_option('order_volume_ratio', 0.1) # 设置成交量比例
     # set_option('match_with_order_book', True) # 开启盘口撮合模式
     set_option('use_real_price', True) # 开启动态复权模式(真实价格)
@@ -25,32 +24,23 @@ def initialize(context):
     run_daily(buy, time='9:35')
     run_daily(sell, time='13:35')
     g.value=0.0 # 储存历史成交额
+    g.buystocks=pd.DataFrame() # 储存待买入标的
     g.allorders=pd.DataFrame() # 储存历史订单
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
-    
-    write_file('非ST股票（日k）.csv',pd.DataFrame(columns=
-    ['日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=True)
+    write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=True)
 
-# 固定时间交易
-def buy(context):
+def after_trading_end(context):
     today = context.current_dt.date()
-    write_file('截至昨日成交额.txt',f'{today}截至昨日成交额:{g.value}'+'\n',append=True)
+    name=g.name
     if  "ETF" in g.name:
         df = get_all_securities(types=['etf'],date=today)
         df = df.index
         stocks = df.tolist()
         # 获取一天数据frequency='1d'，或者一分钟数据frequency='1m'
         df = get_price(stocks,frequency='1d',start_date=today,end_date=today,fields=['open', 'high', 'low', 'close', 'money'],panel=False )
-        df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
-        df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
-        df['资金波动'] = df['振幅'] / df['成交额']
-        df = df.sort_values(by=['资金波动'], ascending=False)
-        df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        df=df[df['资金波动_rank']<0.1]
     if  "000" or "300" in g.name:
-        name=g.name
         df = get_all_securities(types=['stock'],date=today).index
         df = df[df.str.startswith(name)].tolist()
         curr_data = get_current_data()
@@ -92,7 +82,9 @@ def buy(context):
         df['市盈率']=1/df['市盈率']
         df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']]
         write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
-
+        df=df[(df['市净率']>(1/4))]
+        df=df[(df['市销率']>(1/15))]
+        df=df[(df['市盈率']>(1/50))]
         # # 截面因子（标的排名因子）
         # df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
         # df['成交额_rank'] = df['成交额'].rank(ascending=False)/len(df)
@@ -105,14 +97,12 @@ def buy(context):
         # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
         # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
         # df=df[df['资金波动_rank']<0.01至0.1都是好的范围]
-        df=df[df['资金波动_rank']<0.05]
-        df=df[df['资金贡献_rank']<0.05]
+        df=df[df['资金波动_rank']<0.01]
+        # df=df[df['资金贡献_rank']<0.05]
         # df=df[df['市销率_rank']>0.5]
         # df=df[df['市盈率_rank']>0.5]
         # df=df[df['市净率_rank']>0.5]
-        df=df[(df['市净率']>(1/4))]
-        df=df[(df['市销率']>(1/15))]
-        df=df[(df['市盈率']>(1/50))]
+
         # 昨日波动小（不清楚适合什么行情）
         # df['abs涨跌幅']=abs(df['涨跌幅'])
         # df= df.nsmallest(10, "abs涨跌幅")
@@ -120,8 +110,15 @@ def buy(context):
         # # 小市值适合震荡上行的行情，进场是固定每日进场（年底20天不建仓），出场是三十天轮换
         # df= df.nsmallest(10, f"总市值")
         # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
-        if not df.empty: 
-            stocks=df['代码'].tolist()
+        g.buystocks=df
+    
+# 固定时间交易
+def buy(context):
+    today = context.current_dt.date()
+    write_file('截至昨日成交额.txt',f'{today}截至昨日成交额:{g.value}'+'\n',append=True)
+    if  "000" or "300" in g.name:
+        if not g.buystocks.empty: 
+            stocks=g.buystocks['代码'].tolist()
             df = get_price(stocks,count=1,end_date=today,frequency='daily',
                         skip_paused=True,fields=['open','pre_close'],panel=False)
             df = df.rename(columns={'code':'代码','open': '开盘','pre_close':'昨收'})
@@ -132,8 +129,8 @@ def buy(context):
             # df = df.nsmallest(10, f"收盘开盘幅") # 低开选股，过于弱势，有行情也赚不到钱
             # df= df.sort_values(by=['收盘开盘幅'], ascending=True) # 从小到大排序
             df=df[df['开盘']>4]
-        # if not df.empty: 
-        #     # 根据开盘后三分钟涨幅对标的进行二次确认
+            g.buystocks=df
+        # if not g.buystocks.empty: # 根据开盘后三分钟涨幅对标的进行二次确认
         #     year = context.current_dt.year
         #     month = context.current_dt.month
         #     day = context.current_dt.day
@@ -142,6 +139,7 @@ def buy(context):
         #     second = context.current_dt.second
         #     timestamp=f"{year}-{month}-{day} {hour}:{minute}:{second}"
         #     # 获取当前时间戳的前n根5分钟k线
+        #     stocks=g.buystocks['代码'].tolist()
         #     df = get_price(stocks,frequency='5m',count=1,end_date=timestamp,
         #         fields=['open', 'high', 'low', 'close','money'],panel=False)
         #     # df = get_price(stocks,frequency='1m',count=5,end_date=timestamp,
@@ -153,38 +151,36 @@ def buy(context):
         #     df= df.sort_values(by=['收盘开盘幅'], ascending=False) # 从大到小排序
         #     print(df)
         #     write_file('非ST股票（分钟）.csv',df.to_csv(),append=True)
-        # 将筛选之后的股票赋值给buystocks
-        buystocks=df
-        if not buystocks.empty: # 持仓权重确认（不超过百分之五）
-            for newstock in buystocks['代码']:
+        #     g.buystocks=df
+        if not g.buystocks.empty: # 持仓权重确认（不超过百分之五）
+            for newstock in g.buystocks['代码']:
                 position=context.portfolio.positions.keys()
                 for stock in position:
                     if context.portfolio.positions[stock].security==newstock:
                         # # 已有持仓不买入
-                        # buystocks=buystocks[buystocks['代码']!=newstock] # 删除元素
+                        # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
                         # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
                         # 持仓过重不买入
                         if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/10):
-                            buystocks=buystocks[buystocks['代码']!=newstock] # 删除元素
+                            g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
                             print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
-        if not buystocks.empty:
-            print(buystocks['代码'],type(buystocks['代码']))            
-        buystock=buystocks['代码'].tolist()
-        if(len(buystock))>0:
-            for stock in buystock:
-                # CTA淘汰模式，去劣存优，长周期更体现优势
-                # (建仓周期短，成交额相对较大)
-                # m=50 # 固定单笔比例（每笔下单不超过百分之五，适合小资金）
-                # if(context.portfolio.available_cash)>(context.portfolio.total_value/m):
-                #     target_value =context.portfolio.total_value/m
-                #     value_per_stock = target_value
-                #     buyorder=order_value(stock, value_per_stock)
-                #     log.info("Buying", buyorder,buyorder.filled)
-                #     g.value+=buyorder.filled*buyorder.price
-                    
-                # 固定周期滚仓模式，每年集中平仓调换仓位，放大总收益或者亏损
-                # (建仓周期长，成交额相对较大)
-                if (context.day_counter<30) or (context.day_counter % 250>20):
+        if not g.buystocks.empty:
+            print(g.buystocks['代码'],type(g.buystocks['代码']))            
+            buystock=g.buystocks['代码'].tolist()
+            if(len(buystock))>0:
+                for stock in buystock:
+                    # CTA淘汰模式，去劣存优，符合人性但是收益未必好
+                    # (建仓周期短，成交额相对较小)
+                    # m=50 # 固定单笔比例（每笔下单不超过百分之五，适合小资金）
+                    # if(context.portfolio.available_cash)>(context.portfolio.total_value/m):
+                    #     target_value =context.portfolio.total_value/m
+                    #     value_per_stock = target_value
+                    #     buyorder=order_value(stock, value_per_stock)
+                    #     log.info("Buying", buyorder,buyorder.filled)
+                    #     g.value+=buyorder.filled*buyorder.price
+                        
+                    # 固定周期滚仓模式，放大总收益或者亏损，最大下单是总仓位的三十分之一，已经实现了仓位控制了。
+                    # (建仓周期长，成交额相对较大)
                     m=30 # 固定每日比例（每天平均下单最多百分之三，适合大资金）
                     if(context.portfolio.available_cash)<(context.portfolio.total_value/m):
                         target_value =context.portfolio.available_cash
