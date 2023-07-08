@@ -9,15 +9,15 @@ db = client["wth000"]
 # 设置参数
 names = [("000", "001", "002", "600", "601", "603", "605")]
 for name in names:
-    collection = db[f"股票{name}"]
+    collection = db[f"聚宽股票{name}"]
     # 读取MongoDB中的数据
     df = pd.DataFrame(list(collection.find()))
     print("数据读取成功")
-    if "股票" in name:  # 数据截取
-        watchtime = 2019
-        start_date = datetime.datetime(
-            watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-        df = df[(df["日期"] >= start_date)]
+    # if "股票" in name:  # 数据截取
+    #     watchtime = 2019
+    #     start_date = datetime.datetime(
+    #         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+    #     df = df[(df["日期"] >= start_date)]
     # 获取当前.py文件的绝对路径
     file_path = os.path.abspath(__file__)
     # 获取当前.py文件所在目录的路径

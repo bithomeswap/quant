@@ -1,7 +1,8 @@
+# !pip install pymongo
 import math
 from jqdata import *
 import pandas as pd
-import json
+import datetime
 def initialize(context):
     # 设置交易日计数器
     context.day_counter = 0
@@ -31,13 +32,14 @@ def initialize(context):
 
 # 固定时间交易
 def buy(context):
-    print(f'截至昨日成交额:{g.value}')
     today = context.current_dt.date()
+    write_file('截至昨日成交额.txt',f'{today}截至昨日成交额:{g.value}'+'\n',append=True)
     if  "ETF" in g.name:
         df = get_all_securities(types=['etf'],date=today)
         df = df.index
         stocks = df.tolist()
-        df = get_price(stocks, start_date=today,end_date=today, fields=['open', 'high', 'low', 'close', 'money'],panel=False )
+        # 获取一天数据frequency='1d'，或者一分钟数据frequency='1m'
+        df = get_price(stocks,frequency='1d',start_date=today,end_date=today,fields=['open', 'high', 'low', 'close', 'money'],panel=False )
         df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 'close': '收盘', 'money': '成交额'})
         df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
         df['资金波动'] = df['振幅'] / df['成交额']
@@ -59,9 +61,10 @@ def buy(context):
             # ('*' in curr_data[stock].name) or
             # ('退' in curr_data[stock].name)
             )]
-        df = get_price(stocks,count=1,end_date=today-datetime.timedelta(days=1),fields=['open', 'high', 'low', 
-            'close','pre_close','money'],panel=False)
-        df = df.rename(columns={'code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 
+        # 获取一天数据frequency='1d'，或者一分钟数据frequency='1m'
+        df = get_price(stocks,frequency='1d',count=1,end_date=today-datetime.timedelta(days=1),
+                        fields=['open', 'high', 'low', 'close','pre_close','money'],panel=False)
+        df = df.rename(columns={'time': '日期','code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 
             'close': '收盘','pre_close':'昨收','money': '成交额'})
         # 增加基本面数据
         df_fundamentals = get_fundamentals(query(
@@ -71,29 +74,31 @@ def buy(context):
                                             "total_operating_revenue":"营收","total_assets": "总资产", "total_liability": "总负债"})
         df= pd.merge(df, df_fundamentals, on='代码') # 增加设置基本面因子
         df_valuation= get_valuation(stocks,count=1,end_date=today-datetime.timedelta(days=1),fields=['capitalization', 'market_cap','turnover_ratio'])
-        df_valuation = df_valuation.rename(columns={'code': '代码','turnover_ratio': '换手率'})
+        df_valuation = df_valuation.rename(columns={'time':'日期','code': '代码','turnover_ratio': '换手率'})
         df= pd.merge(df, df_valuation, on='代码') # 增加设置换手率因子
         # 资金波动因子(反映控盘程度)
         df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
         df['资金波动'] = df['振幅'] / df['成交额']
-        df['涨跌幅'] = df['收盘'] / df['昨收']
-        df['资金贡献'] = (df['涨跌幅'] / df['成交额'])-1
+        df['涨跌幅'] = (df['收盘'] / df['昨收'])-1
+        df['资金贡献'] = df['涨跌幅'] / df['成交额']
         # # 基本面市销率因子(反映成长性)加不加区别不大
         df['净资产']= df['总资产'] - df['总负债']
         df['市销率']=(df['总市值']*10000000)/df['营收']
         df['市净率']=(df['总市值']*10000000)/df['净资产']
         df['市盈率']=1/df['市盈率']
         # # 截面因子（标的排名因子）
-        # df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
-        # df['成交额_rank'] = df['成交额'].rank(ascending=False)/len(df)
-        # df['振幅_rank'] = df['振幅'].rank(ascending=False)/len(df)
-        # df['涨跌幅_rank'] = df['涨跌幅'].rank(ascending=False)/len(df)
-        # df['换手率_rank'] = df['换手率'].rank(ascending=False)/len(df)
+        df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
+        df['成交额_rank'] = df['成交额'].rank(ascending=False)/len(df)
+        df['振幅_rank'] = df['振幅'].rank(ascending=False)/len(df)
+        df['涨跌幅_rank'] = df['涨跌幅'].rank(ascending=False)/len(df)
+        df['换手率_rank'] = df['换手率'].rank(ascending=False)/len(df)
         df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         df['资金贡献_rank'] = df['资金贡献'].rank(ascending=False)/len(df)
-        # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
-        # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
-        # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
+        df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
+        df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
+        df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
+        write_file('非ST股票.csv',df.to_csv(),append=True)
+            
         # df=df[df['资金波动_rank']<0.01至0.1均可]
         df=df[df['资金波动_rank']<0.02]
         df=df[df['资金贡献_rank']<0.02]
