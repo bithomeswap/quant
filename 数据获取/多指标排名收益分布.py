@@ -9,7 +9,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # names = ["可转债","COIN", "股票", "指数", "行业", "ETF",]
-names = ["股票", ]
+names = ["股", ]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -44,6 +44,7 @@ for file in files:
                 #     df = df[df["日期"] <= end_date]
                 df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df = df.groupby("代码", group_keys=False).apply(choose.rank)
+                df.to_csv('股票指标（收益率隔夜）.csv')
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
