@@ -19,7 +19,7 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file):
+        if (filename in file) :
             try:
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
@@ -42,8 +42,8 @@ for file in files:
                 #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     df = df[df["日期"] >= start_date]
                 #     df = df[df["日期"] <= end_date]
-                df = df.groupby("代码", group_keys=False).apply(
-                    choose.technology)
+                df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                df = df.groupby("代码", group_keys=False).apply(choose.rank)
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
