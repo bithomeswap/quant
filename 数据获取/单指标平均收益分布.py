@@ -1,18 +1,15 @@
-import choose
-from pymongo import MongoClient
 import pandas as pd
 import numpy as np
-import datetime
+import choose
 import os
+import datetime
+from pymongo import MongoClient
 
 client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
-# 设置参数
 # names = ["可转债","COIN", "股票", "指数", "行业", "ETF",]
-names = ["股票",]
-mubiao = f"收盘"
-a = 50  # 将数据划分成a个等距离的区间
+names = ["股", ]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -22,20 +19,28 @@ dir_path = os.path.dirname(os.path.dirname(dir_path))
 files = os.listdir(dir_path)
 for file in files:
     for filename in names:
-        if (filename in file) & ("指标" in file):
+        if (filename in file):
             try:
-                print(f"{mubiao}")
                 # 获取文件名和扩展名
                 name, extension = os.path.splitext(file)
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                df['涨跌幅']=df['涨跌幅'].shift(-1) # 次日涨跌幅确认能否买入
+                # df.columns = ['净利润', '日期', '代码', '开盘', '收盘', '最高', '最低', '昨收', '成交额', '总市值', '总资产',
+                #               '总负债', '净资产', '营收', '市盈率', '市净率', '市销率', '资产负债率', '换手率', '振幅', '资金波动', '资金贡献', '涨跌幅']
+                # df["涨跌幅"] = df["涨跌幅"].shift(-1)  # 次日涨跌幅确认能否买入
+
+                # df = df[df[f"总市值_rank"] > 0.98].copy()
+                df = df[df[f"收盘_rank"] > 0.5].copy()
+                filtered_columns = [
+                    col for col in df.columns if "rank" not in col]
+                df = df[filtered_columns]
+
                 watchtime = 1999
                 # if ("股票" in name) and ("可转债" not in name):  # 数据截取
                 #     watchtime = 2017
-                #     start_date = datetime.datetime(watchtime, int(
-                #         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     start_date = datetime.datetime(
+                #         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     end_date = datetime.datetime(datetime.datetime.strptime(
                 #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
@@ -47,8 +52,12 @@ for file in files:
                 #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     df = df[df["日期"] >= start_date]
                 #     df = df[df["日期"] <= end_date]
+
                 # df = df.groupby("代码", group_keys=False).apply(
                 #     choose.technology)
+                df = df.groupby("代码", group_keys=False).apply(
+                    choose.rank)
+                df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
@@ -56,48 +65,39 @@ for file in files:
                 else:
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
-                df = df.dropna()
-                # df.to_csv(f"实际统计数据{name}_{mubiao}_{watchtime}年.csv")
-                sorted_data = np.sort(df[f"{mubiao}"])
-                indices = np.linspace(
-                    0, len(df[f"{mubiao}"]), num=a+1, endpoint=True, dtype=int)
-                # 得到每一个区间的上界，并作为该部分对应的区间范围
+                # 将数据划分成a个等长度的区间
+                a = 50
                 ranges = []
-                for i in range(len(indices) - 1):
-                    start_idx = indices[i]
-                    end_idx = indices[i+1] if i != len(indices) - \
-                        2 else len(df[f"{mubiao}"])  # 最后一段需要特殊处理
-                    upper_bound = sorted_data[end_idx-1]  # 注意索引从0开始，因此要减1
-                    ranges.append((sorted_data[start_idx], upper_bound))
-                result_dicts = []
-                day = n  # 观察不同的持仓周期的涨跌分布
-                for n in range(1, day):
-                    for rank_range in ranges:
-                        sub_df = df.copy()[(df[f"{mubiao}"] >= rank_range[0]) &
-                                           (df[f"{mubiao}"] <= rank_range[1])]
-                        future_returns = np.array(sub_df[f"{n}日后总涨跌幅（未来函数）"])
-                        # 括号注意大小写的问题，要不就会报错没这个参数
-                        up_rate = len(
-                            future_returns[future_returns >= 0]) / len(future_returns)
-                        avg_return = np.mean(future_returns)
-                        result_dict = {
-                            f"{mubiao}": f"from{rank_range[0]}to{rank_range[1]}",
-                            f"未来{n}日上涨概率": up_rate,
-                            f"未来{n}日平均涨跌幅": avg_return,
-                        }
-                        result_dicts.append(result_dict)
-                # 将结果持久化
-                result_df = pd.DataFrame(result_dicts)
-                for n in range(1, day):
-                    cols_to_shift = [f"未来{n}日上涨概率", f"未来{n}日平均涨跌幅"]
-                    result_df[cols_to_shift] = result_df[cols_to_shift].shift(
-                        -a*(n-1))
-                # result_df = result_df.dropna()  # 删除含有空值的行
-                path = os.path.join(os.path.abspath("."), "资产单指标平均收益分布")
+                left = 0
+                right = 1
+                step = (right - left) / a
+                for i in range(a):
+                    ranges.append((left + i * step, left + (i + 1) * step))
+                # 筛选出列名中包含"rank"的列
+                rank_cols = df.filter(like="rank").columns.tolist()
+                # 创建空的结果DataFrame
+                result_df = pd.DataFrame()
+                # 循环处理每个指标和区间
+                for rank_range in ranges:
+                    col_result_df = pd.DataFrame()  # 创建一个空的DataFrame，用于存储指标的结果
+                    for col_name in rank_cols:
+                        # 根据区间筛选DataFrame
+                        sub_df = df[(df[col_name] >= rank_range[0]) &
+                                    (df[col_name] <= rank_range[1])]
+                        # 计算收益
+                        sub_df_mean = sub_df.mean(numeric_only=True)  # 均值法
+                        # 构造包含指标名和涨跌幅的DataFrame，并添加到列结果DataFrame中
+                        result_sub_df = pd.DataFrame(
+                            {col_name: [sub_df_mean[f"{n}日后总涨跌幅（未来函数）"]]}, index=[rank_range])
+                        col_result_df = pd.concat(
+                            [col_result_df, result_sub_df], axis=1)
+                    result_df = pd.concat([result_df, col_result_df])
+                # 新建涨跌分布文件夹在上级菜单下，并保存结果
+                path = os.path.join(os.path.abspath("."), "资产多指标排名收益分布")
                 if not os.path.exists(path):
                     os.makedirs(path)
-                result_df.round(decimals=6).to_csv(
-                    f"{path}/{name}{mubiao}持有{n}日{str(watchtime)}平均收益分布.csv", index=False)
-                print(name, "已完成")
+                result_df.to_csv(
+                    f"{path}/{name}持有{n}日{str(watchtime)}年多指标排名收益分布.csv")
+                print("任务已经完成！")
             except Exception as e:
                 print(f"发生bug: {e}")

@@ -26,10 +26,10 @@ def initialize(context):
 
     g.m=30 # 固定建仓及清仓周期
     # 大容量策略需要实现周期自增长以扩大容量，CTA策略就不需要了
-    g.m+=math.ceil(context.day_counter/30)
-    print(g.m)
-    if g.m>=45:
-        g.m=45
+    # g.m+=math.ceil(context.day_counter/30)
+    # print(g.m)
+    # if g.m>=45:
+    #     g.m=45
         
     g.value=0.0 # 储存历史成交额
     g.buystocks=pd.DataFrame() # 储存待买入标的
@@ -42,7 +42,6 @@ def initialize(context):
     # write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status订单状态','security代码（str）','price委托价格（float）',
     # 'amount委托数量(int)','avg_cost交易均价（float）','Time委托时间(datetime.datetime)','filled已成交量(int)可能是手数','side多头还是空头(str)','action开仓还是平仓（进场还是出场）(str)',]).to_csv(index=False),append=True)
     write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status','security','price','amount','avg_cost','Time','filled','side','action',]).to_csv(index=False),append=False)
-
 def after_trading_end(context):
     today = context.current_dt.date()
     name=g.name
@@ -99,25 +98,25 @@ def after_trading_end(context):
         
         # # 截面因子（标的排名因子）总市值和价格是越小越好，其他的都是越大越好
         df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
-        df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
         df=df[df['总市值_rank']>0.98]
-        df=df[df['收盘_rank']>0.04]
-        df=df[df['净资产']<100*100000000]
-        # df['净资产_rank'] = df['净资产'].rank(ascending=False)/len(df)
-        # df['资产负债率_rank'] = df['资产负债率'].rank(ascending=False)/len(df)
-        # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
-        # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
-        # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
-        # df=df[(df['净资产_rank']<0.02)|(df['资产负债率_rank']<0.02)|(df['市销率_rank']<0.02)|(df['市盈率_rank']<0.02)|(df['市净率_rank']<0.02)]
+        df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
+        df=df[df['收盘_rank']<0.5]
+        # df=df[df['收盘_rank']<0.8]
         
-        # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        # df=df[df['资金波动_rank']<0.1]
+        # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
+        # df['资产负债率_rank'] = df['资产负债率'].rank(ascending=False)/len(df)
+        # df=df[(df['资产负债率_rank']<=0.02)|(df['市销率_rank']<=0.02)]
+        
+        # df['涨跌幅_rank'] = df['涨跌幅'].rank(ascending=False)/len(df)
+        # df['总负债_rank'] = df['总负债'].rank(ascending=False)/len(df)
+        # df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
+        # df=df[(df['涨跌幅_rank']>=0.04)&(df['总负债_rank']>=0.04)&(df['收盘_rank']>=0.04)]
+        
         # df= df.nsmallest(5, f"总市值")
         # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
         # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
         g.buystocks=df
         print(g.buystocks)
-        
 # 固定时间交易
 def buy(context):
     context.day_counter+=1
@@ -245,7 +244,6 @@ def sell(context):
                             # print(g.allorders)
                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
                         break
-
                 # # 适合小资金的CTA淘汰机制，基本面较好的前提下资金波动前百分之十中选择一部分
                 # if (hold_days >= 1) and not(get_current_data()[stock].paused):
                 #     n=hold_days # 设置趋势观察周期

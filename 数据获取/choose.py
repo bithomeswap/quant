@@ -8,7 +8,7 @@ def technology(df):  # 定义计算技术指标的函数
     try:
         df.sort_values(by="日期")  # 以日期列为索引,避免计算错误
         if "换手率" in df.columns:
-            for n in range(1, 40):
+            for n in range(1, 50):
                 # 计算加滑点之后的收益，A股扣一分钱版本
                 df["买入（未来函数）"] = df["收盘"].apply(
                     lambda x: math.ceil(x * (1 + slippage) * 100) / 100)
