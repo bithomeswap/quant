@@ -10,8 +10,8 @@ client = MongoClient(
 db = client["wth000"]
 # 设置参数
 # names = ["可转债","COIN", "股票", "指数", "行业", "ETF",]
-names = ["可转债",]
-mubiao = f"开盘"
+names = ["股票",]
+mubiao = f"收盘"
 a = 50  # 将数据划分成a个等距离的区间
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
@@ -30,20 +30,25 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                if ("股票" in name) and ("可转债" not in name):  # 数据截取
-                    watchtime = 2017
-                    start_date = datetime.datetime(watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
-                else:  # 数据截取
-                    watchtime = 2018
-                    start_date = datetime.datetime(
-                        watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    end_date = datetime.datetime(datetime.datetime.strptime(
-                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                    df = df[df["日期"] >= start_date]
-                    df = df[df["日期"] <= end_date]
-                df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                df['涨跌幅']=df['涨跌幅'].shift(-1) # 次日涨跌幅确认能否买入
+                watchtime = 1999
+                # if ("股票" in name) and ("可转债" not in name):  # 数据截取
+                #     watchtime = 2017
+                #     start_date = datetime.datetime(watchtime, int(
+                #         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     end_date = datetime.datetime(datetime.datetime.strptime(
+                #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
+                # else:  # 数据截取
+                #     watchtime = 2018
+                #     start_date = datetime.datetime(
+                #         watchtime, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     end_date = datetime.datetime(datetime.datetime.strptime(
+                #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                #     df = df[df["日期"] >= start_date]
+                #     df = df[df["日期"] <= end_date]
+                # df = df.groupby("代码", group_keys=False).apply(
+                #     choose.technology)
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
@@ -72,7 +77,8 @@ for file in files:
                                            (df[f"{mubiao}"] <= rank_range[1])]
                         future_returns = np.array(sub_df[f"{n}日后总涨跌幅（未来函数）"])
                         # 括号注意大小写的问题，要不就会报错没这个参数
-                        up_rate = len(future_returns[future_returns >= 0]) / len(future_returns)
+                        up_rate = len(
+                            future_returns[future_returns >= 0]) / len(future_returns)
                         avg_return = np.mean(future_returns)
                         result_dict = {
                             f"{mubiao}": f"from{rank_range[0]}to{rank_range[1]}",
