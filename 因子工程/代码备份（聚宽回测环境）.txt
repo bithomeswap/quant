@@ -115,7 +115,6 @@ def after_trading_end(context):
         
 #         # # 资金波动最小
 #         # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-#         # df=df[df['开盘']>4]
 #         # df=df[df['资金波动_rank']<0.01]
 #         # df = df.nsmallest(1, '资金波动_rank') # 盈亏比低，回撤较小
         
