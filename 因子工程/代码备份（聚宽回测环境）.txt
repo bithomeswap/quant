@@ -20,9 +20,9 @@ def initialize(context):
     log.set_level('order', 'error') # 过滤掉order系列API产生的比error级别低的log
     # 股票类每笔交易时的手续费是：买入时佣金万分之三，卖出时佣金万分之三加千分之一印花税, 每笔交易佣金最低扣5块钱
     set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0003, close_commission=0.0003, min_commission=5), type='stock')
-    # 定时运行买入卖出函数
-    run_daily(buy, time='9:35')
-    run_daily(sell, time='13:35')
+    # # 定时运行买入卖出函数
+    # run_daily(buy, time='9:35')
+    # run_daily(sell, time='13:35')
 
     g.m=30 # 固定建仓及清仓周期
     # 大容量策略需要实现周期自增长以扩大容量，CTA策略就不需要了
@@ -38,7 +38,7 @@ def initialize(context):
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
     write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
-                '总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=False)
+                '资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=False)
     # write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status订单状态','security代码（str）','price委托价格（float）',
     # 'amount委托数量(int)','avg_cost交易均价（float）','Time委托时间(datetime.datetime)','filled已成交量(int)可能是手数','side多头还是空头(str)','action开仓还是平仓（进场还是出场）(str)',]).to_csv(index=False),append=True)
     write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status','security','price','amount','avg_cost','Time','filled','side','action',]).to_csv(index=False),append=False)
@@ -50,15 +50,16 @@ def after_trading_end(context):
         df = df.index
         stocks = df.tolist()
         # 获取一天数据frequency='1d'，或者一分钟数据frequency='1m'
-        df = get_price(stocks,frequency='1d',start_date=today,end_date=today,fields=['open', 'high', 'low', 'close', 'money'],panel=False )
+        df = get_price(stocks,frequency='1d',count=1,end_date=today,fields=['open', 'high', 'low', 'close', 'money'],panel=False )
     if  "000" or "300" in g.name:
-        df = get_all_securities(types=['stock'],date=today).index
+        df = get_all_securities(types=['stock'],date=today)
+        df = df.index
         df = df[df.str.startswith(name)].tolist()
         curr_data = get_current_data()
         stocks=[stock for stock in df if not (
             # (curr_data[stock].day_open == curr_data[stock].high_limit) or  # 涨停开盘
             # (curr_data[stock].day_open == curr_data[stock].low_limit) or  # 跌停开盘
-            # curr_data[stock].paused or  # 停牌
+            curr_data[stock].paused or  # 停牌
             curr_data[stock].is_st
             # or  # ST
             # ('ST' in curr_data[stock].name) or
@@ -66,6 +67,10 @@ def after_trading_end(context):
             # ('退' in curr_data[stock].name)
             )]
         # 获取一天数据frequency='1d'，或者一分钟数据frequency='1m'
+        # 盘中当天运行的话需要获取前一天的数据
+        # df = get_price(stocks,frequency='1d',count=1,end_date=today-datetime.timedelta(days=1),
+        #                 fields=['open', 'high', 'low', 'close','pre_close','money'],panel=False)
+        # 每日收盘运行的话获取当天的数据即可
         df = get_price(stocks,frequency='1d',count=1,end_date=today,
                         fields=['open', 'high', 'low', 'close','pre_close','money'],panel=False)
         df = df.rename(columns={'time': '日期','code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 
@@ -80,11 +85,14 @@ def after_trading_end(context):
         df_valuation= get_valuation(stocks,count=1,end_date=today,fields=['capitalization', 'market_cap','turnover_ratio'])
         df_valuation = df_valuation.rename(columns={'time':'日期','code': '代码','turnover_ratio': '换手率'})
         df= pd.merge(df, df_valuation, on='代码') # 增加设置换手率因子
-        # 资金波动因子(反映控盘程度)
+        # 资金、市值分别的波动、贡献因子(反映控盘程度)
         df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
         df['资金波动'] = df['振幅'] / df['成交额']
+        df['市值波动'] = df['振幅'] /  df['总市值']
         df['涨跌幅'] = (df['收盘'] / df['昨收'])-1
         df['资金贡献'] = df['涨跌幅'] / df['成交额']
+        df['市值贡献'] = df['涨跌幅'] / df['总市值']
+        df['总市值成交额']=df['总市值']*df['成交额']
         # # 基本面市销率因子(反映成长性)加不加区别不大
         df['净资产']= df['总资产'] - df['总负债']
         df['资产负债率']=df['总资产']/df['总负债']
@@ -92,264 +100,270 @@ def after_trading_end(context):
         df['市净率']=df['净资产']/(df['总市值']*100000000)
         df['市盈率']=1/df['市盈率']
         df['净利润']=df['市盈率']*(df['总市值']*100000000)
-        # df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
-        #     '总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']]
-        # write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
+        # 过滤低价股,避免高滑点
+        df=df[df['收盘']>4]
+        df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
+            '资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']]
+        write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
         
-        # # 截面因子（标的排名因子）总市值和价格是越小越好，其他的都是越大越好
-        df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
-        df=df[df['总市值_rank']>0.98]
-        df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
-        df=df[df['收盘_rank']<0.5]
-        # df=df[df['收盘_rank']<0.8]
+#         # # 小市值中的低价股
+#         # df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
+#         # df=df[df['总市值_rank']>0.98]
+#         # df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
+#         # df=df[df['收盘_rank']<0.5]
+#         # # df=df[df['收盘_rank']<0.8]
         
-        # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
-        # df['资产负债率_rank'] = df['资产负债率'].rank(ascending=False)/len(df)
-        # df=df[(df['资产负债率_rank']<=0.02)|(df['市销率_rank']<=0.02)]
+#         # # 资金波动最小
+#         # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
+#         # df=df[df['开盘']>4]
+#         # df=df[df['资金波动_rank']<0.01]
+#         # df = df.nsmallest(1, '资金波动_rank') # 盈亏比低，回撤较小
         
-        # df['涨跌幅_rank'] = df['涨跌幅'].rank(ascending=False)/len(df)
-        # df['总负债_rank'] = df['总负债'].rank(ascending=False)/len(df)
-        # df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
-        # df=df[(df['涨跌幅_rank']>=0.04)&(df['总负债_rank']>=0.04)&(df['收盘_rank']>=0.04)]
+#         # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
+#         # df['资产负债率_rank'] = df['资产负债率'].rank(ascending=False)/len(df)
+#         # df=df[(df['资产负债率_rank']<=0.02)|(df['市销率_rank']<=0.02)]
+#         # df['涨跌幅_rank'] = df['涨跌幅'].rank(ascending=False)/len(df)
+#         # df['总负债_rank'] = df['总负债'].rank(ascending=False)/len(df)
+#         # df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
+#         # df=df[(df['涨跌幅_rank']>=0.04)&(df['总负债_rank']>=0.04)&(df['收盘_rank']>=0.04)]
         
-        # df= df.nsmallest(5, f"总市值")
-        # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
-        # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
-        g.buystocks=df
-        print(g.buystocks)
-# 固定时间交易
-def buy(context):
-    context.day_counter+=1
-    # print(g.buystocks)
-    today = context.current_dt.date()
-    write_file('截至昨日成交额.txt',f'{today}截至昨日成交额:{g.value}'+'\n',append=True)
-    if "000" or "300" in g.name:
-        if not g.buystocks.empty: 
-            stocks=g.buystocks['代码'].tolist()
-            df = get_price(stocks,count=1,end_date=today,frequency='daily',
-                        skip_paused=True,fields=['open','pre_close'],panel=False)
-            df = df.rename(columns={'code':'代码','open': '开盘','pre_close':'昨收'})
-            # # 高开模式适合震荡行情
-            # df['开盘收盘幅']=df['开盘']/df['昨收']
-            # df['abs开盘收盘幅']=abs(df['开盘收盘幅'])
-            # df= df.nlargest(10, f"收盘开盘幅") # 高开选股，回撤大跟趋势
-            # df= df.sort_values(by=['收盘开盘幅'], ascending=False) # 从大到小排序
-            # df = df.nsmallest(10, f"abs开盘收盘幅") # 平开选股
-            # df= df.sort_values(by=['abs开盘收盘幅'], ascending=True) # 从小到大排序
-            df=df[df['开盘']>4]
-            g.buystocks=df
-        # if not g.buystocks.empty: # 根据开盘后三分钟涨幅对标的进行二次确认
-        #     year = context.current_dt.year
-        #     month = context.current_dt.month
-        #     day = context.current_dt.day
-        #     hour = context.current_dt.hour
-        #     minute = context.current_dt.minute
-        #     second = context.current_dt.second
-        #     timestamp=f"{year}-{month}-{day} {hour}:{minute}:{second}"
-        #     # 获取当前时间戳的前n根5分钟k线
-        #     stocks=g.buystocks['代码'].tolist()
-        #     df = get_price(stocks,frequency='5m',count=1,end_date=timestamp,
-        #         fields=['open', 'high', 'low', 'close','money'],panel=False)
-        #     # df = get_price(stocks,frequency='1m',count=5,end_date=timestamp,
-        #     #     fields=['open', 'high', 'low', 'close','pre_close','money'],panel=False)
-        #     df = df.rename(columns={'time': '日期','code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 
-        #         'close': '收盘','pre_close':'昨收','money': '成交额'})
-        #     df['收盘开盘幅']=df['收盘']/df['开盘']
-        #     df= df.nlargest(5, f"收盘开盘幅") # 高开选股，回撤略大，有行情就能赚钱（整体效果是比较能接受的）
-        #     df= df.sort_values(by=['收盘开盘幅'], ascending=False) # 从大到小排序
-        #     print(df)
-        #     write_file('非ST股票（分钟）.csv',df.to_csv(),append=True)
-        #     g.buystocks=df
-        if not g.buystocks.empty: # 持仓权重确认（不超过百分之五）
-            for newstock in g.buystocks['代码']:
-                position=context.portfolio.positions.keys()
-                for stock in position:
-                    if context.portfolio.positions[stock].security==newstock:
-                        # # 已有持仓不买入
-                        # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
-                        # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
-                        # 持仓过重不买入
-                        if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/5):
-                            g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
-                            print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
-        if not g.buystocks.empty:
-            print(f"{g.buystocks['代码']},{type(g.buystocks['代码'])}") 
-            buystock=g.buystocks['代码'].tolist()
-            if(len(buystock))>0:
-                for stock in buystock:
-                    # CTA淘汰模式，去劣存优，符合人性但是收益未必好
-                    # (建仓周期短，成交额相对较小)
-                    # if(context.portfolio.available_cash)>(context.portfolio.total_value/g.m):
-                    #     target_value =context.portfolio.total_value/g.m
-                    #     value_per_stock = target_value
-                    #     buyorder=order_value(stock, value_per_stock)
-                    #     if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                    #         g.value+=buyorder.filled*buyorder.price
-                    #         log.info("Buying", buyorder)
-                    #         if (str(buyorder.status)!='canceled') and(str(buyorder.action)!='close'): # 去掉未成交订单
-                    #             df = pd.DataFrame({'order_id':[buyorder.order_id],
-                    #                 'status':[str(buyorder.status)],'security':[buyorder.security],
-                    #                 'price':[buyorder.price],'amount':[buyorder.amount],
-                    #                 'avg_cost':[buyorder.avg_cost],'Time':[buyorder.add_time.date()],
-                    #                 'filled':[buyorder.filled],'side':[buyorder.side],
-                    #                 'action':[buyorder.action],'持仓周期':[g.m]})
-                    #             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                    #             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#         # df= df.nsmallest(5, f"总市值")
+#         # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
+#         # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
+#         g.buystocks=df
+#         print(g.buystocks)
+# # 固定时间交易
+# def buy(context):
+#     context.day_counter+=1
+#     # print(g.buystocks)
+#     today = context.current_dt.date()
+#     write_file('截至昨日成交额.txt',f'{today}截至昨日成交额:{g.value}'+'\n',append=True)
+#     if "000" or "300" in g.name:
+#         # 以下因子必须当天才能确认
+#         # if not g.buystocks.empty: 
+#         #     stocks=g.buystocks['代码'].tolist()
+#         #     df = get_price(stocks,count=1,end_date=today,frequency='daily',
+#         #                 skip_paused=True,fields=['open','pre_close'],panel=False)
+#         #     df = df.rename(columns={'code':'代码','open': '开盘','pre_close':'昨收'})
+#         #     # # 高开模式适合震荡行情
+#         #     # df['开盘收盘幅']=df['开盘']/df['昨收']
+#         #     # df['abs开盘收盘幅']=abs(df['开盘收盘幅'])
+#         #     # df= df.nlargest(10, f"收盘开盘幅") # 高开选股，回撤大跟趋势
+#         #     # df= df.sort_values(by=['收盘开盘幅'], ascending=False) # 从大到小排序
+#         #     # df = df.nsmallest(10, f"abs开盘收盘幅") # 平开选股
+#         #     # df= df.sort_values(by=['abs开盘收盘幅'], ascending=True) # 从小到大排序
+#         #     df=df[df['开盘']>4]
+#         #     g.buystocks=df
+#         # if not g.buystocks.empty: # 根据开盘后三分钟涨幅对标的进行二次确认
+#         #     year = context.current_dt.year
+#         #     month = context.current_dt.month
+#         #     day = context.current_dt.day
+#         #     hour = context.current_dt.hour
+#         #     minute = context.current_dt.minute
+#         #     second = context.current_dt.second
+#         #     timestamp=f"{year}-{month}-{day} {hour}:{minute}:{second}"
+#         #     # 获取当前时间戳的前n根5分钟k线
+#         #     stocks=g.buystocks['代码'].tolist()
+#         #     df = get_price(stocks,frequency='5m',count=1,end_date=timestamp,
+#         #         fields=['open', 'high', 'low', 'close','money'],panel=False)
+#         #     # df = get_price(stocks,frequency='1m',count=5,end_date=timestamp,
+#         #     #     fields=['open', 'high', 'low', 'close','pre_close','money'],panel=False)
+#         #     df = df.rename(columns={'time': '日期','code': '代码','open': '开盘', 'high': '最高', 'low': '最低', 
+#         #         'close': '收盘','pre_close':'昨收','money': '成交额'})
+#         #     df['收盘开盘幅']=df['收盘']/df['开盘']
+#         #     df= df.nlargest(5, f"收盘开盘幅") # 高开选股，回撤略大，有行情就能赚钱（整体效果是比较能接受的）
+#         #     df= df.sort_values(by=['收盘开盘幅'], ascending=False) # 从大到小排序
+#         #     print(df)
+#         #     write_file('非ST股票（分钟）.csv',df.to_csv(),append=True)
+#         #     g.buystocks=df
+#         if not g.buystocks.empty: # 持仓权重确认（不超过百分之五）
+#             for newstock in g.buystocks['代码']:
+#                 position=context.portfolio.positions.keys()
+#                 for stock in position:
+#                     if context.portfolio.positions[stock].security==newstock:
+#                         # # 已有持仓不买入
+#                         # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+#                         # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
+#                         # 持仓过重不买入
+#                         if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/5):
+#                             g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+#                             print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
+#         if not g.buystocks.empty:
+#             print(f"{g.buystocks['代码']},{type(g.buystocks['代码'])}") 
+#             buystock=g.buystocks['代码'].tolist()
+#             if(len(buystock))>0:
+#                 for stock in buystock:
+#                     # CTA淘汰模式，去劣存优，符合人性但是收益未必好
+#                     # (建仓周期短，成交额相对较小)
+#                     # if(context.portfolio.available_cash)>(context.portfolio.total_value/g.m):
+#                     #     target_value =context.portfolio.total_value/g.m
+#                     #     value_per_stock = target_value
+#                     #     buyorder=order_value(stock, value_per_stock)
+#                     #     if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                     #         g.value+=buyorder.filled*buyorder.price
+#                     #         log.info("Buying", buyorder)
+#                     #         if (str(buyorder.status)!='canceled') and(str(buyorder.action)!='close'): # 去掉未成交订单
+#                     #             df = pd.DataFrame({'order_id':[buyorder.order_id],
+#                     #                 'status':[str(buyorder.status)],'security':[buyorder.security],
+#                     #                 'price':[buyorder.price],'amount':[buyorder.amount],
+#                     #                 'avg_cost':[buyorder.avg_cost],'Time':[buyorder.add_time.date()],
+#                     #                 'filled':[buyorder.filled],'side':[buyorder.side],
+#                     #                 'action':[buyorder.action],'持仓周期':[g.m]})
+#                     #             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                     #             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
 
-                    # 固定周期滚仓模式，放大总收益或者亏损，逐渐扩大周期，提高容量
-                    # (建仓周期长，成交额相对较大)
-                    if(context.portfolio.available_cash)<(context.portfolio.total_value/g.m):
-                        target_value =context.portfolio.available_cash
-                    else:
-                        target_value =context.portfolio.total_value/g.m
-                    value_per_stock = target_value/len(buystock)
-                    buyorder=order_value(stock, value_per_stock)
-                    if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                        g.value+=buyorder.filled*buyorder.price
-                        log.info("Buying", buyorder)
-                        if (str(buyorder.status)!='canceled') and(str(buyorder.action)!='close'): # 去掉未成交订单
-                            df = pd.DataFrame({'order_id':[buyorder.order_id],
-                                'status':[str(buyorder.status)],'security':[buyorder.security],
-                                'price':[buyorder.price],'amount':[buyorder.amount],
-                                'avg_cost':[buyorder.avg_cost],'Time':[buyorder.add_time.date()],
-                                'filled':[buyorder.filled],'side':[buyorder.side],
-                                'action':[buyorder.action],'持仓周期':[g.m]})
-                            g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                            # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-def sell(context):
-    if  "000" or "300" in g.name:
-        today = context.current_dt.date()
-        if not g.allorders.empty:
-            for order_id in g.allorders['order_id']:
-                df=g.allorders[g.allorders['order_id'] == order_id]
-                stock=df['security'].values[0]
-                starttime=df['Time'].values[0]
-                hold_days = (today - starttime).days
-                # 适合大资金固定周期滚仓模式，基本面较好的前提下资金波动前百分之十中选择一部分
-                if (hold_days >= df['持仓周期'].values[0]) and not(get_current_data()[stock].paused):
-                    take='到期'
-                    sellorder=order(stock,-df['filled'].values[0])
-                    if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                        g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                        g.value+=sellorder.filled*sellorder.price
-                        log.info("selling", sellorder)
-                        if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
-                            df = pd.DataFrame({'order_id':[sellorder.order_id],
-                                'status':[str(sellorder.status)],'security':[sellorder.security],
-                                'price':[sellorder.price],'amount':[sellorder.amount],
-                                'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
-                                'filled':[sellorder.filled],'side':[sellorder.side],
-                                'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
-                            g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                            # print(g.allorders)
-                            # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-                        break
-                # # 适合小资金的CTA淘汰机制，基本面较好的前提下资金波动前百分之十中选择一部分
-                # if (hold_days >= 1) and not(get_current_data()[stock].paused):
-                #     n=hold_days # 设置趋势观察周期
-                #     df_cta = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,fields=['open'],panel=False)
-                #     if (hold_days >= 3):
-                #         if not(any(df_cta['open'][2] > df_cta['open'].iloc[:2].values)): # 破三日新低卖出
-                #             take='破位'
-                #             sellorder=order(stock,-df['filled'].values[0])
-                #             if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                #                 g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                #                 g.value+=sellorder.filled*sellorder.price
-                #                 log.info("selling", sellorder)
-                #                 if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
-                #                     df = pd.DataFrame({'order_id':[sellorder.order_id],
-                #                         'status':[str(sellorder.status)],'security':[sellorder.security],
-                #                         'price':[sellorder.price],'amount':[sellorder.amount],
-                #                         'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
-                #                         'filled':[sellorder.filled],'side':[sellorder.side],
-                #                         'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
-                #                     g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                #                     # print(g.allorders)
-                #                     # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-                #                 break
-                #     if df_cta['open'][n-1]<df['avg_cost'].values[0]*0.95:# 浮亏百五卖出（止损）
-                #         take='止损'
-                #         sellorder=order(stock,-df['filled'].values[0])
-                #         if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                #             g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                #             g.value+=sellorder.filled*sellorder.price
-                #             log.info("selling", sellorder)
-                #             if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
-                #                 df = pd.DataFrame({'order_id':[sellorder.order_id],
-                #                     'status':[str(sellorder.status)],'security':[sellorder.security],
-                #                     'price':[sellorder.price],'amount':[sellorder.amount],
-                #                     'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
-                #                     'filled':[sellorder.filled],'side':[sellorder.side],
-                #                     'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
-                #                 g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                #                 # print(g.allorders)
-                #                 # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-                #             break
-                #     if (hold_days >= 10) and not(get_current_data()[stock].paused):
-                #         divisors = np.arange(1, len(df_cta)+1)
-                #         df_rate = ((df_cta/(df['avg_cost'].values[0]))-1).div(divisors, axis=0)
-                #         df_rate=df_rate['open'].max() # 定义历史斜率最大值为盈利斜率
-                #         # 止损线上移，每日上移一个盈利斜率
-                #         if(df_cta['open'][n-1] < (df['avg_cost'].values[0])*(0.95+df_rate*hold_days)):
-                #             take='长期止损'
-                #             sellorder=order(stock,-df['filled'].values[0])
-                #             if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                #                 g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                #                 g.value+=sellorder.filled*sellorder.price
-                #                 log.info("selling", sellorder)
-                #                 if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
-                #                     df = pd.DataFrame({'order_id':[sellorder.order_id],
-                #                         'status':[str(sellorder.status)],'security':[sellorder.security],
-                #                         'price':[sellorder.price],'amount':[sellorder.amount],
-                #                         'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
-                #                         'filled':[sellorder.filled],'side':[sellorder.side],
-                #                         'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
-                #                     g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                #                     # print(g.allorders)
-                #                     # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-                #                 break
-                #     if not(get_current_data()[stock].paused):
-                #         df_lastrate = df_cta['open']/df_cta['open'].shift(1)
-                #         lastindex=pd.Index(df_lastrate > 1.09).where(df_lastrate>1.09).tolist()
-                #         last=list(filter(lambda x: not math.isnan(x), lastindex))
-                #         if (len(last)>0): # 判断持仓期间是否有涨停
-                #             index=len(lastindex)-lastindex[::-1].index(True)
-                #             if index<5: # 上次涨停位置<5 且 最高点回撤>0.2
-                #                 if df_cta['open'][n-1]<df_cta['open'].max()*0.8:
-                #                     take='赶顶'
-                #                     sellorder=order(stock,-df['filled'].values[0])
-                #                     if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                #                         g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                #                         g.value+=sellorder.filled*sellorder.price
-                #                         log.info("selling", sellorder)
-                #                         if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
-                #                             df = pd.DataFrame({'order_id':[sellorder.order_id],
-                #                                 'status':[str(sellorder.status)],'security':[sellorder.security],
-                #                                 'price':[sellorder.price],'amount':[sellorder.amount],
-                #                                 'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
-                #                                 'filled':[sellorder.filled],'side':[sellorder.side],
-                #                                 'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
-                #                             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                #                             # print(g.allorders)
-                #                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-                #                         break
-                #         if (hold_days >= 10) and ((len(last)==0) or ((len(last)>0) and (index>10))):
-                #             if df_rate<((df_cta['open'][n-1]/df_cta['open'][n-4])-1)and (df_cta['open'][n-1]<0):
-                #                 take='回调'
-                #                 sellorder=order(stock,-df['filled'].values[0])
-                #                 if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                #                     g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                #                     g.value+=sellorder.filled*sellorder.price
-                #                     log.info("selling", sellorder)
-                #                     if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
-                #                         df = pd.DataFrame({'order_id':[sellorder.order_id],
-                #                             'status':[str(sellorder.status)],'security':[sellorder.security],
-                #                             'price':[sellorder.price],'amount':[sellorder.amount],
-                #                             'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
-                #                             'filled':[sellorder.filled],'side':[sellorder.side],
-                #                             'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
-                #                         g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                #                         # print(g.allorders)
-                #                         # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-                #                     break
+#                     # 固定周期滚仓模式，放大总收益或者亏损，逐渐扩大周期，提高容量
+#                     # (建仓周期长，成交额相对较大)
+#                     if(context.portfolio.available_cash)<(context.portfolio.total_value/g.m):
+#                         target_value =context.portfolio.available_cash
+#                     else:
+#                         target_value =context.portfolio.total_value/g.m
+#                     value_per_stock = target_value/len(buystock)
+#                     buyorder=order_value(stock, value_per_stock)
+#                     if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                         g.value+=buyorder.filled*buyorder.price
+#                         log.info("Buying", buyorder)
+#                         if (str(buyorder.status)!='canceled') and(str(buyorder.action)!='close'): # 去掉未成交订单
+#                             df = pd.DataFrame({'order_id':[buyorder.order_id],
+#                                 'status':[str(buyorder.status)],'security':[buyorder.security],
+#                                 'price':[buyorder.price],'amount':[buyorder.amount],
+#                                 'avg_cost':[buyorder.avg_cost],'Time':[buyorder.add_time.date()],
+#                                 'filled':[buyorder.filled],'side':[buyorder.side],
+#                                 'action':[buyorder.action],'持仓周期':[g.m]})
+#                             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+# def sell(context):
+#     if  "000" or "300" in g.name:
+#         today = context.current_dt.date()
+#         if not g.allorders.empty:
+#             for order_id in g.allorders['order_id']:
+#                 df=g.allorders[g.allorders['order_id'] == order_id]
+#                 stock=df['security'].values[0]
+#                 starttime=df['Time'].values[0]
+#                 hold_days = (today - starttime).days
+#                 # 适合大资金固定周期滚仓模式，基本面较好的前提下资金波动前百分之十中选择一部分
+#                 if (hold_days >= df['持仓周期'].values[0]) and not(get_current_data()[stock].paused):
+#                     take='到期'
+#                     sellorder=order(stock,-df['filled'].values[0])
+#                     if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                         g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+#                         g.value+=sellorder.filled*sellorder.price
+#                         log.info("selling", sellorder)
+#                         if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
+#                             df = pd.DataFrame({'order_id':[sellorder.order_id],
+#                                 'status':[str(sellorder.status)],'security':[sellorder.security],
+#                                 'price':[sellorder.price],'amount':[sellorder.amount],
+#                                 'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
+#                                 'filled':[sellorder.filled],'side':[sellorder.side],
+#                                 'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
+#                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#                         break
+#                 # # 适合小资金的CTA淘汰机制，基本面较好的前提下资金波动前百分之十中选择一部分
+#                 # if (hold_days >= 1) and not(get_current_data()[stock].paused):
+#                 #     n=hold_days # 设置趋势观察周期
+#                 #     df_cta = get_price(stock,count=n,end_date=today, frequency='daily',skip_paused=True,fields=['open'],panel=False)
+#                 #     if (hold_days >= 3):
+#                 #         if not(any(df_cta['open'][2] > df_cta['open'].iloc[:2].values)): # 破三日新低卖出
+#                 #             take='破位'
+#                 #             sellorder=order(stock,-df['filled'].values[0])
+#                 #             if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                 #                 g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+#                 #                 g.value+=sellorder.filled*sellorder.price
+#                 #                 log.info("selling", sellorder)
+#                 #                 if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
+#                 #                     df = pd.DataFrame({'order_id':[sellorder.order_id],
+#                 #                         'status':[str(sellorder.status)],'security':[sellorder.security],
+#                 #                         'price':[sellorder.price],'amount':[sellorder.amount],
+#                 #                         'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
+#                 #                         'filled':[sellorder.filled],'side':[sellorder.side],
+#                 #                         'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
+#                 #                     g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                 #                     # print(g.allorders)
+#                 #                     # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#                 #                 break
+#                 #     if df_cta['open'][n-1]<df['avg_cost'].values[0]*0.95:# 浮亏百五卖出（止损）
+#                 #         take='止损'
+#                 #         sellorder=order(stock,-df['filled'].values[0])
+#                 #         if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                 #             g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+#                 #             g.value+=sellorder.filled*sellorder.price
+#                 #             log.info("selling", sellorder)
+#                 #             if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
+#                 #                 df = pd.DataFrame({'order_id':[sellorder.order_id],
+#                 #                     'status':[str(sellorder.status)],'security':[sellorder.security],
+#                 #                     'price':[sellorder.price],'amount':[sellorder.amount],
+#                 #                     'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
+#                 #                     'filled':[sellorder.filled],'side':[sellorder.side],
+#                 #                     'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
+#                 #                 g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                 #                 # print(g.allorders)
+#                 #                 # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#                 #             break
+#                 #     if (hold_days >= 10) and not(get_current_data()[stock].paused):
+#                 #         divisors = np.arange(1, len(df_cta)+1)
+#                 #         df_rate = ((df_cta/(df['avg_cost'].values[0]))-1).div(divisors, axis=0)
+#                 #         df_rate=df_rate['open'].max() # 定义历史斜率最大值为盈利斜率
+#                 #         # 止损线上移，每日上移一个盈利斜率
+#                 #         if(df_cta['open'][n-1] < (df['avg_cost'].values[0])*(0.95+df_rate*hold_days)):
+#                 #             take='长期止损'
+#                 #             sellorder=order(stock,-df['filled'].values[0])
+#                 #             if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                 #                 g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+#                 #                 g.value+=sellorder.filled*sellorder.price
+#                 #                 log.info("selling", sellorder)
+#                 #                 if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
+#                 #                     df = pd.DataFrame({'order_id':[sellorder.order_id],
+#                 #                         'status':[str(sellorder.status)],'security':[sellorder.security],
+#                 #                         'price':[sellorder.price],'amount':[sellorder.amount],
+#                 #                         'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
+#                 #                         'filled':[sellorder.filled],'side':[sellorder.side],
+#                 #                         'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
+#                 #                     g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                 #                     # print(g.allorders)
+#                 #                     # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#                 #                 break
+#                 #     if not(get_current_data()[stock].paused):
+#                 #         df_lastrate = df_cta['open']/df_cta['open'].shift(1)
+#                 #         lastindex=pd.Index(df_lastrate > 1.09).where(df_lastrate>1.09).tolist()
+#                 #         last=list(filter(lambda x: not math.isnan(x), lastindex))
+#                 #         if (len(last)>0): # 判断持仓期间是否有涨停
+#                 #             index=len(lastindex)-lastindex[::-1].index(True)
+#                 #             if index<5: # 上次涨停位置<5 且 最高点回撤>0.2
+#                 #                 if df_cta['open'][n-1]<df_cta['open'].max()*0.8:
+#                 #                     take='赶顶'
+#                 #                     sellorder=order(stock,-df['filled'].values[0])
+#                 #                     if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                 #                         g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+#                 #                         g.value+=sellorder.filled*sellorder.price
+#                 #                         log.info("selling", sellorder)
+#                 #                         if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
+#                 #                             df = pd.DataFrame({'order_id':[sellorder.order_id],
+#                 #                                 'status':[str(sellorder.status)],'security':[sellorder.security],
+#                 #                                 'price':[sellorder.price],'amount':[sellorder.amount],
+#                 #                                 'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
+#                 #                                 'filled':[sellorder.filled],'side':[sellorder.side],
+#                 #                                 'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
+#                 #                             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                 #                             # print(g.allorders)
+#                 #                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#                 #                         break
+#                 #         if (hold_days >= 10) and ((len(last)==0) or ((len(last)>0) and (index>10))):
+#                 #             if df_rate<((df_cta['open'][n-1]/df_cta['open'][n-4])-1)and (df_cta['open'][n-1]<0):
+#                 #                 take='回调'
+#                 #                 sellorder=order(stock,-df['filled'].values[0])
+#                 #                 if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+#                 #                     g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+#                 #                     g.value+=sellorder.filled*sellorder.price
+#                 #                     log.info("selling", sellorder)
+#                 #                     if (str(sellorder.status)!='canceled') and(str(sellorder.action)!='open'): # 去掉未成交订单
+#                 #                         df = pd.DataFrame({'order_id':[sellorder.order_id],
+#                 #                             'status':[str(sellorder.status)],'security':[sellorder.security],
+#                 #                             'price':[sellorder.price],'amount':[sellorder.amount],
+#                 #                             'avg_cost':[sellorder.avg_cost],'Time':[sellorder.add_time.date()],
+#                 #                             'filled':[sellorder.filled],'side':[sellorder.side],
+#                 #                             'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
+#                 #                         g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+#                 #                         # print(g.allorders)
+#                 #                         # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+#                 #                     break
                 
