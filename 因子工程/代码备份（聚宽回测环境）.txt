@@ -24,9 +24,9 @@ def initialize(context):
     run_daily(buy, time='9:35')
     run_daily(sell, time='13:35')
 
-    g.m=10 # 固定建仓及清仓周期
+    g.m=30 # 固定建仓及清仓周期
     # 大容量策略需要实现周期自增长以扩大容量，CTA策略就不需要了
-    g.m+=math.ceil(context.day_counter/10)
+    g.m+=math.ceil(context.day_counter/30)
     print(g.m)
     if g.m>=45:
         g.m=45
@@ -38,10 +38,10 @@ def initialize(context):
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
     write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
-                '总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=True)
+                '总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=False)
     # write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status订单状态','security代码（str）','price委托价格（float）',
     # 'amount委托数量(int)','avg_cost交易均价（float）','Time委托时间(datetime.datetime)','filled已成交量(int)可能是手数','side多头还是空头(str)','action开仓还是平仓（进场还是出场）(str)',]).to_csv(index=False),append=True)
-    write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status','security','price','amount','avg_cost','Time','filled','side','action',]).to_csv(index=False),append=True)
+    write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status','security','price','amount','avg_cost','Time','filled','side','action',]).to_csv(index=False),append=False)
 
 def after_trading_end(context):
     today = context.current_dt.date()
@@ -103,17 +103,17 @@ def after_trading_end(context):
         df=df[df['总市值_rank']>0.98]
         df=df[df['收盘_rank']>0.04]
 
+
         # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         # df['资金贡献_rank'] = df['资金贡献'].rank(ascending=False)/len(df)
         # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
         # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
         # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
-        # df=df[df['资金波动_rank']<0.01]
+        # df=df[df['资金波动_rank']<0.1]
         # df=df[df['资金贡献_rank']<0.1]
         # df=df[df['市销率_rank']<0.1]
         # df=df[df['市盈率_rank']<0.1]
         # df=df[df['市净率_rank']<0.1]
-        
         # df= df.nsmallest(5, f"总市值")
         # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
         # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
