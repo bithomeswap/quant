@@ -23,14 +23,22 @@ def initialize(context):
     # 定时运行买入卖出函数
     run_daily(buy, time='9:35')
     run_daily(sell, time='13:35')
+    
     g.m=30 # 固定建仓及清仓周期
+    # 大容量策略需要实现周期自增长以扩大容量，CTA策略就不需要了
+    g.m+=math.ceil(context.day_counter/30)
+    print(g.m)
+    if g.m>=100:
+        g.m=100
+        
     g.value=0.0 # 储存历史成交额
     g.buystocks=pd.DataFrame() # 储存待买入标的
     g.allorders=pd.DataFrame() # 储存历史订单
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
-    write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=True)
+    write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
+                '总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']).to_csv(index=False),append=True)
 
 def after_trading_end(context):
     today = context.current_dt.date()
@@ -81,34 +89,36 @@ def after_trading_end(context):
         df['市销率']=df['营收']/(df['总市值']*100000000)
         df['市净率']=df['净资产']/(df['总市值']*100000000)
         df['市盈率']=1/df['市盈率']
-        df = df[['净利润','','','','','','','','','','','','日期','代码','开盘','收盘','最高','最低','昨收','成交额','总市值','总资产','总负债','净资产','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']]
-        # write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
+        df['净利润']=df['市盈率']*df['总市值']
+        df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
+            '总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','资金波动','资金贡献','涨跌幅']]
+        write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
         # df=df[(df['市净率']>(1/4))]
         # df=df[(df['市销率']>(1/15))]
         # df=df[(df['市盈率']>(1/50))]
         # # 截面因子（标的排名因子）
-        df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
-        df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        df['资金贡献_rank'] = df['资金贡献'].rank(ascending=False)/len(df)
-        df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
-        df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
-        df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
+        # df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
+        # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
+        # df['资金贡献_rank'] = df['资金贡献'].rank(ascending=False)/len(df)
+        # df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
+        # df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
+        # df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
         
         # 总市值越小越好，其他的都是越大越好
-        df=df[df['资金波动_rank']<0.1]
+        # df=df[df['资金波动_rank']<0.1]
         # df=df[df['资金贡献_rank']<0.1]
-        
         # df=df[df['市销率_rank']<0.1]
         # df=df[df['市盈率_rank']<0.1]
         # df=df[df['市净率_rank']<0.1]
-        df=df[df['总市值_rank']>0.9]
-        df= df.nsmallest(10, f"总市值")
+        # df=df[df['总市值_rank']>0.9]
+        df= df.nsmallest(5, f"总市值")
         df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
         g.buystocks=df
         # print(g.buystocks)
 
 # 固定时间交易
 def buy(context):
+    context.day_counter+=1
     print(g.buystocks)
     today = context.current_dt.date()
     write_file('截至昨日成交额.txt',f'{today}截至昨日成交额:{g.value}'+'\n',append=True)
@@ -169,9 +179,8 @@ def buy(context):
                 for stock in buystock:
                     # CTA淘汰模式，去劣存优，符合人性但是收益未必好
                     # (建仓周期短，成交额相对较小)
-                    # m=50 # 固定单笔比例（每笔下单不超过百分之五，适合小资金）
-                    # if(context.portfolio.available_cash)>(context.portfolio.total_value/m):
-                    #     target_value =context.portfolio.total_value/m
+                    # if(context.portfolio.available_cash)>(context.portfolio.total_value/g.m):
+                    #     target_value =context.portfolio.total_value/g.m
                     #     value_per_stock = target_value
                     #     buyorder=order_value(stock, value_per_stock)
                     #     log.info("Buying", buyorder,buyorder.filled)
@@ -179,9 +188,6 @@ def buy(context):
                         
                     # 固定周期滚仓模式，放大总收益或者亏损，逐渐扩大周期，提高容量
                     # (建仓周期长，成交额相对较大)
-                    g.m+=(context.day_counter-(context.day_counter % 30))/30
-                    if g.m>=100:
-                        g.m=100
                     if(context.portfolio.available_cash)<(context.portfolio.total_value/g.m):
                         target_value =context.portfolio.available_cash
                     else:
@@ -192,42 +198,63 @@ def buy(context):
                         g.value+=buyorder.filled*buyorder.price
                         # log.info("Buying", buyorder)
                         write_file('交易日志.txt',f'Buying,{buyorder}'+'\n',append=True)
-        context.day_counter += 1
+                        # df = pd.DataFrame(columns=['order_id','status','security','price','amount',
+                        #     'avg_cost','Time','filled','side','action'])
+                        # if (str(buyorder.status)!='canceled') and(str(buyorder.action)!='close'): # 去掉未成交订单
+                        #     df.loc['order_id'] = buyorder.order_id
+                        #     df.loc['status'] = str(buyorder.status) # 订单状态
+                        #     df.loc['security'] = buyorder.security # 代码（str）
+                        #     df.loc['price'] = buyorder.price # 委托价格（float）
+                        #     df.loc['amount'] = buyorder.amount # 委托数量(int)
+                        #     df.loc['avg_cost'] = buyorder.avg_cost # 交易均价（float）
+                        #     df.loc['Time'] = buyorder.add_time # 委托时间(datetime.datetime)
+                        #     df.loc['filled'] = buyorder.filled # 已成交量(int)，可能是手数
+                        #     df.loc['side'] = buyorder.side # 多头还是空头(str)
+                        #     df.loc['action'] = buyorder.action # 开仓还是平仓（进场还是出场）(str)
+                        # g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+                        df = pd.DataFrame({'order_id':buyorder.order_id,'status':str(buyorder.status),'security':buyorder.security,
+                            'price':buyorder.price,'amount':buyorder.amount,
+                            'avg_cost':buyorder.avg_cost,'Time':buyorder.add_time,
+                            'filled':buyorder.filled,'side':buyorder.side,'action':buyorder.action})
+                        print(df)
+                        # g.allorders=pd.concat([g.allorders,df],ignore_index=True)
 def sell(context):
     if  "000" or "300" in g.name:
         today = context.current_dt.date()
-        orders = get_orders()
-        i=0
-        df = pd.DataFrame(columns=['order_id','status','security','price','amount',
-                'avg_cost','Time','is_buy','filled','side','action'])
-        for _orders in orders.values():
-            if (str(_orders.status)!='canceled') and(str(_orders.action)!='close'): # 去掉未成交订单
-                df.loc[i,'order_id'] = _orders.order_id
-                df.loc[i,'status'] = str(_orders.status) # 订单状态
-                df.loc[i, 'security'] = _orders.security # 代码（str）
-                df.loc[i,'price'] = _orders.price # 委托价格（float）
-                df.loc[i,'amount'] = _orders.amount # 委托数量(int)
-                df.loc[i,'avg_cost'] = _orders.avg_cost # 交易均价（float）
-                df.loc[i, 'Time'] = _orders.add_time # 委托时间(datetime.datetime)
-                df.loc[i, 'filled'] = _orders.filled # 已成交量(int)，可能是手数
-                df.loc[i, 'side'] = _orders.side # 多头还是空头(str)
-                df.loc[i, 'action'] = _orders.action # 开仓还是平仓（进场还是出场）(str)
-                i=i+1
-        g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-        for order_id in g.allorders['order_id']:
-            df=g.allorders[g.allorders['order_id'] == order_id]
-            stock=df['security'].values[0]
-            starttime=df['Time'].values[0].date()
-            hold_days = (today - starttime).days
+        # orders = get_orders()
+        # i=0
+        # df = pd.DataFrame(columns=['order_id','status','security','price','amount',
+        #         'avg_cost','Time','is_buy','filled','side','action'])
+        # for _orders in orders.values():
+        #     if (str(_orders.status)!='canceled') and(str(_orders.action)!='close'): # 去掉未成交订单
+        #         df.loc[i,'order_id'] = _orders.order_id
+        #         df.loc[i,'status'] = str(_orders.status) # 订单状态
+        #         df.loc[i, 'security'] = _orders.security # 代码（str）
+        #         df.loc[i,'price'] = _orders.price # 委托价格（float）
+        #         df.loc[i,'amount'] = _orders.amount # 委托数量(int)
+        #         df.loc[i,'avg_cost'] = _orders.avg_cost # 交易均价（float）
+        #         df.loc[i, 'Time'] = _orders.add_time # 委托时间(datetime.datetime)
+        #         df.loc[i, 'filled'] = _orders.filled # 已成交量(int)，可能是手数
+        #         df.loc[i, 'side'] = _orders.side # 多头还是空头(str)
+        #         df.loc[i, 'action'] = _orders.action # 开仓还是平仓（进场还是出场）(str)
+        #         i=i+1
+        # g.allorders=pd.concat([g.allorders,df],ignore_index=True)
+        
+        
+        # for order_id in g.allorders['order_id']:
+        #     df=g.allorders[g.allorders['order_id'] == order_id]
+        #     stock=df['security'].values[0]
+        #     starttime=df['Time'].values[0].date()
+        #     hold_days = (today - starttime).days
             
-            # 适合大资金固定周期滚仓模式，基本面较好的前提下资金波动前百分之十中选择一部分
-            if (hold_days >= g.m) and not(get_current_data()[stock].paused):
-                sellorder=order(stock,-df['filled'].values[0])
-                # log.info("selling", sellorder)
-                g.value+=sellorder.filled*sellorder.price
-                if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                    g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
-                    write_file('交易日志.txt',f'Selling,{sellorder}'+'\n',append=True)
+        #     # 适合大资金固定周期滚仓模式，基本面较好的前提下资金波动前百分之十中选择一部分
+        #     if (hold_days >= g.m) and not(get_current_data()[stock].paused):
+        #         sellorder=order(stock,-df['filled'].values[0])
+        #         # log.info("selling", sellorder)
+        #         g.value+=sellorder.filled*sellorder.price
+        #         if sellorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
+        #             g.allorders = g.allorders[g.allorders['order_id']!= order_id].copy()
+        #             write_file('交易日志.txt',f'Selling,{sellorder}'+'\n',append=True)
 
             # # 适合小资金的CTA淘汰机制，基本面较好的前提下资金波动前百分之十中选择一部分
             # if (hold_days >= 1) and not(get_current_data()[stock].paused):
