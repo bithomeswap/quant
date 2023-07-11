@@ -29,13 +29,13 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 df = pd.read_csv(path)
                 watchtime = 1999
-                # if ("股票" in name) and ("可转债" not in name):  # 数据截取
-                #     watchtime = 2014
-                #     start_date = datetime.datetime(watchtime, int(
-                #         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                #     end_date = datetime.datetime(datetime.datetime.strptime(
-                #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
-                #     df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
+                if ("股票" in name) and ("可转债" not in name):  # 数据截取
+                    watchtime = 2017
+                    start_date = datetime.datetime(watchtime, int(
+                        1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    end_date = datetime.datetime(datetime.datetime.strptime(
+                        start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
+                    df = df[(df["日期"] >= start_date) & (df["日期"] <= end_date)]
                 # else:  # 数据截取
                 #     watchtime = 2021
                 #     start_date = datetime.datetime(

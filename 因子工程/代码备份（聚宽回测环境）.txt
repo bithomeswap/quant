@@ -118,7 +118,9 @@ def after_trading_end(context):
         df = df[df['市盈率_rank'] < 0.95].copy()
         df = df[df['市盈率_rank'] < 0.95].copy()
         df = df[df['收盘_rank'] > 0.05].copy()
-        df= df.nlargest(len(df)/4, f"换手率")
+        
+        num=math.ceil(len(df)/4)
+        df= df.nlargest(num, f"换手率")
         # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
         df = df.sort_values(by=['换手率'], ascending=False) # 从大到小排序
         
@@ -204,33 +206,34 @@ def buy(context):
             print(f"{g.buystocks['代码']},{type(g.buystocks['代码'])}") 
             buystock=g.buystocks['代码'].tolist()
             if(len(buystock))>0:
-                for stock in buystock:
-                    # CTA淘汰模式，去劣存优，符合人性但是收益未必好
-                    # (建仓周期短，成交额相对较小)
-                    # if(context.portfolio.available_cash)>(context.portfolio.total_value/g.m):
+                # # 固定周期滚仓模式,均摊风险与收益，逐渐扩大周期，提高容量
+                # # (建仓周期长，成交额相对较大)
+                # if(context.portfolio.available_cash)<(context.portfolio.total_value/g.m):
+                #     target_value =context.portfolio.available_cash
+                # else:
+                #     target_value =context.portfolio.total_value/g.m
+                # value_per_stock = target_value/len(buystock)
+                
+                # 固定周期滚仓模式,独立承担风险与收益，逐渐扩大周期，提高容量
+                # (建仓周期长，成交额相对较大)
+                if context.day_counter<=30:
+                    target_value =context.portfolio.total_value/g.m
+                else:
+                    target_value =context.portfolio.total_value/g.m
+                    # if context.day_counter%250>=30:
                     #     target_value =context.portfolio.total_value/g.m
-                    #     value_per_stock = target_value
-                    #     buyorder=order_value(stock, value_per_stock)
-                    #     if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
-                    #         g.value+=buyorder.filled*buyorder.price
-                    #         log.info("Buying", buyorder)
-                    #         if (str(buyorder.status)!='canceled') and(str(buyorder.action)!='close'): # 去掉未成交订单
-                    #             df = pd.DataFrame({'order_id':[buyorder.order_id],
-                    #                 'status':[str(buyorder.status)],'security':[buyorder.security],
-                    #                 'price':[buyorder.price],'amount':[buyorder.amount],
-                    #                 'avg_cost':[buyorder.avg_cost],'Time':[buyorder.add_time.date()],
-                    #                 'filled':[buyorder.filled],'side':[buyorder.side],
-                    #                 'action':[buyorder.action],'持仓周期':[g.m]})
-                    #             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
-                    #             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
-
-                    # 固定周期滚仓模式，放大总收益或者亏损，逐渐扩大周期，提高容量
-                    # (建仓周期长，成交额相对较大)
-                    if(context.portfolio.available_cash)<(context.portfolio.total_value/g.m):
-                        target_value =context.portfolio.available_cash
-                    else:
-                        target_value =context.portfolio.total_value/g.m
-                    value_per_stock = target_value/len(buystock)
+                    # else:
+                    #     target_value =0
+                value_per_stock = target_value/len(buystock)
+                
+                # # CTA模式，去劣存优，效果并不好
+                # # (建仓周期短，成交额相对较小)
+                # if(context.portfolio.available_cash)>(context.portfolio.total_value/g.m):
+                #     target_value =context.portfolio.total_value/g.m
+                # else:
+                #     target_value =0
+                # value_per_stock = target_value/len(buystock)
+                for stock in buystock:
                     buyorder=order_value(stock, value_per_stock)
                     if buyorder!=None: # 避免股票停牌等异常导致order的返回值为空值进而导致当日无法交易
                         g.value+=buyorder.filled*buyorder.price
