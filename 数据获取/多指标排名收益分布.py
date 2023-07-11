@@ -26,7 +26,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                # df = df[df['总市值_rank'] > 0.98].copy()
+                df['涨跌幅'] = df['涨跌幅'].shift(-1)
                 # filtered_columns = [col for col in df.columns if "rank" not in col]
                 # df = df[filtered_columns]
                 watchtime = 1999
@@ -45,17 +45,17 @@ for file in files:
                 #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     df = df[df["日期"] >= start_date]
                 #     df = df[df["日期"] <= end_date]
-                # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
-                df = df[df['总市值_rank'] > 0.99].copy()
-                # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
-                df = df[df['市销率_rank'] < 0.95].copy()
-                df = df[df['市盈率_rank'] < 0.95].copy()
-                df = df[df['市盈率_rank'] < 0.95].copy()
-                df = df[df['收盘_rank'] > 0.05].copy()
-                # df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                # # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
+                # df = df[df['总市值_rank'] > 0.99].copy()
+                # # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
+                # df = df[df['市销率_rank'] < 0.95].copy()
+                # df = df[df['市盈率_rank'] < 0.95].copy()
+                # df = df[df['市盈率_rank'] < 0.95].copy()
+                # df = df[df['收盘_rank'] > 0.05].copy()
+                df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df = df[df[f"收盘"] > 4].copy()
-                # df = df.groupby("代码", group_keys=False).apply(choose.rank)
-                # df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
+                df = df.groupby("代码", group_keys=False).apply(choose.rank)
+                df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
