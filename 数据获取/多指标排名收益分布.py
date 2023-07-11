@@ -26,10 +26,9 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                
-                # df = df[df[f"总市值_rank"] > 0.98].copy()
-                # df = df[df[f"收盘_rank"] > 0.5].copy()
-                # filtered_columns = [col for col in df.columns if "rank" not in col]
+                # df = df[df['总市值_rank'] > 0.98].copy()
+                # filtered_columns = [
+                #     col for col in df.columns if "rank" not in col]
                 # df = df[filtered_columns]
                 watchtime = 1999
                 # if ("股票" in name) and ("可转债" not in name):  # 数据截取
@@ -48,10 +47,10 @@ for file in files:
                 #     df = df[df["日期"] >= start_date]
                 #     df = df[df["日期"] <= end_date]
 
-                df = df.groupby("代码", group_keys=False).apply(choose.technology)
+                # df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df = df[df[f"收盘"] > 4].copy()
-                df = df.groupby("代码", group_keys=False).apply(choose.rank)
-                df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
+                # df = df.groupby("代码", group_keys=False).apply(choose.rank)
+                # df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
                     for i in range(1, n+1):
@@ -60,7 +59,7 @@ for file in files:
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 # 将数据划分成a个等长度的区间
-                a = 50
+                a = 200
                 ranges = []
                 left = 0
                 right = 1
