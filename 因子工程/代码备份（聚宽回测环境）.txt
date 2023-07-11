@@ -22,7 +22,7 @@ def initialize(context):
     set_order_cost(OrderCost(close_tax=0.001, open_commission=0.0003, close_commission=0.0003, min_commission=5), type='stock')
     # 定时运行买入卖出函数
     run_daily(buy, time='9:35')
-    run_daily(sell, time='13:35')
+    run_daily(sell, time='14:00')
 
     g.m=30 # 固定建仓及清仓周期
     # 大容量策略需要实现周期自增长以扩大容量，CTA策略就不需要了
@@ -37,7 +37,7 @@ def initialize(context):
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
-    # write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
+    # write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额','涨跌幅（开盘）',
     #         '资金波动','市值波动','资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','涨跌幅']).to_csv(index=False),append=False)
     # write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status订单状态','security代码（str）','price委托价格（float）',
     # 'amount委托数量(int)','avg_cost交易均价（float）','Time委托时间(datetime.datetime)','filled已成交量(int)可能是手数','side多头还是空头(str)','action开仓还是平仓（进场还是出场）(str)',]).to_csv(index=False),append=True)
@@ -86,6 +86,7 @@ def after_trading_end(context):
         df_valuation = df_valuation.rename(columns={'time':'日期','code': '代码','turnover_ratio': '换手率'})
         df= pd.merge(df, df_valuation, on='代码') # 增加设置换手率因子
         # 资金、市值分别的波动、贡献因子(反映控盘程度)
+        df['涨跌幅（开盘）']=(df['开盘']/df['昨收'])-1
         df['振幅'] = (df['最高'] - df['最低']) / df['开盘']
         df['资金波动'] = df['振幅'] / df['成交额']
         df['市值波动'] = df['振幅'] /  df['总市值']
@@ -101,10 +102,10 @@ def after_trading_end(context):
         df['市盈率']=1/df['市盈率']
         df['净利润']=df['市盈率']*(df['总市值']*100000000)
         # 过滤低价股,避免高滑点
-        df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额',
+        df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额','涨跌幅（开盘）',
             '资金波动','市值波动','资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','涨跌幅']]
         # write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
-        df=df[df['收盘']>4]
+        df=df[df['收盘']>4].copy()
         # 小市值中的低价股
         df['总市值_rank'] = df['总市值'].rank(method="max",ascending=False)/len(df)
         df['收盘_rank'] = df['收盘'].rank(method="max", ascending=False)/len(df)
@@ -116,25 +117,21 @@ def after_trading_end(context):
         # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
         df = df[df['市销率_rank'] < 0.95].copy()
         df = df[df['市盈率_rank'] < 0.95].copy()
-        df = df[df['市盈率_rank'] < 0.95].copy()
+        df = df[df['市净率_rank'] < 0.95].copy()
         df = df[df['收盘_rank'] > 0.05].copy()
+        # 这里的换手率越大越好（换手率越大未来波动也越大）
+        # 取两只时八年收益能有一百倍
+        df= df.nlargest(10, f"换手率").copy()
+        # df = df.sort_values(by=['换手率'], ascending=True).copy() # 从小到大排序
+        df = df.sort_values(by=['换手率'], ascending=False).copy() # 从大到小排序
         
-        num=math.ceil(len(df)/4)
-        df= df.nlargest(num, f"换手率")
-        # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
-        df = df.sort_values(by=['换手率'], ascending=False) # 从大到小排序
-        
-        # df['资金波动_rank'] = df['资金波动'].rank(method="max",ascending=False)/len(df)
-        # df['收盘_rank'] = df['收盘'].rank(method="max",ascending=False)/len(df)
-        # w=0.5
-        # df=df[(df['市净率_rank']<=w)&(df['市销率_rank']<=w)&(df['资金波动_rank']<=w)].copy()
 
         # # 资金波动最小
         # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
         # df=df[df['资金波动_rank']<0.01]
-        # df= df.nsmallest(5, f"总市值")
-        # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
-        # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
+        # df= df.nsmallest(5, f"总市值").copy() 
+        # df = df.sort_values(by=['总市值'], ascending=True).copy()  # 从小到大排序
+        # df = df.sort_values(by=['总市值'], ascending=False).copy()  # 从大到小排序
         
         # # 打分法
         # df["score"] = 0
@@ -143,7 +140,7 @@ def after_trading_end(context):
         # df["score"] += df[f"市盈率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
         # df["score"] += df[f"市净率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
         # df["score"] += df[f"市销率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
-        # df = df.nlargest(20, f"score")
+        # df = df.nlargest(20, f"score").copy() 
         
         g.buystocks=df
         print(g.buystocks)
@@ -190,18 +187,18 @@ def buy(context):
         #     print(df)
         #     write_file('非ST股票（分钟）.csv',df.to_csv(),append=True)
         #     g.buystocks=df
-        if not g.buystocks.empty: # 持仓权重确认（不超过百分之五）
-            for newstock in g.buystocks['代码']:
-                position=context.portfolio.positions.keys()
-                for stock in position:
-                    if context.portfolio.positions[stock].security==newstock:
-                        # # 已有持仓不买入
-                        # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
-                        # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
-                        # 持仓过重不买入
-                        if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/5):
-                            g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
-                            print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
+        # if not g.buystocks.empty: # 持仓权重确认（不超过百分之五）
+        #     for newstock in g.buystocks['代码']:
+        #         position=context.portfolio.positions.keys()
+        #         for stock in position:
+        #             if context.portfolio.positions[stock].security==newstock:
+        #                 # # 已有持仓不买入
+        #                 # g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+        #                 # print(context.portfolio.positions[stock].security,'已有持仓，不宜买入')
+        #                 # 持仓过重不买入
+        #                 if(context.portfolio.positions[stock].closeable_amount+context.portfolio.positions[stock].locked_amount)>(context.portfolio.total_value/5):
+        #                     g.buystocks=g.buystocks[g.buystocks['代码']!=newstock] # 删除元素
+        #                     print(context.portfolio.positions[stock].security,'仓位过重，不宜买入')
         if not g.buystocks.empty:
             print(f"{g.buystocks['代码']},{type(g.buystocks['代码'])}") 
             buystock=g.buystocks['代码'].tolist()
@@ -219,11 +216,11 @@ def buy(context):
                 if context.day_counter<=30:
                     target_value =context.portfolio.total_value/g.m
                 else:
-                    target_value =context.portfolio.total_value/g.m
+                    target_value =context.portfolio.available_cash
                     # if context.day_counter%250>=30:
-                    #     target_value =context.portfolio.total_value/g.m
+                    #     target_value =context.portfolio.available_cash
                     # else:
-                    #     target_value =0
+                    #     target_value =context.portfolio.total_value/g.m
                 value_per_stock = target_value/len(buystock)
                 
                 # # CTA模式，去劣存优，效果并不好
@@ -247,6 +244,8 @@ def buy(context):
                                 'action':[buyorder.action],'持仓周期':[g.m]})
                             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                            log.info(df)
+
 def sell(context):
     if  "000" or "300" in g.name:
         today = context.current_dt.date()
@@ -272,6 +271,7 @@ def sell(context):
                                 'filled':[sellorder.filled],'side':[sellorder.side],
                                 'action':[sellorder.action],'持仓周期':[f"{g.m},{take}"]})
                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                            log.info(df)
                         break
                 # # 适合小资金的CTA淘汰机制，基本面较好的前提下资金波动前百分之十中选择一部分
                 # if (hold_days >= 1) and not(get_current_data()[stock].paused):
@@ -295,6 +295,7 @@ def sell(context):
                 #                     g.allorders=pd.concat([g.allorders,df],ignore_index=True)
                 #                     # print(g.allorders)
                 #                     # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                #                     log.info(df)
                 #                 break
                 #     if df_cta['open'][n-1]<df['avg_cost'].values[0]*0.95:# 浮亏百五卖出（止损）
                 #         take='止损'
@@ -313,6 +314,7 @@ def sell(context):
                 #                 g.allorders=pd.concat([g.allorders,df],ignore_index=True)
                 #                 # print(g.allorders)
                 #                 # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                #                 log.info(df)
                 #             break
                 #     if (hold_days >= 10) and not(get_current_data()[stock].paused):
                 #         divisors = np.arange(1, len(df_cta)+1)
@@ -336,6 +338,7 @@ def sell(context):
                 #                     g.allorders=pd.concat([g.allorders,df],ignore_index=True)
                 #                     # print(g.allorders)
                 #                     # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                #                     log.info(df)
                 #                 break
                 #     if not(get_current_data()[stock].paused):
                 #         df_lastrate = df_cta['open']/df_cta['open'].shift(1)
@@ -361,6 +364,7 @@ def sell(context):
                 #                             g.allorders=pd.concat([g.allorders,df],ignore_index=True)
                 #                             # print(g.allorders)
                 #                             # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                #                             log.info(df)
                 #                         break
                 #         if (hold_days >= 10) and ((len(last)==0) or ((len(last)>0) and (index>10))):
                 #             if df_rate<((df_cta['open'][n-1]/df_cta['open'][n-4])-1)and (df_cta['open'][n-1]<0):
@@ -380,5 +384,6 @@ def sell(context):
                 #                         g.allorders=pd.concat([g.allorders,df],ignore_index=True)
                 #                         # print(g.allorders)
                 #                         # write_file('交易日志.csv',df.to_csv(index=False, header=False),append=True)
+                #                         log.info(df)
                 #                     break
                 

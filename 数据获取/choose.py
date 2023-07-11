@@ -27,7 +27,8 @@ def technology(df):  # 定义计算技术指标的函数
         else:
             for n in range(1, 81):
                 # 计算不加滑点的收益
-                df[f"{n}日后总涨跌幅（未来函数）"] = (df["收盘"].copy().shift(-n) / df["收盘"]) - 1
+                df[f"{n}日后总涨跌幅（未来函数）"] = (
+                    df["收盘"].copy().shift(-n) / df["收盘"]) - 1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
@@ -76,8 +77,7 @@ def choose(choosename, name, df):
                 n = 45  # 设置持仓周期
         if ("股票" in name) and ("可转债" not in name):  # 数据截取
             if ("分钟" not in name):
-                df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
-
+                df = df[(df["收盘"] >= 4) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
                 # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
                 df = df[df['总市值_rank'] > 0.99]
                 # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
@@ -85,9 +85,10 @@ def choose(choosename, name, df):
                 df = df[df['市盈率_rank'] < 0.95]
                 df = df[df['市盈率_rank'] < 0.95]
                 df = df[df['收盘_rank'] > 0.05]
-                df = df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(10, f"换手率")).reset_index(drop=True)                
+                df = df.groupby("日期", group_keys=True).apply(
+                    lambda x: x.nlargest(10, f"换手率")).reset_index(drop=True)
                 # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
-                df = df.sort_values(by=['换手率'], ascending=False) # 从大到小排序
+                df = df.sort_values(by=['换手率'], ascending=False)  # 从大到小排序
                 # 不免手续费的话，将近二十六倍的收益（收益有点低）
                 # df = df[df['收盘_rank'] > 0.99].copy()
 

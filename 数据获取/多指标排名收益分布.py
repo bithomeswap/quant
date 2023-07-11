@@ -26,7 +26,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                df['涨跌幅'] = df['涨跌幅'].shift(-1)
+                df['涨跌幅'] = df['开盘'].shift(-1)/df['昨收'].shift(-1)-1
                 # filtered_columns = [col for col in df.columns if "rank" not in col]
                 # df = df[filtered_columns]
                 watchtime = 1999
@@ -64,7 +64,7 @@ for file in files:
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 # 将数据划分成a个等长度的区间
-                a = 4
+                a = 50
                 ranges = []
                 left = 0
                 right = 1
