@@ -27,8 +27,7 @@ for file in files:
                 print(name)
                 df = pd.read_csv(path)
                 # df = df[df['总市值_rank'] > 0.98].copy()
-                # filtered_columns = [
-                #     col for col in df.columns if "rank" not in col]
+                # filtered_columns = [col for col in df.columns if "rank" not in col]
                 # df = df[filtered_columns]
                 watchtime = 1999
                 # if ("股票" in name) and ("可转债" not in name):  # 数据截取
@@ -46,7 +45,13 @@ for file in files:
                 #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     df = df[df["日期"] >= start_date]
                 #     df = df[df["日期"] <= end_date]
-
+                # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
+                df = df[df['总市值_rank'] > 0.99].copy()
+                # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
+                df = df[df['市销率_rank'] < 0.95].copy()
+                df = df[df['市盈率_rank'] < 0.95].copy()
+                df = df[df['市盈率_rank'] < 0.95].copy()
+                df = df[df['收盘_rank'] > 0.05].copy()
                 # df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df = df[df[f"收盘"] > 4].copy()
                 # df = df.groupby("代码", group_keys=False).apply(choose.rank)
@@ -59,7 +64,7 @@ for file in files:
                     for i in range(1, n+1):
                         df = df[df[f"{i}日后总涨跌幅（未来函数）"] <= 20*(1+0.1*n)]
                 # 将数据划分成a个等长度的区间
-                a = 200
+                a = 4
                 ranges = []
                 left = 0
                 right = 1

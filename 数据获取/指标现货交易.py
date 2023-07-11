@@ -30,7 +30,7 @@ for file in files:
                 df = pd.read_csv(path)
                 watchtime = 1999
                 if ("股票" in name) and ("可转债" not in name):  # 数据截取
-                    watchtime = 2017
+                    watchtime = 2014
                     start_date = datetime.datetime(watchtime, int(
                         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
