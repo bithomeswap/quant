@@ -85,10 +85,10 @@ def choose(choosename, name, df):
                 df = df[df['市盈率_rank'] < 0.95]
                 df = df[df['市盈率_rank'] < 0.95]
                 df = df[df['收盘_rank'] > 0.05]
-                df = df.groupby("日期", group_keys=True).apply(
-                    lambda x: x.nlargest(10, f"换手率")).reset_index(drop=True)
-                # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
-                df = df.sort_values(by=['换手率'], ascending=False)  # 从大到小排序
+                # df = df.groupby("日期", group_keys=True).apply(
+                #     lambda x: x.nlargest(10, f"换手率")).reset_index(drop=True)
+                # # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
+                # df = df.sort_values(by=['换手率'], ascending=False)  # 从大到小排序
                 # 不免手续费的话，将近二十六倍的收益（收益有点低）
                 # df = df[df['收盘_rank'] > 0.99].copy()
 
