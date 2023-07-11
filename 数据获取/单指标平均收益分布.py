@@ -55,8 +55,7 @@ for file in files:
 
                 # df = df.groupby("代码", group_keys=False).apply(
                 #     choose.technology)
-                df = df.groupby("代码", group_keys=False).apply(
-                    choose.rank)
+                df = df.groupby("日期", group_keys=False).apply(choose.rank)
                 df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):

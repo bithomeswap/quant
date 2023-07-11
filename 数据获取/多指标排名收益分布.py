@@ -26,7 +26,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                df['涨跌幅'] = df['开盘'].shift(-1)/df['昨收'].shift(-1)-1
+
                 # filtered_columns = [col for col in df.columns if "rank" not in col]
                 # df = df[filtered_columns]
                 watchtime = 1999
@@ -54,7 +54,7 @@ for file in files:
                 # df = df[df['收盘_rank'] > 0.05].copy()
                 df = df.groupby("代码", group_keys=False).apply(choose.technology)
                 df = df[df[f"收盘"] > 4].copy()
-                df = df.groupby("代码", group_keys=False).apply(choose.rank)
+                df = df.groupby("日期", group_keys=False).apply(choose.rank)
                 df.to_csv(f'股票指标（收益率隔夜）{name}.csv')
                 df, m, n = choose.choose("分布", name, df)
                 if ("股票" in name):
