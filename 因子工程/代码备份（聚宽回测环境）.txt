@@ -106,11 +106,11 @@ def after_trading_end(context):
         # write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
         df=df[df['收盘']>4]
         # 小市值中的低价股
-        df['总市值_rank'] = df['总市值'].rank(ascending=False)/len(df)
-        df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
-        df['市净率_rank'] = df['市净率'].rank(ascending=False)/len(df)
-        df['市销率_rank'] = df['市销率'].rank(ascending=False)/len(df)
-        df['市盈率_rank'] = df['市盈率'].rank(ascending=False)/len(df)
+        df['总市值_rank'] = df['总市值'].rank(method="max",ascending=False)/len(df)
+        df['收盘_rank'] = df['收盘'].rank(method="max", ascending=False)/len(df)
+        df['市净率_rank'] = df['市净率'].rank(method="max",ascending=False)/len(df)
+        df['市销率_rank'] = df['市销率'].rank(method="max",ascending=False)/len(df)
+        df['市盈率_rank'] = df['市盈率'].rank(method="max",ascending=False)/len(df)
         # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
         df = df[df['总市值_rank'] > 0.99].copy()
         # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
@@ -118,18 +118,23 @@ def after_trading_end(context):
         df = df[df['市盈率_rank'] < 0.95].copy()
         df = df[df['市盈率_rank'] < 0.95].copy()
         df = df[df['收盘_rank'] > 0.05].copy()
-        df= df.nsmallest(len(df)/10, f"换手率")
+        df= df.nlargest(len(df)/4, f"换手率")
         # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
         df = df.sort_values(by=['换手率'], ascending=False) # 从大到小排序
         
-        # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        # df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
+        # df['资金波动_rank'] = df['资金波动'].rank(method="max",ascending=False)/len(df)
+        # df['收盘_rank'] = df['收盘'].rank(method="max",ascending=False)/len(df)
         # w=0.5
         # df=df[(df['市净率_rank']<=w)&(df['市销率_rank']<=w)&(df['资金波动_rank']<=w)].copy()
 
-
-        # # df = df[df['总市值_rank'] > 0.98].copy()
-        # # df = df[df['收盘_rank'] > 0.98].copy()
+        # # 资金波动最小
+        # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
+        # df=df[df['资金波动_rank']<0.01]
+        # df= df.nsmallest(5, f"总市值")
+        # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
+        # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
+        
+        # # 打分法
         # df["score"] = 0
         # df["score"] += df[f"总市值_rank"].apply(lambda x: (x >= 0.98)).astype(int)
         # df["score"] += df[f"收盘_rank"].apply(lambda x: (x >= 0.98)).astype(int)
@@ -137,21 +142,7 @@ def after_trading_end(context):
         # df["score"] += df[f"市净率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
         # df["score"] += df[f"市销率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
         # df = df.nlargest(20, f"score")
-
-        # # 资金波动最小
-        # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        # df=df[df['资金波动_rank']<0.01]
-
-        # df['资产负债率_rank'] = df['资产负债率'].rank(ascending=False)/len(df)
-        # df=df[(df['资产负债率_rank']<=0.02)|(df['市销率_rank']<=0.02)]
-        # df['涨跌幅_rank'] = df['涨跌幅'].rank(ascending=False)/len(df)
-        # df['总负债_rank'] = df['总负债'].rank(ascending=False)/len(df)
-        # df['收盘_rank'] = df['收盘'].rank(ascending=False)/len(df)
-        # df=df[(df['涨跌幅_rank']>=0.04)&(df['总负债_rank']>=0.04)&(df['收盘_rank']>=0.04)]
-
-        # df= df.nsmallest(5, f"总市值")
-        # df = df.sort_values(by=['总市值'], ascending=True) # 从小到大排序
-        # df = df.sort_values(by=['总市值'], ascending=False) # 从大到小排序
+        
         g.buystocks=df
         print(g.buystocks)
 # 固定时间交易

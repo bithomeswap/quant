@@ -27,8 +27,7 @@ def technology(df):  # 定义计算技术指标的函数
         else:
             for n in range(1, 81):
                 # 计算不加滑点的收益
-                df[f"{n}日后总涨跌幅（未来函数）"] = (
-                    df["收盘"].copy().shift(-n) / df["收盘"]) - 1
+                df[f"{n}日后总涨跌幅（未来函数）"] = (df["收盘"].copy().shift(-n) / df["收盘"]) - 1
     except Exception as e:
         print(f"发生bug: {e}")
     return df
@@ -86,7 +85,11 @@ def choose(choosename, name, df):
                 df = df[df['市盈率_rank'] < 0.95].copy()
                 df = df[df['市盈率_rank'] < 0.95].copy()
                 df = df[df['收盘_rank'] > 0.05].copy()
+                df= df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(len(df)/4, f"换手率"))
 
+                # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
+                df = df.sort_values(by=['换手率'], ascending=False) # 从大到小排序
+                
                 # 不免手续费的话，将近二十六倍的收益（收益有点低）
                 # df = df[df['收盘_rank'] > 0.99].copy()
 
