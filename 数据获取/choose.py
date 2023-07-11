@@ -16,7 +16,7 @@ def technology(df):  # 定义计算技术指标的函数
                     x * (1 - slippage) * (1 - commission) * 100) / 100)
                 df[f"{n}日后总涨跌幅（未来函数）"] = (
                     df["卖出（未来函数）"].copy().shift(-n-1) / df["买入（未来函数）"].shift(-1)) - 1
-                # 次日的开盘幅
+                # 次日的开盘幅（这里命名为涨跌幅，方便后续计算，实际上不是涨跌幅）
                 df['涨跌幅'] = df['开盘'].shift(-1)/df['昨收'].shift(-1)-1
 
             # for n in range(1, 81):
