@@ -9,7 +9,7 @@ client = MongoClient(
     "mongodb://wth000:wth000@43.159.47.250:27017/dbname?authSource=wth000")
 db = client["wth000"]
 # names = ["可转债","COIN", "股票", "指数", "行业", "ETF",]
-names = ["股", ]
+names = ["股票", ]
 # 获取当前.py文件的绝对路径
 file_path = os.path.abspath(__file__)
 # 获取当前.py文件所在目录的路径
@@ -26,16 +26,8 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-                # df.columns = ['净利润', '日期', '代码', '开盘', '收盘', '最高', '最低', '昨收', '成交额', '总市值', '总资产',
-                #               '总负债', '净资产', '营收', '市盈率', '市净率', '市销率', '资产负债率', '换手率', '振幅', '资金波动', '资金贡献', '涨跌幅']
-                # df["涨跌幅"] = df["涨跌幅"].shift(-1)  # 次日涨跌幅确认能否买入
-
-                # df = df[df[f"总市值_rank"] > 0.98].copy()
-                df = df[df[f"收盘_rank"] > 0.5].copy()
-                filtered_columns = [
-                    col for col in df.columns if "rank" not in col]
-                df = df[filtered_columns]
-
+                # filtered_columns = [col for col in df.columns if "rank" not in col]
+                # df = df[filtered_columns]
                 watchtime = 1999
                 # if ("股票" in name) and ("可转债" not in name):  # 数据截取
                 #     watchtime = 2017
@@ -52,7 +44,13 @@ for file in files:
                 #         start_date, "%Y-%m-%d %H:%M:%S").year + 8, int(1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                 #     df = df[df["日期"] >= start_date]
                 #     df = df[df["日期"] <= end_date]
-
+                # # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
+                # df = df[df['总市值_rank'] > 0.99].copy()
+                # # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
+                # df = df[df['市销率_rank'] < 0.95].copy()
+                # df = df[df['市盈率_rank'] < 0.95].copy()
+                # df = df[df['市盈率_rank'] < 0.95].copy()
+                # df = df[df['收盘_rank'] > 0.05].copy()
                 # df = df.groupby("代码", group_keys=False).apply(
                 #     choose.technology)
                 df = df.groupby("日期", group_keys=False).apply(choose.rank)
