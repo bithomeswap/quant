@@ -79,11 +79,13 @@ def choose(choosename, name, df):
             if ("分钟" not in name):
                 df = df[(df["开盘"] >= 2) & (df["涨跌幅"] <= 0.09)].copy()  # 过滤垃圾股
 
-                # 不免手续费的话，将近五十多倍的收益
+                # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
                 df = df[df['总市值_rank'] > 0.99].copy()
-                df = df[df['市销率_rank'] > 0.01].copy()
-                df = df[df['市盈率_rank'] > 0.01].copy()
-                df = df[df['市盈率_rank'] > 0.01].copy()
+                # 加上基本面过滤垃圾标的之后收益率有提高，达到61倍了
+                df = df[df['市销率_rank'] < 0.95].copy()
+                df = df[df['市盈率_rank'] < 0.95].copy()
+                df = df[df['市盈率_rank'] < 0.95].copy()
+                df = df[df['收盘_rank'] > 0.05].copy()
 
                 # 不免手续费的话，将近二十六倍的收益（收益有点低）
                 # df = df[df['收盘_rank'] > 0.99].copy()
