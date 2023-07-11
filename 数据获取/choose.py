@@ -85,8 +85,7 @@ def choose(choosename, name, df):
                 df = df[df['市盈率_rank'] < 0.95]
                 df = df[df['市盈率_rank'] < 0.95]
                 df = df[df['收盘_rank'] > 0.05]
-                # df = df.groupby("日期", group_keys=True).apply(lambda x: (x <= x.quantile(0.25))).reset_index(drop=True)
-                df = df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(1, f"换手率")).reset_index(drop=True)                
+                df = df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(10, f"换手率")).reset_index(drop=True)                
                 # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
                 df = df.sort_values(by=['换手率'], ascending=False) # 从大到小排序
                 # 不免手续费的话，将近二十六倍的收益（收益有点低）
@@ -101,9 +100,9 @@ def choose(choosename, name, df):
                 # df["score"] += df[f"市销率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
                 # df = df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(10, f"score")).reset_index(drop=True)
 
-                # 算下来到今天的收益才两倍（性价比过于低了）【这个是针对聚宽的当天的数据，聚宽把涨跌幅和收益下移了，实盘中是前一天的数据】
+                # # 算下来到今天的收益才两倍（性价比过于低了）【这个是针对聚宽的当天的数据，聚宽把涨跌幅和收益下移了，实盘中是前一天的数据】
                 # df = df[(df[f"资金波动_rank"] <= 0.01)].copy()
-                m = 0.002  # 设置手续费
+                m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
                 df = df[(df["开盘"] >= 2)].copy()  # 过滤垃圾股
