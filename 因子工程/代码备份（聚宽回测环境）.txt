@@ -61,8 +61,8 @@ def initialize(context):
     g.name = ("000", "001", "002", "600", "601", "603", "605") # 主板
     # g.name = ("300", "688") # 创业板
     # g.name = ("ETF")
-    # write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额','涨跌幅（开盘）',
-    #         '资金波动','市值波动','资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','涨跌幅']).to_csv(index=False),append=False)
+    write_file('非ST股票（日k）.csv',pd.DataFrame(columns=['日期','代码','开盘','收盘','最高','最低','昨收','成交额','涨跌幅（开盘）',
+            '资金波动','市值波动','资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','涨跌幅']).to_csv(index=False),append=False)
     # write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status订单状态（held:挂单成功、canceled:撤销订单）','security代码（str）','price委托价格（float）',
     # 'amount委托数量(int)','avg_cost交易均价（float）','Time委托时间(datetime.datetime)','filled已成交量(int)可能是手数','side多头还是空头(str)','action开仓还是平仓（进场还是出场）(str)',]).to_csv(index=False),append=True)
     write_file('交易日志.csv',pd.DataFrame(columns=['order_id','status','security','price','amount','avg_cost','Time','filled','side','action',]).to_csv(index=False),append=False)
@@ -115,6 +115,7 @@ def after_trading_end(context):
         df['资金波动'] = df['振幅'] / df['成交额']
         df['市值波动'] = df['振幅'] /  df['总市值']
         df['涨跌幅'] = (df['收盘'] / df['昨收'])-1
+        df['涨跌幅（ABS）'] = abs(df['涨跌幅'])
         df['资金贡献'] = df['涨跌幅'] / df['成交额']
         df['市值贡献'] = df['涨跌幅'] / df['总市值']
         df['总市值成交额']=df['总市值']*df['成交额']
@@ -128,15 +129,15 @@ def after_trading_end(context):
         # 过滤低价股,避免高滑点
         df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额','涨跌幅（开盘）',
             '资金波动','市值波动','资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','涨跌幅']]
-        # write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
+        write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
         df=df[df['收盘']>4].copy()
-        # 计算各个指标的排名
-        for column in df.columns:
-            if ("未来函数" not in str(column)):
-                df = pd.concat([df, (df[str(column)].rank(
-                    method="max", ascending=False)/len(df)).rename(f"{str(column)}_rank")], axis=1)
-        # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
-        df = df[df['总市值_rank'] > 0.995].copy()
+        # # 计算各个指标的排名
+        # for column in df.columns:
+        #     if ("未来函数" not in str(column)):
+        #         df = pd.concat([df, (df[str(column)].rank(
+        #             method="max", ascending=False)/len(df)).rename(f"{str(column)}_rank")], axis=1)
+        # # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
+        # df = df[df['总市值_rank'] > 0.995].copy()
         # # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
         # df = df[df['市销率_rank'] < 0.95].copy()
         # df = df[df['市盈率_rank'] < 0.95].copy()
@@ -147,12 +148,12 @@ def after_trading_end(context):
         # # df = df.sort_values(by=['换手率'], ascending=True).copy() # 从小到大排序
         # df = df.sort_values(by=['换手率'], ascending=False).copy() # 从大到小排序
 
-        # # 资金波动最小
-        # df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
-        # df=df[df['资金波动_rank']<0.01]
-        # df= df.nsmallest(5, f"总市值").copy() 
-        # df = df.sort_values(by=['总市值'], ascending=True).copy()  # 从小到大排序
-        # df = df.sort_values(by=['总市值'], ascending=False).copy()  # 从大到小排序
+        # 资金波动最小
+        df['资金波动_rank'] = df['资金波动'].rank(ascending=False)/len(df)
+        df=df[df['资金波动_rank']<0.01]
+        df= df.nsmallest(5, f"总市值").copy() 
+        df = df.sort_values(by=['总市值'], ascending=True).copy()  # 从小到大排序
+        df = df.sort_values(by=['总市值'], ascending=False).copy()  # 从大到小排序
         
         # # 打分法
         # df["score"] = 0
