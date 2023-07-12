@@ -10,9 +10,10 @@ def technology(df):  # 定义计算技术指标的函数
         if "换手率" in df.columns:
             df['涨跌幅（原值）'] = df['涨跌幅']+1
             for n in range(1, 50):
-                # 计算不加滑点的收益
-                df[f"{n}日后总涨跌幅（未来函数）"] = df['涨跌幅（原值）'].shift(-1).rolling(n).apply(lambda x: x.prod(), raw=True)
-                df[f"{n}日后总涨跌幅（未来函数）"] = df[f"{n}日后总涨跌幅（未来函数）"]-1
+                if n==1:
+                    df[f"{n}日后总涨跌幅（未来函数）"] = df['涨跌幅（原值）'].shift(-1)-1
+                if n>1:
+                    df[f"{n}日后总涨跌幅（未来函数）"] = ((df[f"{n-1}日后总涨跌幅（未来函数）"]+1)*df['涨跌幅（原值）'].shift(-n))-1
             # for n in range(1, 81):
             #     # 计算加滑点之后的收益，A股扣一分钱版本
             #     df["买入（未来函数）"] = df["开盘"].apply(
@@ -48,10 +49,9 @@ def choose(choosename, name, df):
         print(name, "板块第一天的标的数量", len(code), "择股数量", num)
         if ("可转债" not in name):  # 数据截取
             if ("分钟" not in name):
-                df = df[(df["开盘"] >= 4) & (
-                    df["涨跌幅（开盘）"] <= 0.09)].copy()  # 过滤垃圾股
+                df = df[(df["开盘"] >= 4) & (df["涨跌幅（开盘）"] <= 0.09)].copy()  # 过滤垃圾股
                 # # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
-                # df = df[df['总市值_rank'] > 0.99].copy()
+                df = df[df['总市值_rank'] > 0.995].copy()
                 # # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
                 # df = df[df['市销率_rank'] < 0.95].copy()
                 # df = df[df['市盈率_rank'] < 0.95].copy()
