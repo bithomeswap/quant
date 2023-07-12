@@ -10,10 +10,11 @@ def technology(df):  # 定义计算技术指标的函数
         if "换手率" in df.columns:
             df['涨跌幅（原值）'] = df['涨跌幅']+1
             for n in range(1, 50):
-                if n==1:
+                if n == 1:
                     df[f"{n}日后总涨跌幅（未来函数）"] = df['涨跌幅（原值）'].shift(-1)-1
-                if n>1:
-                    df[f"{n}日后总涨跌幅（未来函数）"] = ((df[f"{n-1}日后总涨跌幅（未来函数）"]+1)*df['涨跌幅（原值）'].shift(-n))-1
+                if n > 1:
+                    df[f"{n}日后总涨跌幅（未来函数）"] = (
+                        (df[f"{n-1}日后总涨跌幅（未来函数）"]+1)*df['涨跌幅（原值）'].shift(-n))-1
             # for n in range(1, 81):
             #     # 计算加滑点之后的收益，A股扣一分钱版本
             #     df["买入（未来函数）"] = df["开盘"].apply(
@@ -49,20 +50,17 @@ def choose(choosename, name, df):
         print(name, "板块第一天的标的数量", len(code), "择股数量", num)
         if ("可转债" not in name):  # 数据截取
             if ("分钟" not in name):
-                df = df[(df["开盘"] >= 4) & (df["涨跌幅（开盘）"] <= 0.09)].copy()  # 过滤垃圾股
+                df = df[(df["收盘"] >= 4)].copy()  # 过滤垃圾股
                 # # 不免手续费的话，将近五十多倍的收益（收益高的离谱很可能是有借壳上市的停牌期间的利润）
-                df = df[df['总市值_rank'] > 0.995].copy()
-                # # 加上基本面过滤垃圾标的之后收益率有提高，各排除百分之五就已经达到65倍收益了
-                # df = df[df['市销率_rank'] < 0.95].copy()
-                # df = df[df['市盈率_rank'] < 0.95].copy()
-                # df = df[df['市净率_rank'] < 0.95].copy()
-                # df = df[df['收盘_rank'] > 0.05].copy()
-                # df = df.groupby("日期", group_keys=True).apply(
-                #     lambda x: x.nlargest(10, f"换手率")).reset_index(drop=True)
-                # # df = df.sort_values(by=['换手率'], ascending=True) # 从小到大排序
-                # df = df.sort_values(by=['换手率'], ascending=False)  # 从大到小排序
-                # # 不免手续费的话，将近二十六倍的收益（收益有点低）
-                # # df = df[df['收盘_rank'] > 0.99].copy()
+                df = df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(5, f"总市值_rank")).reset_index(drop=True)
+                df = df[(df["涨跌幅（开盘原值）"] <= 0.09)].copy()  # 过滤垃圾股
+                # df = df[df['总市值_rank'] > 0.995]
+                # df = df[df['资金波动_rank'] <0.005] # 不如单独的市值效果好
+                # df = df[df['收盘_rank'] > 0.2]
+                # df = df[df['成交额_rank'] > 0.3]
+                # df = df[df['振幅_rank']>0.2]
+                # df = df[df['换手率_rank']>0.2]
+                # df = df[(df['涨跌幅_rank'] < 0.92) & (df['涨跌幅_rank'] > 0.02)]
 
                 # # 免手续费的话，大概二十六倍的收益（收益有点低）
                 # # df["score"] = 0
@@ -73,9 +71,7 @@ def choose(choosename, name, df):
                 # # df["score"] += df[f"市销率_rank"].apply(lambda x: (x <= 0.01)).astype(int)
                 # # df = df.groupby("日期", group_keys=True).apply(lambda x: x.nlargest(10, f"score")).reset_index(drop=True)
 
-                # # # 算下来到今天的收益才两倍（性价比过于低了）【这个是针对聚宽的当天的数据，聚宽把涨跌幅和收益下移了，实盘中是前一天的数据】
-                # # df = df[(df[f"资金波动_rank"] <= 0.01)].copy()
-                m = 0.01  # 设置手续费
+                m = 0.005  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):
                 df = df[(df["开盘"] >= 4)].copy()  # 过滤垃圾股
@@ -97,8 +93,8 @@ def choose(choosename, name, df):
     if choosename == "分布":
         if ("可转债" not in name):  # 数据截取
             if ("分钟" not in name):
-                df = df[(df["开盘"] >= 4) & (
-                    df["涨跌幅（开盘）"] <= 0.09)].copy()  # 过滤垃圾股
+                df = df[(df["开盘"] >= 4)].copy()  # 过滤垃圾股
+                df = df[(df["涨跌幅（开盘原值）"] <= 0.09)].copy()  # 过滤垃圾股
                 m = 0.01  # 设置手续费
                 n = 30  # 设置持仓周期
             if ("分钟" in name):

@@ -26,7 +26,7 @@ for file in files:
                 path = os.path.join(dir_path, f"{name}.csv")
                 print(name)
                 df = pd.read_csv(path)
-
+                df['涨跌幅（开盘原值）'] = df['涨跌幅（开盘）'].shift(-1)
                 # filtered_columns = [col for col in df.columns if "rank" not in col]
                 # df = df[filtered_columns]
                 watchtime = 1999

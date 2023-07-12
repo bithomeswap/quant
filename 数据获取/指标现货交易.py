@@ -30,7 +30,7 @@ for file in files:
                 df = pd.read_csv(path)
                 watchtime = 1999
                 if ("股票" in name) and ("可转债" not in name):  # 数据截取
-                    watchtime = 2017
+                    watchtime = 2014
                     start_date = datetime.datetime(watchtime, int(
                         1), int(1)).strftime("%Y-%m-%d %H:%M:%S")
                     end_date = datetime.datetime(datetime.datetime.strptime(
@@ -101,8 +101,7 @@ for file in files:
                 manyday = manyday[~manyday["日期"].isin(df["日期"])]
                 # 将两个数据集根据key列进行合并
                 result_df = pd.concat([result_df,  manyday])
-                result_df = result_df.sort_values(
-                    by="日期").reset_index(drop=True)
+                result_df = result_df.sort_values(by="日期").reset_index(drop=True)
 
                 for i in range(1, n+1):  # 对每一份资金列分别根据对应的数据向下填充数据
                     cash = 1
