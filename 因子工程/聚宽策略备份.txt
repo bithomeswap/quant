@@ -129,7 +129,7 @@ def after_trading_end(context):
         # 过滤低价股,避免高滑点
         df = df[['日期','代码','开盘','收盘','最高','最低','昨收','成交额','涨跌幅（开盘）',
             '资金波动','市值波动','资金贡献','市值贡献','总市值成交额','总市值','总资产','总负债','净资产','净利润','营收','市盈率','市净率','市销率','资产负债率','换手率','振幅','涨跌幅']]
-        # write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
+        write_file('非ST股票（日k）.csv',df.to_csv(index=False, header=False),append=True)
         df=df[df['收盘']>4].copy()
         # # 计算各个指标的排名
         # for column in df.columns:
